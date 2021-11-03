@@ -1,0 +1,1105 @@
+{
+  "record": {
+    "vtag": {
+      "field_name": "field_name",
+      "no_repetition": "no_repetition",
+      "no_subfield": "no_subfield",
+      "subfields": {
+        "subfield": "subfield_name"
+      }
+    }
+  },
+  "c": {
+    "v010": {
+      "field_name": "analytic_author",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "given_names",
+        "1": "rid",
+        "r": "role",
+        "s": "surname",
+        "_": "anonym"
+      }
+    },
+    "v107": {
+      "field_name": "monograph_update",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v108": {
+      "field_name": "monograph_update_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v109": {
+      "field_name": "monograph_cited",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v011": {
+      "field_name": "analytic_corpauth",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v110": {
+      "field_name": "monograph_cited_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v118": {
+      "field_name": "no",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v012": {
+      "field_name": "analytic_ctitle_title",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "l": "language",
+        "_": "title"
+      }
+    },
+    "v137": {
+      "field_name": "analytic_location",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v014": {
+      "field_name": "analytic_pages",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v016": {
+      "field_name": "monograph_author",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "given_names",
+        "1": "rid",
+        "r": "role",
+        "s": "surname",
+        "_": "anonym"
+      }
+    },
+    "v017": {
+      "field_name": "monograph_corpauth",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v018": {
+      "field_name": "monograph_ctitle_title",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "l": "language",
+        "_": "title"
+      }
+    },
+    "v020": {
+      "field_name": "monograph_extent",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v022": {
+      "field_name": "monograph_tome",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v237": {
+      "field_name": "monograph_doi",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v025": {
+      "field_name": "monograph_coltitle",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v026": {
+      "field_name": "monograph_colvolid",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v028": {
+      "field_name": "serial_author",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "given_names",
+        "1": "rid",
+        "r": "role",
+        "s": "surname"
+      }
+    },
+    "v029": {
+      "field_name": "serial_corpauth",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v031": {
+      "field_name": "analytic_volid",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v032": {
+      "field_name": "serial",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "s": "suppl"
+      }
+    },
+    "v033": {
+      "field_name": "serial_isstitle",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v034": {
+      "field_name": "monograph_part",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v035": {
+      "field_name": "serial_issn",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v037": {
+      "field_name": "monograph_url",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v039": {
+      "field_name": "serial_isdesig",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v044": {
+      "field_name": "monograph_thesis_date",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v045": {
+      "field_name": "monograph_thesis_date",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v046": {
+      "field_name": "monograph_thesis",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "e": "state",
+        "_": "city"
+      }
+    },
+    "v047": {
+      "field_name": "monograph_thesis_country",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v049": {
+      "field_name": "analytic_section",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v050": {
+      "field_name": "monograph_thesis",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v710": {
+      "field_name": "analytic_author_previous",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": "previous"
+      }
+    },
+    "v051": {
+      "field_name": "monograph_thesis_degree",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v052": {
+      "field_name": "conference_sponsor",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v053": {
+      "field_name": "conference",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "no"
+      }
+    },
+    "v054": {
+      "field_name": "conference_date",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": "date"
+      }
+    },
+    "v055": {
+      "field_name": "conference_date_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": "dateiso"
+      }
+    },
+    "v056": {
+      "field_name": "conference",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "e": "state",
+        "_": "city"
+      }
+    },
+    "v057": {
+      "field_name": "conference_country",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": "country"
+      }
+    },
+    "v058": {
+      "field_name": "monograph_report_rsponsor",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v059": {
+      "field_name": "monograph_report_projname",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v591": {
+      "field_name": "monograph_report_awarded",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "given_names",
+        "d": "orgdiv",
+        "s": "surname",
+        "_": "orgname"
+      }
+    },
+    "v592": {
+      "field_name": "monograph_report_no",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v060": {
+      "field_name": "monograph_report_contract",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v061": {
+      "field_name": "analytic_notes",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v062": {
+      "field_name": "monograph_mpubinfo_pubname",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v063": {
+      "field_name": "monograph_edition",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v064": {
+      "field_name": "analytic_date",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v065": {
+      "field_name": "analytic_date_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v066": {
+      "field_name": "monograph",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "e": "state",
+        "_": "city"
+      }
+    },
+    "v067": {
+      "field_name": "monograph_country",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v069": {
+      "field_name": "analytic_isbn",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v071": {
+      "field_name": "analytic_vtitle_tp",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v810": {
+      "field_name": "analytic_et_al",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": "et_al"
+      }
+    },
+    "v093": {
+      "field_name": "analytic_subresp",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "given_names",
+        "r": "role",
+        "s": "surname"
+      }
+    },
+    "v094": {
+      "field_name": "monograph_subresp",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "given_names",
+        "r": "role",
+        "s": "surname"
+      }
+    },
+    "v095": {
+      "field_name": "monograph_version",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v096": {
+      "field_name": "monograph_inpress",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v098": {
+      "field_name": "monograph_medium",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    }
+  },
+  "f": {
+    "v001": {
+      "field_name": "ccode",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v010": {
+      "field_name": "authgrp_author",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "given_names",
+        "1": "rid",
+        "r": "role",
+        "s": "surname"
+      }
+    },
+    "v011": {
+      "field_name": "authgrp_corpauth",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v111": {
+      "field_name": "history_received",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v112": {
+      "field_name": "history_received_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v113": {
+      "field_name": "history_accepted",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v114": {
+      "field_name": "history_accepted_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v115": {
+      "field_name": "history_revised",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v116": {
+      "field_name": "history_revised_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v117": {
+      "field_name": "biblist_head_standard",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v012": {
+      "field_name": "title",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "l": "language",
+        "_": "title"
+      }
+    },
+    "v120": {
+      "field_name": "version",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v121": {
+      "field_name": "order",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v123": {
+      "field_name": "toccode",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v131": {
+      "field_name": "supplvol",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v132": {
+      "field_name": "supplno",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v141": {
+      "field_name": "figgrp",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "r": "figref",
+        "m": "legend",
+        "n": "no",
+        "s": "subtitle",
+        "t": "title",
+        "l": "language"
+      }
+    },
+    "v142": {
+      "field_name": "table",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "m": "legend",
+        "n": "no",
+        "s": "subtitle",
+        "t": "title",
+        "l": "language"
+      }
+    },
+    "v158": {
+      "field_name": "sponsor",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v002": {
+      "field_name": "pii",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {}
+    },
+    "v223": {
+      "field_name": "ahpdate",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v224": {
+      "field_name": "rvpdate",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v225": {
+      "field_name": "old_pid",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {}
+    },
+    "v237": {
+      "field_name": "doi",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v238": {
+      "field_name": "url",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v241": {
+      "field_name": "product",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "t": "reltype",
+        "i": "relid",
+        "z": "relidtp"
+      }
+    },
+    "v250": {
+      "field_name": "hcomment",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v264": {
+      "field_name": "deposit_embdate",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v265": {
+      "field_name": "deposit_entrdate",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v268": {
+      "field_name": "deposit_deposid",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v031": {
+      "field_name": "issuegrp_volid",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v032": {
+      "field_name": "issuegrp_issueno",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v035": {
+      "field_name": "issn",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v038": {
+      "field_name": "type",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {}
+    },
+    "v040": {
+      "field_name": "language",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v041": {
+      "field_name": "isidpart",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v042": {
+      "field_name": "status",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v044": {
+      "field_name": "thesis_date",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v045": {
+      "field_name": "thesis_date_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v046": {
+      "field_name": "thesis",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "e": "state",
+        "_": "city"
+      }
+    },
+    "v047": {
+      "field_name": "thesis_country",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v049": {
+      "field_name": "seccode",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v050": {
+      "field_name": "thesis",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v051": {
+      "field_name": "thesis_degree",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v052": {
+      "field_name": "conference_sponsor",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v053": {
+      "field_name": "conference",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "no"
+      }
+    },
+    "v054": {
+      "field_name": "conference_date",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": "date"
+      }
+    },
+    "v540": {
+      "field_name": "license",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "u": "href",
+        "l": "language",
+        "t": "lictype",
+        "_": "licensep"
+      }
+    },
+    "v055": {
+      "field_name": "conference_date_dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": "dateiso"
+      }
+    },
+    "v056": {
+      "field_name": "conference",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "e": "state",
+        "_": "city"
+      }
+    },
+    "v057": {
+      "field_name": "conference_country",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": "country"
+      }
+    },
+    "v058": {
+      "field_name": "projgrp_psponsor",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "d": "orgdiv",
+        "_": "orgname"
+      }
+    },
+    "v059": {
+      "field_name": "projgrp_projname",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v591": {
+      "field_name": "report_awarded",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "n": "given_names",
+        "d": "orgdiv",
+        "s": "surname",
+        "_": "orgname"
+      }
+    },
+    "v592": {
+      "field_name": "report_no",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v060": {
+      "field_name": "projgrp_psponsor_contract",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v064": {
+      "field_name": "issuegrp_date",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v065": {
+      "field_name": "dateiso",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v070": {
+      "field_name": "aff",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "c": "city",
+        "p": "country",
+        "e": "email",
+        "i": "id",
+        "1": "orgdiv1",
+        "2": "orgdiv2",
+        "3": "orgdiv3",
+        "d": "orgdiv",
+        "s": "state",
+        "z": "zipcode",
+        "_": "orgname"
+      }
+    },
+    "v071": {
+      "field_name": "doctopic",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v072": {
+      "field_name": "biblist_head_count",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "_": ""
+      }
+    },
+    "v074": {
+      "field_name": "keygrp_dperiod",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "f": "from",
+        "t": "to"
+      }
+    },
+    "v770": {
+      "field_name": "cltrial",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "a": "ctreg",
+        "u": "cturl",
+        "_": "ctdbid"
+      }
+    },
+    "v083": {
+      "field_name": "",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "a": "abstract",
+        "l": "language"
+      }
+    },
+    "v085": {
+      "field_name": "keygrp",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {
+        "k": "keyword",
+        "d": "scheme",
+        "s": "subkey",
+        "l": "language",
+        "t": "type",
+        "_": "rid"
+      }
+    },
+    "v914": {
+      "field_name": "fpage",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {}
+    },
+    "v915": {
+      "field_name": "lpage",
+      "no_repetition": "",
+      "no_subfield": "",
+      "subfields": {}
+    }
+  }
+}
