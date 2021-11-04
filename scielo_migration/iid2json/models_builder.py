@@ -7,7 +7,7 @@ import json
 BUILDER_CSV_FIELD_NAMES = [
     'record',
     'tag', 'subfield', 'subfield_name',
-    'no_repetition', 'no_subfield',
+    'is_multi_val', 'is_composite_val',
     'field_name',
     'name', 'description',
 ]
@@ -35,7 +35,7 @@ class DataDictionaryBuilder:
             recs[rec_type] = recs.get(rec_type) or {}
             recs[rec_type][tag] = recs[rec_type].get(tag) or {}
             if not recs[rec_type][tag]:
-                for l in ("field_name", "no_repetition", "no_subfield"):
+                for l in ("field_name", "is_multi_val", "is_composite_val"):
                     recs[rec_type][tag][l] = row.get(l) or ""
                 recs[rec_type][tag]["subfields"] = {}
             if row["subfield"]:
@@ -82,13 +82,12 @@ class ModelBuilder:
 
             field_name = tag_info.get('field_name') or tag
             subfields = tag_info.get('subfields') or {}
-            no_repetition = tag_info.get('no_repetition') or ''
-            no_subfield = tag_info.get('no_subfield') or ''
+            is_multi_val = bool(tag_info.get('is_multi_val'))
 
             comment = _get_comment(tag, tag_info)
             blocks.append(
                 _attribute_builder(
-                    field_name, tag, subfields, no_repetition, no_subfield,
+                    field_name, tag, subfields, is_multi_val,
                     comment,
                 )
             )
@@ -101,8 +100,7 @@ class ModelBuilder:
 def _get_comment(tag, tag_info):
     field_name = tag_info.get('field_name') or tag
     subfields = tag_info.get('subfields') or ''
-    no_repetition = tag_info.get('no_repetition') or ''
-    no_subfield = tag_info.get('no_subfield') or ''
+    is_multi_val = tag_info.get('is_multi_val') or ''
     name = tag_info.get('name') or field_name
     description = tag_info.get('description') or name
     rows = [
@@ -125,24 +123,22 @@ def _class_init_builder(class_name):
         f"""class {class_name}(MetaRecord):""",
         f"""""",
         f"""    def __init__(""",
-        f"""            self, record, no_repetition_tags=None, no_subfield_tags=None,""",
+        f"""            self, record, multi_val_tags=None, """,
         f"""            data_dictionary=None):""",
         f"""        super().__init__(""",
-        f"""            record, no_repetition_tags, no_subfield_tags, data_dictionary)""",
+        f"""            record, multi_val_tags, data_dictionary)""",
     ))
 
 
-def _attribute_builder(attribute_name, tag, subfields, no_repetition, no_subfield, comment=""):
+def _attribute_builder(attribute_name, tag, subfields, is_multi_val, comment=""):
     format_before_tag = ""
     virg_and_new_line = ",\n" + " "*12
 
     optional_params = {}
     if subfields:
         optional_params["subfields"] = subfields
-    if no_repetition:
-        optional_params["no_repetition"] = True
-    if no_subfield:
-        optional_params["no_subfield"] = True
+    optional_params["single"] = not is_multi_val
+    optional_params["simple"] = not subfields
 
     params = [f'"{tag}"']
     if optional_params:

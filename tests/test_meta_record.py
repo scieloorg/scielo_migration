@@ -79,40 +79,40 @@ class TestMetaRecord(TestCase):
             "v010", "authors", subfields)
         self.assertEqual(expected, result)
 
-    def test_get_named_field_returns_v882_with_no_repetition(self):
+    def test_get_named_field_returns_v882_with_single(self):
         expected = {"v882": {"v": "49", "n": "3"}}
         result = self.meta_record.get_named_field(
-            "v882", no_repetition=True)
+            "v882", single=True)
         self.assertEqual(expected, result)
 
-    def test_get_named_field_returns_v882_with_no_repetition_as_False(self):
+    def test_get_named_field_returns_v882_with_single_as_False(self):
         expected = {"v882": [{"v": "49", "n": "3"}]}
         result = self.meta_record.get_named_field(
-            "v882", no_repetition=False)
+            "v882", single=False)
         self.assertEqual(expected, result)
 
-    def test_get_named_field_returns_v004_with_no_subfield_as_True(self):
+    def test_get_named_field_returns_v004_with_simple_as_True(self):
         expected = {"v004": ["v49n3"]}
         result = self.meta_record.get_named_field(
-            "v004", no_subfield=True)
+            "v004", simple=True)
         self.assertEqual(expected, result)
 
-    def test_get_named_field_returns_v004_with_no_subfield_as_False(self):
+    def test_get_named_field_returns_v004_with_simple_as_False(self):
         expected = {"v004": [{"_": "v49n3"}]}
         result = self.meta_record.get_named_field(
-            "v004", no_subfield=False)
+            "v004", simple=False)
         self.assertEqual(expected, result)
 
-    def test_get_named_field_returns_v004_with_no_subfield_as_True_and_no_repetition_as_True(self):
+    def test_get_named_field_returns_v004_with_simple_as_True_and_single_as_True(self):
         expected = {"v004": "v49n3"}
         result = self.meta_record.get_named_field(
-            "v004", no_repetition=True, no_subfield=True)
+            "v004", single=True, simple=True)
         self.assertEqual(expected, result)
 
-    def test_get_named_field_returns_v005_with_no_subfield_as_True(self):
+    def test_get_named_field_returns_v005_with_simple_as_True(self):
         expected = {"v005": ["xxxx", "xxyz"]}
         result = self.meta_record.get_named_field(
-            "v005", no_subfield=True)
+            "v005", simple=True)
         self.assertEqual(expected, result)
 
     def test_get_record_subset_as_dict(self):
@@ -126,12 +126,12 @@ class TestMetaRecord(TestCase):
             },
             "v005": {
                 "field_name": "codigos",
-                "no_subfield": True,
+                "simple": True,
             },
             "v706": {
                 "field_name": "rec_tp",
-                "no_subfield": True,
-                "no_repetition": True,
+                "simple": True,
+                "single": True,
             },
             "v880": {
                 "field_name": "PID",
@@ -139,28 +139,30 @@ class TestMetaRecord(TestCase):
         }
         retorna somente as tags indicadas no `data_dict` e retorna os dados
         de acordo com os parâmetros indicados no `data_dict`, ou seja,
-        `field_name`, `subfields`, `no_subfield`, `no_repetition`
+        `field_name`, `subfields`, `simple`, `single`
         """
         data_dict = {
             "v003": {
                 "field_name": "resumo",
                 "subfields": {"_": "texto", "l": "idioma"},
+                "is_multi_val": True,
             },
             "v010": {
                 "field_name": "autores",
                 "subfields": {"n": "nome"},
+                "is_multi_val": True,
             },
             "v005": {
                 "field_name": "codigos",
-                "no_subfield": True,
+                "is_multi_val": True,
             },
             "v706": {
                 "field_name": "rec_tp",
-                "no_subfield": True,
-                "no_repetition": True,
             },
             "v880": {
                 "field_name": "PID",
+                "is_multi_val": True,
+                "subfields": {"_": "_"},
             },
         }
         expected = {
@@ -196,7 +198,9 @@ class TestMetaRecord(TestCase):
             "v010": {
                 "field_name": "autores",
                 "subfields": {"n": "nome"},
-            }
+                "is_multi_val": True,
+            },
+
         }
         expected = {
             "v003": [{"_": "bla", "l": "en"}],
@@ -235,6 +239,7 @@ class TestMetaRecord(TestCase):
                 "subfields": {
                     "n": "name", "s": "surname", "1": "affs", "k": "orcid",
                 },
+                "is_multi_val": True,
             }
         }
         expected = {

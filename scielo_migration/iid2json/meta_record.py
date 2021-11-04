@@ -12,12 +12,11 @@ def build_object(obj, record_as_dict):
 class MetaRecord:
 
     def __init__(self, record,
-                 no_repetition_tags=None, no_subfield_tags=None,
+                 multi_val_tags=None,
                  data_dictionary=None,
                  ):
         self._record = record
-        self._no_repetition_tags = no_repetition_tags or []
-        self._no_subfield_tags = no_subfield_tags or []
+        self._multi_val_tags = multi_val_tags or []
         self._data_dictionary = data_dictionary or {}
 
     @property
@@ -27,7 +26,7 @@ class MetaRecord:
         except:
             return
 
-    def get_simple_content(self, tag):
+    def get_single_value(self, tag):
         """
         Retorna o conteúdo do campo `tag` que não se repete e não tem subcampo
         """
@@ -36,7 +35,7 @@ class MetaRecord:
         except (KeyError, IndexError):
             return
 
-    def get_multi_content(self, tag):
+    def get_multi_value(self, tag):
         """
         Retorna o conteúdo do campo `tag` que se repete e não tem subcampo
         """
@@ -46,7 +45,7 @@ class MetaRecord:
             return
 
     def get_field_content(self, tag, subfields=None,
-                          no_repetition=False, no_subfield=False):
+                          single=False, simple=False):
         """
         Retorna o conteúdo do campo `tag`. Usa `subfields` para traduzir
         os subcampos do ISIS em nomes mais expressivos
@@ -66,9 +65,9 @@ class MetaRecord:
                     "r": "role",
                 }
                 ```
-        no_repetition: bool
+        single: bool
             `True` returns one occurrence, False returns `list`
-        no_subfield: bool
+        simple: bool
             `True` returns `value` instead of `{"_": value}`
 
         Returns
@@ -82,15 +81,15 @@ class MetaRecord:
         ]
         ```
         """
-        no_repetition = no_repetition or tag in self._no_repetition_tags
-        no_subfield = no_subfield or tag in self._no_subfield_tags
+        if tag in self._multi_val_tags:
+            single = False
 
         try:
-            if no_subfield and no_repetition:
+            if simple and single:
                 return self._record[tag][0]["_"]
-            elif no_repetition:
+            elif single:
                 return self._record[tag][0]
-            elif no_subfield:
+            elif simple:
                 return [item["_"] for item in self._record[tag]]
         except (IndexError, KeyError):
             pass
@@ -140,7 +139,7 @@ class MetaRecord:
         }
 
     def get_named_field(self, tag, field_name=None, subfields=None,
-                        no_repetition=False, no_subfield=False):
+                        single=False, simple=False):
         """
         Retorna o conteúdo do campo `tag` em formato `dict`
 
@@ -161,9 +160,9 @@ class MetaRecord:
                     "r": "role",
                 }
                 ```
-        no_repetition: bool
+        single: bool
             `True` returns one occurrence, False returns `list`
-        no_subfield: bool
+        simple: bool
             `True` returns `value` instead of `{"_": value}`
 
         Returns
@@ -180,7 +179,7 @@ class MetaRecord:
         return {
             field_name or tag:
             self.get_field_content(
-                tag, subfields, no_repetition, no_subfield)
+                tag, subfields, single, simple)
         }
 
     def get_record_subset_as_dict(self, data_dict):
@@ -198,7 +197,7 @@ class MetaRecord:
         dict
             ```
             {"tag": {"field_name": "authors", "subfields": {},
-                     "no_repetition": True, "no_subfield": True}}
+                     "single": True, "simple": True}}
             ```
         """
         if not data_dict:
@@ -206,18 +205,18 @@ class MetaRecord:
                 """ERROR: MetaRecord.get_record_subset_as_dict requires  """
                 """`data_dict` as dictionary such as """
                 """{"tag": {"field_name": "authors", "subfields": {},"""
-                """ "no_repetition": True, "no_subfield": True} }"""
+                """ "single": True, "simple": True} }"""
             )
 
         record = {}
         for tag, template in data_dict.items():
             field_name = template.get("field_name") or tag
             subfields = template.get("subfields") or {}
-            no_repetition = template.get("no_repetition") or False
-            no_subfield = template.get("no_subfield") or False
+            single = not template.get("is_multi_val")
+            simple = not subfields
             record.update(
                 self.get_named_field(
-                    tag, field_name, subfields, no_repetition, no_subfield,
+                    tag, field_name, subfields, single, simple,
                 )
             )
         return record
@@ -238,7 +237,7 @@ class MetaRecord:
         dict
             ```
             {"tag": {"field_name": "authors", "subfields": {},
-                     "no_repetition": True, "no_subfield": True}}
+                     "single": True, "simple": True}}
             ```
         """
         data_dict = data_dict or self._data_dictionary
@@ -253,16 +252,16 @@ class MetaRecord:
                 # print(tag, data_dict.keys())
                 field_name = tag
                 subfields = {}
-                no_repetition = False
-                no_subfield = False
+                single = False
+                simple = False
             else:
                 field_name = template.get("field_name") or tag
                 subfields = template.get("subfields") or {}
-                no_repetition = template.get("no_repetition") or False
-                no_subfield = template.get("no_subfield") or False
+                single = not template.get("is_multi_val")
+                simple = not subfields
             record.update(
                 self.get_named_field(
-                    tag, field_name, subfields, no_repetition, no_subfield,
+                    tag, field_name, subfields, single, simple,
                 )
             )
         return record
