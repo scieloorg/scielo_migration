@@ -166,6 +166,40 @@ def main():
     subparsers = parser.add_subparsers(
         title="Commands", metavar="", dest="command")
 
+    generate_model_parser = subparsers.add_parser(
+        "generate_model",
+        help=(
+            "Generate model"
+        )
+    )
+
+    generate_model_parser.add_argument(
+        "isis_records_defs_csv_file_path",
+        help=(
+            "CSV file path which contains ISIS Records definitions"
+        )
+    )
+
+    generate_model_parser.add_argument(
+        "record_type",
+        help=(
+            "record type"
+        )
+    )
+
+    generate_model_parser.add_argument(
+        "class_name",
+        help=(
+            "class name"
+        )
+    )
+
+    generate_model_parser.add_argument(
+        "class_file_path",
+        help=(
+            "module file"
+        )
+    )
     generate_json_data_dictionary_parser = subparsers.add_parser(
         "generate_json_data_dictionary",
         help=(
@@ -203,21 +237,21 @@ def main():
     generate_module_parser.add_argument(
         "record_type",
         help=(
-            "output file"
+            "record type"
         )
     )
 
     generate_module_parser.add_argument(
         "class_name",
         help=(
-            "output file"
+            "class name"
         )
     )
 
     generate_module_parser.add_argument(
         "class_file_path",
         help=(
-            "output file"
+            "module file"
         )
     )
 
@@ -228,6 +262,20 @@ def main():
     elif args.command == "generate_module_py":
         with open(args.data_dictionary_json_file_path) as fp:
             data_dict = json.loads(fp.read())
+        builder = ModelBuilder(args.class_name, data_dict[args.record_type])
+        builder.create_module(args.class_file_path)
+        builder.add_class(args.class_file_path)
+    elif args.command == "generate_model":
+        builder = DataDictionaryBuilder(args.isis_records_defs_csv_file_path)
+
+        data_dictionary_json_file_path, ext = (
+            os.path.splitext(args.isis_records_defs_csv_file_path)
+        )
+        data_dictionary_json_file_path += ".json"
+        builder.save(data_dictionary_json_file_path)
+        with open(data_dictionary_json_file_path) as fp:
+            data_dict = json.loads(fp.read())
+
         builder = ModelBuilder(args.class_name, data_dict[args.record_type])
         builder.create_module(args.class_file_path)
         builder.add_class(args.class_file_path)
