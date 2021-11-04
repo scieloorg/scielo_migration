@@ -17,7 +17,7 @@ class DataDictionaryBuilder:
 
     def __init__(self, file_path):
         self._file_path = file_path
-        self._grouped_by_rec_and_tag = None
+        self._grouped_by_rec_and_field = None
 
     def _read(self):
         with open(self._file_path, newline='') as csvfile:
@@ -26,46 +26,48 @@ class DataDictionaryBuilder:
             for row in reader:
                 yield row
 
-    def _group_by_rec_and_tag(self):
+    def _group_by_rec_and_field(self):
         recs = {}
         for row in self._read():
             rec_type = row["record"]
             tag_number = row["tag"]
             tag = "v" + tag_number.zfill(3)
+
+            field = tag
             recs[rec_type] = recs.get(rec_type) or {}
-            recs[rec_type][tag] = recs[rec_type].get(tag) or {}
-            if not recs[rec_type][tag]:
-                recs[rec_type][tag]["field_name"] = row.get("field_name") or ""
-                recs[rec_type][tag]["subfields"] = {}
+            recs[rec_type][field] = recs[rec_type].get(field) or {}
+            if not recs[rec_type][field]:
+                recs[rec_type][field]["field_name"] = row.get("field_name") or ""
+                recs[rec_type][field]["subfields"] = {}
 
             if row["subfield"]:
-                recs[rec_type][tag]["subfields"].update(
+                recs[rec_type][field]["subfields"].update(
                     {row["subfield"]: row["subfield_name"]}
                 )
             for l in ("multi_val", "composite"):
                 # assume que o campo composto tender a ser
                 # também multivalorado (nem sempre é)
-                recs[rec_type][tag][f"is_{l}"] = bool(
-                    recs[rec_type][tag].get(l) or
-                    recs[rec_type][tag]["subfields"] or
+                recs[rec_type][field][f"is_{l}"] = bool(
+                    recs[rec_type][field].get(l) or
+                    recs[rec_type][field]["subfields"] or
                     row.get(l) or
                     row["subfield"] or
                     row["subfield_name"]
                 )
-            recs[rec_type][tag]["name"] = row.get("name") or ""
-            recs[rec_type][tag]["description"] = row.get("description") or ""
-        self._grouped_by_rec_and_tag = recs
+            recs[rec_type][field]["name"] = row.get("name") or ""
+            recs[rec_type][field]["description"] = row.get("description") or ""
+        self._grouped_by_rec_and_field = recs
 
     @property
     def data_dictionary(self):
-        if not self._grouped_by_rec_and_tag:
+        if not self._grouped_by_rec_and_field:
             self._group_by_rec_and_tag()
-        return self._grouped_by_rec_and_tag or {}
+        return self._grouped_by_rec_and_field or {}
 
     def get_record_data_dictionary(self, rec_type):
-        if not self._grouped_by_rec_and_tag:
+        if not self._grouped_by_rec_and_field:
             self._group_by_rec_and_tag()
-        return self._grouped_by_rec_and_tag.get(rec_type) or {}
+        return self._grouped_by_rec_and_field.get(rec_type) or {}
 
     def save(self, output_json_file_path):
         with open(output_json_file_path, "w") as fp:
