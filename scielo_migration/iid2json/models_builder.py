@@ -7,7 +7,7 @@ import json
 BUILDER_CSV_FIELD_NAMES = [
     'record',
     'tag', 'subfield', 'subfield_name',
-    'is_multi_val', 'is_composite_val',
+    'multi_val', 'composite',
     'field_name',
     'name', 'description',
 ]
@@ -35,12 +35,22 @@ class DataDictionaryBuilder:
             recs[rec_type] = recs.get(rec_type) or {}
             recs[rec_type][tag] = recs[rec_type].get(tag) or {}
             if not recs[rec_type][tag]:
-                for l in ("field_name", "is_multi_val", "is_composite_val"):
-                    recs[rec_type][tag][l] = row.get(l) or ""
+                recs[rec_type][tag]["field_name"] = row.get("field_name") or ""
                 recs[rec_type][tag]["subfields"] = {}
+
             if row["subfield"]:
                 recs[rec_type][tag]["subfields"].update(
                     {row["subfield"]: row["subfield_name"]}
+                )
+            for l in ("multi_val", "composite"):
+                # assume que o campo composto tender a ser
+                # também multivalorado (nem sempre é)
+                recs[rec_type][tag][f"is_{l}"] = bool(
+                    recs[rec_type][tag].get(l) or
+                    recs[rec_type][tag]["subfields"] or
+                    row.get(l) or
+                    row["subfield"] or
+                    row["subfield_name"]
                 )
         self._grouped_by_rec_and_tag = recs
 
