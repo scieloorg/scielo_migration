@@ -54,6 +54,7 @@ class DataDictionaryBuilder:
                     row["subfield"] or
                     row["subfield_name"]
                 )
+            recs[rec_type][field]["tag"] = tag
             recs[rec_type][field]["name"] = row.get("name") or ""
             recs[rec_type][field]["description"] = row.get("description") or ""
         self._grouped_by_rec_and_field = recs
@@ -88,12 +89,13 @@ class ModelBuilder:
         blocks = [
             _class_init_builder(f"{self._class_name}"),
         ]
-        for tag, tag_info in self._data_dictionary.keys():
+        for group_name, tag_info in sorted(self._data_dictionary.items(), key=lambda x: x[1]['tag']):
             subfields = tag_info.get('subfields') or {}
             if subfields:
                 if len(subfields) == 1 and "_" in subfields.keys() and not subfields["_"]:
                     tag_info["subfields"] = None
 
+            tag = tag_info.get('tag')
             field_name = tag_info.get('field_name') or tag
             subfields = tag_info.get('subfields') or {}
             is_multi_val = bool(tag_info.get('is_multi_val'))
@@ -117,17 +119,18 @@ def _get_comment(tag, tag_info):
     is_multi_val = tag_info.get('is_multi_val') or ''
     name = tag_info.get('name') or field_name
     description = tag_info.get('description') or name
+    return_type = "dict" if subfields else "str"
+    return_subfields = subfields and {v: "" for k, v in subfields.items()}
     rows = [
         '',
         '"""',
         f"{description}",
-        "",
         f"{tag} {subfields}",
         '"""',
     ]
     comment_rows = []
     for row in rows[1:]:
-        comment_rows.append(" "*8 + row.strip() if row else '')
+        comment_rows.append(" "*8 + row.rstrip() if row else '')
     return "\n".join(comment_rows)
 
 
