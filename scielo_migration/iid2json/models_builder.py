@@ -83,7 +83,7 @@ class ModelBuilder:
 
     def create_module(self, class_file_path):
         with open(class_file_path, "w") as fp:
-            fp.write("from scielo_migratin.iid2json.meta_record import MetaRecord\n\n")
+            fp.write("from scielo_migration.iid2json.meta_record import MetaRecord\n\n")
 
     def add_class(self, class_file_path):
         blocks = [
