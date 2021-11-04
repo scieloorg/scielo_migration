@@ -33,7 +33,7 @@ class DataDictionaryBuilder:
             tag_number = row["tag"]
             tag = "v" + tag_number.zfill(3)
 
-            field = tag
+            field = row["field_name"]
             recs[rec_type] = recs.get(rec_type) or {}
             recs[rec_type][field] = recs[rec_type].get(field) or {}
             if not recs[rec_type][field]:
@@ -61,12 +61,12 @@ class DataDictionaryBuilder:
     @property
     def data_dictionary(self):
         if not self._grouped_by_rec_and_field:
-            self._group_by_rec_and_tag()
+            self._group_by_rec_and_field()
         return self._grouped_by_rec_and_field or {}
 
     def get_record_data_dictionary(self, rec_type):
         if not self._grouped_by_rec_and_field:
-            self._group_by_rec_and_tag()
+            self._group_by_rec_and_field()
         return self._grouped_by_rec_and_field.get(rec_type) or {}
 
     def save(self, output_json_file_path):
