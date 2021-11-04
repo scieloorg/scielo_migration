@@ -52,6 +52,8 @@ class DataDictionaryBuilder:
                     row["subfield"] or
                     row["subfield_name"]
                 )
+            recs[rec_type][tag]["name"] = row.get("name") or ""
+            recs[rec_type][tag]["description"] = row.get("description") or ""
         self._grouped_by_rec_and_tag = recs
 
     @property
@@ -84,7 +86,7 @@ class ModelBuilder:
         blocks = [
             _class_init_builder(f"{self._class_name}"),
         ]
-        for tag, tag_info in self._data_dictionary.items():
+        for tag, tag_info in self._data_dictionary.keys():
             subfields = tag_info.get('subfields') or {}
             if subfields:
                 if len(subfields) == 1 and "_" in subfields.keys() and not subfields["_"]:
@@ -141,28 +143,27 @@ def _class_init_builder(class_name):
 
 
 def _attribute_builder(attribute_name, tag, subfields, is_multi_val, comment=""):
-    format_before_tag = ""
-    virg_and_new_line = ",\n" + " "*12
+    indent = "\n" + " "*12
 
     optional_params = {}
-    if subfields:
-        optional_params["subfields"] = subfields
+    optional_params["subfields"] = subfields or {}
     optional_params["single"] = not is_multi_val
     optional_params["simple"] = not subfields
 
-    params = [f'"{tag}"']
+    params = [f'{indent}"{tag}"']
     if optional_params:
         params.extend(
-            [f"{name}={value}" for name, value in optional_params.items()])
-        format_before_tag = "\n" + " "*12
-    params = virg_and_new_line.join(params)
+            [f"{indent}{name}={value}"
+             for name, value in optional_params.items()])
+        params.append("\n" + " "*8)
+    params = ",".join(params)
 
     return "\n".join((
         f"""""",
         f"""    @property""",
         f"""    def {attribute_name}(self):""",
         f"""{comment}""",
-        f"""        return self.get_field_content({format_before_tag}{params})""",
+        f"""        return self.get_field_content({params})""",
     ))
 
 
