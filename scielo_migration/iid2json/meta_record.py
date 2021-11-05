@@ -91,7 +91,7 @@ class MetaRecord:
                 return self._record[tag][0]
             elif simple:
                 return [item["_"] for item in self._record[tag]]
-        except (IndexError, KeyError):
+        except (IndexError, KeyError, TypeError):
             pass
 
         return [

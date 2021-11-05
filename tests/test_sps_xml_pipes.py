@@ -9,6 +9,7 @@ from scielo_migration.spsxml.sps_xml_pipes import (
 )
 from scielo_migration.isisdb.document import (
     Document,
+    ArticleRecord,
 )
 
 
@@ -19,7 +20,8 @@ def get_tree(xml_str):
 class TestGetXmlRsps(TestCase):
 
     def test_get_xml_rsps(self):
-        document = Document("_id", {})
+        h_record = ArticleRecord(None)
+        document = Document(h_record)
         expected = (
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
             'Journal Publishing DTD v1.0 20120330//EN" '
@@ -31,15 +33,13 @@ class TestGetXmlRsps(TestCase):
         self.assertEqual(expected, result)
 
     def test_get_xml_rsps_add_new_article_attribs(self):
-        records = [
-            {
-                "v040": [{"_": "en"}],
-                "v071": [{"_": "oa"}],
-                "v706": [{"_": "f"}],
-            }
-        ]
-
-        document = Document("_id", records)
+        record = {
+            "v040": [{"_": "en"}],
+            "v071": [{"_": "oa"}],
+            "v706": [{"_": "f"}],
+        }
+        h_record = ArticleRecord(record)
+        document = Document(h_record)
         expected = (
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
             'Journal Publishing DTD v1.0 20120330//EN" '

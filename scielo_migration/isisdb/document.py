@@ -12,6 +12,21 @@ RECORD = dict(
 
 
 class Document:
+    def __init__(self, h_record, journal=None, issue=None, citations=None):
+        self.h_record = h_record
+        self.journal = journal
+        self.issue = issue
+        self.citations = citations
+
+    def __getattr__(self, name):
+        # desta forma Document não precisa herdar de ArticleRecord
+        # fica menos acoplado
+        if hasattr(self.h_record, name):
+            return getattr(self.h_record, name)
+        raise AttributeError(name)
+
+
+class DocumentRecords:
     def __init__(self, _id, records):
         self._id = _id
         self._records = None
@@ -27,7 +42,6 @@ class Document:
         for _record in _records:
             meta_record = MetaRecord(_record)
             rec_type = meta_record.rec_type
-            print(RECORD[rec_type])
             record = RECORD[rec_type](_record)
             self._records[rec_type] = self._records.get(rec_type) or []
             self._records[rec_type].append(record)

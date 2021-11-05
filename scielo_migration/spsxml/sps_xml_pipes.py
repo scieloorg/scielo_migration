@@ -2,6 +2,9 @@
 import plumber
 from lxml import etree as ET
 
+from scielo_migration.spsxml.sps_xml_attributes import (
+    ARTICLE_TYPES,
+)
 
 def get_xml_rsps(document):
     """
@@ -71,7 +74,7 @@ class XMLArticlePipe(plumber.Pipe):
     def precond(data):
         raw, xml = data
         try:
-            if not raw.article_meta:
+            if not raw.document_type or not raw.original_language:
                 raise plumber.UnmetPrecondition()
         except AttributeError:
             raise plumber.UnmetPrecondition()
@@ -80,8 +83,8 @@ class XMLArticlePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        article_meta = raw.article_meta
-        xml.set('{http://www.w3.org/XML/1998/namespace}lang', article_meta.original_language)
-        xml.set('article-type', article_meta.document_type)
+        document_type = ARTICLE_TYPES.get_sps_value(raw.document_type)
+        xml.set('{http://www.w3.org/XML/1998/namespace}lang', raw.original_language)
+        xml.set('article-type', document_type)
 
         return data
