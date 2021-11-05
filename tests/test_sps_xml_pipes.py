@@ -7,6 +7,9 @@ from scielo_migration.spsxml.sps_xml_pipes import (
     SetupArticlePipe,
     XMLClosePipe,
 )
+from scielo_migration.isisdb.document import (
+    Document,
+)
 
 
 def get_tree(xml_str):
@@ -16,6 +19,7 @@ def get_tree(xml_str):
 class TestGetXmlRsps(TestCase):
 
     def test_get_xml_rsps(self):
+        document = Document("_id", {})
         expected = (
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
             'Journal Publishing DTD v1.0 20120330//EN" '
@@ -23,7 +27,29 @@ class TestGetXmlRsps(TestCase):
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
             'specific-use="sps-1.4" dtd-version="1.0"/>'
         ).encode("utf-8")
-        result = get_xml_rsps(None)
+        result = get_xml_rsps(document)
+        self.assertEqual(expected, result)
+
+    def test_get_xml_rsps_add_new_article_attribs(self):
+        records = [
+            {
+                "v040": [{"_": "en"}],
+                "v071": [{"_": "oa"}],
+                "v706": [{"_": "f"}],
+            }
+        ]
+
+        document = Document("_id", records)
+        expected = (
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
+            'Journal Publishing DTD v1.0 20120330//EN" '
+            '"JATS-journalpublishing1.dtd">\n'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0" '
+            'xml:lang="en" article-type="oa"'
+            '/>'
+        ).encode("utf-8")
+        result = get_xml_rsps(document)
         self.assertEqual(expected, result)
 
 
