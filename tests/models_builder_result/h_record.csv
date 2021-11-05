@@ -1,0 +1,85 @@
+record,tag,subfield,subfield_name,multi_val,composite,field_name,name,description
+article,,,,,,fulltexts,fulltexts,Fulltexts
+article,,,,,,html_url,html url,Html Url
+article,,,,,,is_ahead_of_print,is ahead of print,Is Ahead Of Print
+article,,,,,,issue,issue,Issue
+article,,,,,,issue_label,issue label,Issue Label
+article,,,,,,issue_url,issue url,Issue Url
+article,,,,,,journal,journal,Journal
+article,,,,,,mixed_affiliations,mixed affiliations,Mixed Affiliations
+article,,,,,,pdf_url,pdf url,Pdf Url
+article,,,,,,translated_htmls,translated htmls,Translated Htmls
+article,10,1,xref,,,author,author,Author
+article,10,k,orcid,,,author,author,Author
+article,10,l,lattes,,,author,author,Author
+article,10,n,given_names,,,author,author,Author
+article,10,n,given_names,,,author,author,Author
+article,10,p,prefix,,,author,author,Author
+article,10,r,role,,,author,author,Author
+article,10,s,surname,,,author,author,Author
+article,11,,,true,,corporative_authors,corporative authors,Corporative Authors
+article,112,,,,,receive_date_iso,receive date ISO,Receive Date ISO
+article,114,,,,,acceptance_date_iso,acceptance date ISO,Acceptance Date ISO
+article,116,,,,,review_date_iso,review date ISO,Review Date ISO
+article,12,s,subtitle,,,article_titles,article titles,Article Titles
+article,12,_,text,,,article_titles,article titles,Article Titles
+article,12,l,language,,,article_titles,article titles,Article Titles
+article,120,,,,,data_model_version,data model version,Data Model Version
+article,121,,,,,internal_sequence_id,internal sequence id,Internal Sequence Id
+article,121,,,,,order,order,Order
+article,14,e,elocation,,,page,Page
+article,14,f,start,,,page,Page
+article,14,l,end,,,page,Page
+article,14,s,sequence,,page,page,Page
+article,223,,,,,ahead_publication_date,ahead publication date,Ahead Publication Date
+article,223,,,,,document_publication_date,document publication date,Document Publication Date
+article,237,,,,,doi,doi,DOI
+article,240,i,id,,,normalized_affiliations,normalized affiliations,Normalized Affiliations
+article,240,p,country,,,normalized_affiliations,normalized affiliations,Normalized Affiliations
+article,337,d,doi,,,doi_with_lang,doi with lang,DOI with language
+article,337,l,language,,,doi_with_lang,doi with lang,DOI with language
+article,38,,,true,,illustrative_material,illustrative material,Illustrative Material
+article,4,,,,,assets_code,assets code,Assets Code
+article,40,,,,,original_language,original language,Original Language
+article,435,_,value,,,any_issn,any issn,Any Issn
+article,435,t,type,,,any_issn,any issn,Any Issn
+article,49,,,,,original_section,original section,Original Section
+article,49,,,,,section,section,Section
+article,49,,,,,section_code,section code,Section Code
+article,49,,,,,translated_section,translated section,Translated Section
+article,51,,,,,thesis_degree,thesis degree,Thesis Degree
+article,52,,,,,thesis_organization,thesis organization,Thesis Organization
+article,540,,,,,permissions,permissions,Permissions
+article,58,,,true,,project_sponsor,project sponsor,Project Sponsor
+article,59,,,true,,project_name,project name,Project Name
+article,60,,,true,,contract,contract,Contract
+article,601,,,true,,languages,languages,Languages
+article,601,,,true,,xml_languages,xml languages,Xml Languages
+article,65,,,,,issue_publication_date,issue publication date,Issue Publication Date
+article,65,,,,,publication_date,publication date,Publication Date
+article,690,,,,,scielo_domain,scielo domain,Scielo Domain
+article,70,1,div1,,,affiliations,affiliations,Affiliations
+article,70,2,div2,,,affiliations,affiliations,Affiliations
+article,70,3,div3,,,affiliations,affiliations,Affiliations
+article,70,_,orgname,,,affiliations,affiliations,Affiliations
+article,70,c,city,,,affiliations,affiliations,Affiliations
+article,70,e,email,,,affiliations,affiliations,Affiliations
+article,70,i,id,,,affiliations,affiliations,Affiliations
+article,70,p,country,,,affiliations,affiliations,Affiliations
+article,70,s,state,,,affiliations,affiliations,Affiliations
+article,702,,,,,file_code,file code,File Code
+article,702,,,,,original_html,original html,Original Html
+article,71,,,,,article_type,article type,Article Type
+article,71,,,,,document_type,document type,Document Type
+article,83,a,text,,,abstracts,abstracts,Abstracts
+article,83,l,language,,,abstracts,abstracts,Abstracts
+article,85,k,text,,,keywords,keywords,Keywords
+article,85,l,language,,,keywords,keywords,Keywords
+article,880,,,,,publisher_id,publisher id,Publisher Id
+article,880,,,,,scielo_pid_v2,scielo pid v2,SciELO PID v2
+article,881,,,,,publisher_ahead_id,publisher ahead id,Publisher Ahead Id
+article,885,,,,,scielo_pid_v3,scielo pid v3,SciELO PID v3
+article,91,,,,,processing_date,processing date,Processing Date
+article,91,,,,,update_date,update date,Update Date
+article,93,,,,,creation_date,creation date,Creation Date
+article,992,,,,,collection_acronym,collection acronym,Collection Acronym
