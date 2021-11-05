@@ -83,7 +83,7 @@ class XMLArticlePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        document_type = ARTICLE_TYPES.get_sps_value(raw.document_type)
+        document_type = ARTICLE_TYPES.get(raw.document_type)
         xml.set('{http://www.w3.org/XML/1998/namespace}lang', raw.original_language)
         xml.set('article-type', document_type)
 

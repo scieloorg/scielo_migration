@@ -46,7 +46,7 @@ class TestGetXmlRsps(TestCase):
             '"JATS-journalpublishing1.dtd">\n'
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
             'specific-use="sps-1.4" dtd-version="1.0" '
-            'xml:lang="en" article-type="oa"'
+            'xml:lang="en" article-type="research-article"'
             '/>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
