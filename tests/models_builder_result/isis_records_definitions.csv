@@ -1,4 +1,4 @@
-record,tag,subfield,subfield_name,no_repetition,no_subfield,field_name,name,description
+record,tag,subfield,subfield_name,multi_val,composite,field_name,name,description
 c,10,n,given_names,,,analytic_author,analytic author first name,
 c,10,1,rid,,,analytic_author,analytic author rid,
 c,10,r,role,,,analytic_author,analytic author role,
