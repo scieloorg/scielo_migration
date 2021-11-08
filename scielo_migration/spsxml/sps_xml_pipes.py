@@ -28,6 +28,7 @@ def _process(document):
     ppl = plumber.Pipeline(
             SetupArticlePipe(),
             XMLArticlePipe(),
+            XMLFrontPipe(),
             XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -86,5 +87,19 @@ class XMLArticlePipe(plumber.Pipe):
         document_type = ARTICLE_TYPES.get(raw.document_type)
         xml.set('{http://www.w3.org/XML/1998/namespace}lang', raw.original_language)
         xml.set('article-type', document_type)
+
+        return data
+
+
+class XMLFrontPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        xml.append(ET.Element('front'))
+
+        front = xml.find('front')
+        front.append(ET.Element('journal-meta'))
+        front.append(ET.Element('article-meta'))
 
         return data

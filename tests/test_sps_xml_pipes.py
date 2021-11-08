@@ -27,7 +27,9 @@ class TestGetXmlRsps(TestCase):
             'Journal Publishing DTD v1.0 20120330//EN" '
             '"JATS-journalpublishing1.dtd">\n'
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
-            'specific-use="sps-1.4" dtd-version="1.0"/>'
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front><journal-meta/><article-meta/></front>'
+            '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
         self.assertEqual(expected, result)
@@ -47,7 +49,9 @@ class TestGetXmlRsps(TestCase):
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
             'specific-use="sps-1.4" dtd-version="1.0" '
             'xml:lang="en" article-type="research-article"'
-            '/>'
+            '>'
+            '<front><journal-meta/><article-meta/></front>'
+            '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
         self.assertEqual(expected, result)
