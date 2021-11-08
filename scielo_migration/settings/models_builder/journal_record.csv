@@ -1,0 +1,67 @@
+record,tag,subfield,subfield_name,multi_val,composite,field_name,name,description
+Journal,435,_,value,,,_load_issn, load issn, Load Issn
+Journal,435,t,type,,,_load_issn, load issn, Load Issn
+Journal,541,,,,,permissions,permissions,Permissions
+Journal,699,,,,,publishing_model,publishing model,Publishing Model
+Journal,699,,,,,is_publishing_model_continuous,is publishing model continuous,Is Publishing Model Continuous
+Journal,63,,,true,,editor_address,editor address,Editor Address
+Journal,64,,,,,editor_email,editor email,Editor Email
+Journal,851,,,,,is_indexed_in_scie,is indexed in scie,Is Indexed In Scie
+Journal,852,,,,,is_indexed_in_ssci,is indexed in ssci,Is Indexed In Ssci
+Journal,853,,,,,is_indexed_in_ahci,is indexed in ahci,Is Indexed In Ahci
+Journal,330,,,,,publication_level,publication level,Publication Level
+Journal,85,,,,,controlled_vocabulary,controlled vocabulary,Controlled Vocabulary
+Journal,117,,,,,editorial_standard,editorial standard,Editorial Standard
+Journal,692,,,,,submission_url,submission url,Submission Url
+Journal,,,,,,scimago_code,scimago code,Scimago Code
+Journal,37,,,,,secs_code,secs code,Secs Code
+Journal,20,,,,,cnn_code,cnn code,Cnn Code
+Journal,301,,,,,first_year,first year,First Year
+Journal,302,,,,,first_volume,first volume,First Volume
+Journal,303,,,,,first_number,first number,First Number
+Journal,304,,,,,last_year,last year,Last Year
+Journal,305,,,,,last_volume,last volume,Last Volume
+Journal,306,,,,,last_number,last number,Last Number
+Journal,350,,,true,,languages,languages,Languages
+Journal,360,,,true,,abstract_languages,abstract languages,Abstract Languages
+Journal,992,,,,,collection_acronym,collection acronym,Collection Acronym
+Journal,690,,,,,scielo_domain,scielo domain,Scielo Domain
+Journal,,,,,,any_issn,any issn,Any Issn
+Journal,400,,,,,scielo_issn,scielo issn,Scielo Issn
+Journal,69,,,,,institutional_url,institutional url,Institutional Url
+Journal,,,,,,url,url,Url
+Journal,440,,,true,,subject_descriptors,subject descriptors,Subject Descriptors
+Journal,450,,,true,,index_coverage,index coverage,Index Coverage
+Journal,441,,,true,,subject_areas,subject areas,Subject Areas
+Journal,854,,,true,,wos_subject_areas,wos subject areas,Wos Subject Areas
+Journal,851,,,true,,wos_citation_indexes,wos citation indexes,Wos Citation Indexes
+Journal,480,,,true,,publisher_name,publisher name,Publisher Name
+Journal,490,,,,,publisher_loc,publisher loc,Publisher Loc
+Journal,490,,,,,publisher_city,publisher city,Publisher City
+Journal,320,,,,,publisher_state,publisher state,Publisher State
+Journal,610,,,,,previous_title,previous title,Previous Title
+Journal,100,,,,,title,title,Title
+Journal,710,,,,,next_title,next title,Next Title
+Journal,310,,,,,publisher_country,publisher country,Publisher Country
+Journal,110,,,,,subtitle,subtitle,Subtitle
+Journal,,,,,,fulltitle,fulltitle,Fulltitle
+Journal,421,,,,,title_nlm,title nlm,Title Nlm
+Journal,150,,,,,abbreviated_title,abbreviated title,Abbreviated Title
+Journal,151,,,,,abbreviated_iso_title,abbreviated iso title,Abbreviated Iso Title
+Journal,68,,,,,acronym,acronym,Acronym
+Journal,380,,,,,periodicity,periodicity,Periodicity
+Journal,380,,,,,periodicity_in_months,periodicity in months,Periodicity In Months
+Journal,51,a,in_date,,,status_history,status history,Status History
+Journal,51,b,in_status,,,status_history,status history,Status History
+Journal,51,c,out_date,,,status_history,status history,Status History
+Journal,51,d,out_status,,,status_history,status history,Status History
+Journal,50,,,,,current_status,current status,Current Status
+Journal,940,,,,,creation_date,creation date,Creation Date
+Journal,941,,,,,update_date,update date,Update Date
+Journal,941,,,,,processing_date,processing date,Processing Date
+Journal,901,_,text,,,mission,mission,Mission
+Journal,901,l,language,,,mission,mission,Mission
+Journal,62,,,,,copyrighter,copyrighter,Copyrighter
+Journal,230,,,true,,parallel_titles,parallel titles,Parallel Titles - official titles in other languages 
+Journal,240,,,true,,other_titles,other titles,Other Titles - alternative titles, differents forms
+Journal,140,,,true,,sponsors,sponsors,Sponsors
