@@ -7,9 +7,13 @@ from scielo_migration.spsxml.sps_xml_pipes import (
     SetupArticlePipe,
     XMLClosePipe,
 )
-from scielo_migration.isisdb.document import (
+from scielo_migration.isisdb.journal_record import (
+    JournalRecord,
+)
+from scielo_migration.isisdb.models import (
     Document,
     ArticleRecord,
+    Journal,
 )
 
 
@@ -17,18 +21,32 @@ def get_tree(xml_str):
     return etree.fromstring(xml_str)
 
 
+def _get_journal():
+    record = {
+        "v068": [{"_": "jacron"}],
+    }
+    journal_record = JournalRecord(record)
+    return Journal(journal_record)
+
+
 class TestGetXmlRsps(TestCase):
 
     def test_get_xml_rsps(self):
         h_record = ArticleRecord(None)
-        document = Document(h_record)
+        journal = _get_journal()
+        document = Document(h_record, journal)
         expected = (
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
             'Journal Publishing DTD v1.0 20120330//EN" '
             '"JATS-journalpublishing1.dtd">\n'
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
             'specific-use="sps-1.4" dtd-version="1.0">'
-            '<front><journal-meta/><article-meta/></front>'
+            '<front>'
+            '<journal-meta>'
+            '<journal-id journal-id-type="publisher-id">jacron</journal-id>'
+            '</journal-meta>'
+            '<article-meta/>'
+            '</front>'
             '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
@@ -41,7 +59,8 @@ class TestGetXmlRsps(TestCase):
             "v706": [{"_": "f"}],
         }
         h_record = ArticleRecord(record)
-        document = Document(h_record)
+        journal = _get_journal()
+        document = Document(h_record, journal)
         expected = (
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
             'Journal Publishing DTD v1.0 20120330//EN" '
@@ -50,7 +69,12 @@ class TestGetXmlRsps(TestCase):
             'specific-use="sps-1.4" dtd-version="1.0" '
             'xml:lang="en" article-type="research-article"'
             '>'
-            '<front><journal-meta/><article-meta/></front>'
+            '<front>'
+            '<journal-meta>'
+            '<journal-id journal-id-type="publisher-id">jacron</journal-id>'
+            '</journal-meta>'
+            '<article-meta/>'
+            '</front>'
             '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)

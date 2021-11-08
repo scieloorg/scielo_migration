@@ -6,6 +6,7 @@ from scielo_migration.spsxml.sps_xml_attributes import (
     ARTICLE_TYPES,
 )
 
+
 def get_xml_rsps(document):
     """
     Obtém XML
@@ -29,6 +30,7 @@ def _process(document):
             SetupArticlePipe(),
             XMLArticlePipe(),
             XMLFrontPipe(),
+            XMLJournalMetaJournalIdPipe(),
             XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -101,5 +103,21 @@ class XMLFrontPipe(plumber.Pipe):
         front = xml.find('front')
         front.append(ET.Element('journal-meta'))
         front.append(ET.Element('article-meta'))
+
+        return data
+
+
+class XMLJournalMetaJournalIdPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        journal_meta = xml.find('./front/journal-meta')
+
+        journalid = ET.Element('journal-id')
+        journalid.text = raw.journal.acronym
+        journalid.set('journal-id-type', 'publisher-id')
+
+        journal_meta.append(journalid)
 
         return data
