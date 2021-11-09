@@ -11,6 +11,18 @@ RECORD = dict(
 )
 
 
+class Journal:
+    def __init__(self, journal_record):
+        self.journal_record = journal_record
+
+    def __getattr__(self, name):
+        # desta forma Journal não precisa herdar de JournalRecord
+        # fica menos acoplado
+        if hasattr(self.journal_record, name):
+            return getattr(self.journal_record, name)
+        raise AttributeError(name)
+
+
 class Document:
     def __init__(self, h_record, journal=None, issue=None, citations=None):
         self.h_record = h_record

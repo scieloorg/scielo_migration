@@ -1,0 +1,577 @@
+{
+  "record": {
+    "field_name": {
+      "field_name": "field_name",
+      "subfields": {
+        "subfield": "subfield_name"
+      },
+      "is_multi_val": true,
+      "is_composite": true,
+      "tag": "vtag",
+      "name": "name",
+      "description": "description"
+    }
+  },
+  "Journal": {
+    "_load_issn": {
+      "field_name": "_load_issn",
+      "subfields": {
+        "_": "value",
+        "t": "type"
+      },
+      "is_multi_val": true,
+      "is_composite": true,
+      "tag": "v435",
+      "name": " load issn",
+      "description": " Load Issn"
+    },
+    "permissions": {
+      "field_name": "permissions",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v541",
+      "name": "permissions",
+      "description": "Permissions"
+    },
+    "publishing_model": {
+      "field_name": "publishing_model",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v699",
+      "name": "publishing model",
+      "description": "Publishing Model"
+    },
+    "is_publishing_model_continuous": {
+      "field_name": "is_publishing_model_continuous",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v699",
+      "name": "is publishing model continuous",
+      "description": "Is Publishing Model Continuous"
+    },
+    "editor_address": {
+      "field_name": "editor_address",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v063",
+      "name": "editor address",
+      "description": "Editor Address"
+    },
+    "editor_email": {
+      "field_name": "editor_email",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v064",
+      "name": "editor email",
+      "description": "Editor Email"
+    },
+    "is_indexed_in_scie": {
+      "field_name": "is_indexed_in_scie",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v851",
+      "name": "is indexed in scie",
+      "description": "Is Indexed In Scie"
+    },
+    "is_indexed_in_ssci": {
+      "field_name": "is_indexed_in_ssci",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v852",
+      "name": "is indexed in ssci",
+      "description": "Is Indexed In Ssci"
+    },
+    "is_indexed_in_ahci": {
+      "field_name": "is_indexed_in_ahci",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v853",
+      "name": "is indexed in ahci",
+      "description": "Is Indexed In Ahci"
+    },
+    "publication_level": {
+      "field_name": "publication_level",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v330",
+      "name": "publication level",
+      "description": "Publication Level"
+    },
+    "controlled_vocabulary": {
+      "field_name": "controlled_vocabulary",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v085",
+      "name": "controlled vocabulary",
+      "description": "Controlled Vocabulary"
+    },
+    "editorial_standard": {
+      "field_name": "editorial_standard",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v117",
+      "name": "editorial standard",
+      "description": "Editorial Standard"
+    },
+    "submission_url": {
+      "field_name": "submission_url",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v692",
+      "name": "submission url",
+      "description": "Submission Url"
+    },
+    "scimago_code": {
+      "field_name": "scimago_code",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v000",
+      "name": "scimago code",
+      "description": "Scimago Code"
+    },
+    "secs_code": {
+      "field_name": "secs_code",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v037",
+      "name": "secs code",
+      "description": "Secs Code"
+    },
+    "cnn_code": {
+      "field_name": "cnn_code",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v020",
+      "name": "cnn code",
+      "description": "Cnn Code"
+    },
+    "first_year": {
+      "field_name": "first_year",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v301",
+      "name": "first year",
+      "description": "First Year"
+    },
+    "first_volume": {
+      "field_name": "first_volume",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v302",
+      "name": "first volume",
+      "description": "First Volume"
+    },
+    "first_number": {
+      "field_name": "first_number",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v303",
+      "name": "first number",
+      "description": "First Number"
+    },
+    "last_year": {
+      "field_name": "last_year",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v304",
+      "name": "last year",
+      "description": "Last Year"
+    },
+    "last_volume": {
+      "field_name": "last_volume",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v305",
+      "name": "last volume",
+      "description": "Last Volume"
+    },
+    "last_number": {
+      "field_name": "last_number",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v306",
+      "name": "last number",
+      "description": "Last Number"
+    },
+    "languages": {
+      "field_name": "languages",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v350",
+      "name": "languages",
+      "description": "Languages"
+    },
+    "abstract_languages": {
+      "field_name": "abstract_languages",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v360",
+      "name": "abstract languages",
+      "description": "Abstract Languages"
+    },
+    "collection_acronym": {
+      "field_name": "collection_acronym",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v992",
+      "name": "collection acronym",
+      "description": "Collection Acronym"
+    },
+    "scielo_domain": {
+      "field_name": "scielo_domain",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v690",
+      "name": "scielo domain",
+      "description": "Scielo Domain"
+    },
+    "any_issn": {
+      "field_name": "any_issn",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v000",
+      "name": "any issn",
+      "description": "Any Issn"
+    },
+    "scielo_issn": {
+      "field_name": "scielo_issn",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v400",
+      "name": "scielo issn",
+      "description": "Scielo Issn"
+    },
+    "institutional_url": {
+      "field_name": "institutional_url",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v069",
+      "name": "institutional url",
+      "description": "Institutional Url"
+    },
+    "url": {
+      "field_name": "url",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v000",
+      "name": "url",
+      "description": "Url"
+    },
+    "subject_descriptors": {
+      "field_name": "subject_descriptors",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v440",
+      "name": "subject descriptors",
+      "description": "Subject Descriptors"
+    },
+    "index_coverage": {
+      "field_name": "index_coverage",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v450",
+      "name": "index coverage",
+      "description": "Index Coverage"
+    },
+    "subject_areas": {
+      "field_name": "subject_areas",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v441",
+      "name": "subject areas",
+      "description": "Subject Areas"
+    },
+    "wos_subject_areas": {
+      "field_name": "wos_subject_areas",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v854",
+      "name": "wos subject areas",
+      "description": "Wos Subject Areas"
+    },
+    "wos_citation_indexes": {
+      "field_name": "wos_citation_indexes",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v851",
+      "name": "wos citation indexes",
+      "description": "Wos Citation Indexes"
+    },
+    "publisher_name": {
+      "field_name": "publisher_name",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v480",
+      "name": "publisher name",
+      "description": "Publisher Name"
+    },
+    "publisher_loc": {
+      "field_name": "publisher_loc",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v490",
+      "name": "publisher loc",
+      "description": "Publisher Loc"
+    },
+    "publisher_city": {
+      "field_name": "publisher_city",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v490",
+      "name": "publisher city",
+      "description": "Publisher City"
+    },
+    "publisher_state": {
+      "field_name": "publisher_state",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v320",
+      "name": "publisher state",
+      "description": "Publisher State"
+    },
+    "previous_title": {
+      "field_name": "previous_title",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v610",
+      "name": "previous title",
+      "description": "Previous Title"
+    },
+    "title": {
+      "field_name": "title",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v100",
+      "name": "title",
+      "description": "Title"
+    },
+    "next_title": {
+      "field_name": "next_title",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v710",
+      "name": "next title",
+      "description": "Next Title"
+    },
+    "publisher_country": {
+      "field_name": "publisher_country",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v310",
+      "name": "publisher country",
+      "description": "Publisher Country"
+    },
+    "subtitle": {
+      "field_name": "subtitle",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v110",
+      "name": "subtitle",
+      "description": "Subtitle"
+    },
+    "fulltitle": {
+      "field_name": "fulltitle",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v000",
+      "name": "fulltitle",
+      "description": "Fulltitle"
+    },
+    "title_nlm": {
+      "field_name": "title_nlm",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v421",
+      "name": "title nlm",
+      "description": "Title Nlm"
+    },
+    "abbreviated_title": {
+      "field_name": "abbreviated_title",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v150",
+      "name": "abbreviated title",
+      "description": "Abbreviated Title"
+    },
+    "abbreviated_iso_title": {
+      "field_name": "abbreviated_iso_title",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v151",
+      "name": "abbreviated iso title",
+      "description": "Abbreviated Iso Title"
+    },
+    "acronym": {
+      "field_name": "acronym",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v068",
+      "name": "acronym",
+      "description": "Acronym"
+    },
+    "periodicity": {
+      "field_name": "periodicity",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v380",
+      "name": "periodicity",
+      "description": "Periodicity"
+    },
+    "periodicity_in_months": {
+      "field_name": "periodicity_in_months",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v380",
+      "name": "periodicity in months",
+      "description": "Periodicity In Months"
+    },
+    "status_history": {
+      "field_name": "status_history",
+      "subfields": {
+        "a": "in_date",
+        "b": "in_status",
+        "c": "out_date",
+        "d": "out_status"
+      },
+      "is_multi_val": true,
+      "is_composite": true,
+      "tag": "v051",
+      "name": "status history",
+      "description": "Status History"
+    },
+    "current_status": {
+      "field_name": "current_status",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v050",
+      "name": "current status",
+      "description": "Current Status"
+    },
+    "creation_date": {
+      "field_name": "creation_date",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v940",
+      "name": "creation date",
+      "description": "Creation Date"
+    },
+    "update_date": {
+      "field_name": "update_date",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v941",
+      "name": "update date",
+      "description": "Update Date"
+    },
+    "processing_date": {
+      "field_name": "processing_date",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v941",
+      "name": "processing date",
+      "description": "Processing Date"
+    },
+    "mission": {
+      "field_name": "mission",
+      "subfields": {
+        "_": "text",
+        "l": "language"
+      },
+      "is_multi_val": true,
+      "is_composite": true,
+      "tag": "v901",
+      "name": "mission",
+      "description": "Mission"
+    },
+    "copyrighter": {
+      "field_name": "copyrighter",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v062",
+      "name": "copyrighter",
+      "description": "Copyrighter"
+    },
+    "parallel_titles": {
+      "field_name": "parallel_titles",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v230",
+      "name": "parallel titles",
+      "description": "Parallel Titles - official titles in other languages "
+    },
+    "other_titles": {
+      "field_name": "other_titles",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v240",
+      "name": "other titles",
+      "description": "Other Titles - alternative titles"
+    },
+    "sponsors": {
+      "field_name": "sponsors",
+      "subfields": {},
+      "is_multi_val": true,
+      "is_composite": false,
+      "tag": "v140",
+      "name": "sponsors",
+      "description": "Sponsors"
+    }
+  }
+}
