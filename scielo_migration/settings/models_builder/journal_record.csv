@@ -1,6 +1,6 @@
 record,tag,subfield,subfield_name,multi_val,composite,field_name,name,description
-Journal,435,_,value,,,_load_issn, load issn, Load Issn
-Journal,435,t,type,,,_load_issn, load issn, Load Issn
+Journal,435,_,value,,,issns,ISSNs,ISSNs
+Journal,435,t,type,,,issns,ISSNs,ISSNs
 Journal,541,,,,,permissions,permissions,Permissions
 Journal,699,,,,,publishing_model,publishing model,Publishing Model
 Journal,699,,,,,is_publishing_model_continuous,is publishing model continuous,Is Publishing Model Continuous
