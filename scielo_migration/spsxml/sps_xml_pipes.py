@@ -31,6 +31,7 @@ def _process(document):
             XMLArticlePipe(),
             XMLFrontPipe(),
             XMLJournalMetaJournalIdPipe(),
+            XMLJournalMetaJournalTitleGroupPipe(),
             XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -119,5 +120,25 @@ class XMLJournalMetaJournalIdPipe(plumber.Pipe):
         journalid.set('journal-id-type', 'publisher-id')
 
         journal_meta.append(journalid)
+
+        return data
+
+
+class XMLJournalMetaJournalTitleGroupPipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+
+        journaltitle = ET.Element('journal-title')
+        journaltitle.text = raw.journal.title
+
+        journalabbrevtitle = ET.Element('abbrev-journal-title')
+        journalabbrevtitle.text = raw.journal.abbreviated_title
+        journalabbrevtitle.set('abbrev-type', 'publisher')
+
+        journaltitlegroup = ET.Element('journal-title-group')
+        journaltitlegroup.append(journaltitle)
+        journaltitlegroup.append(journalabbrevtitle)
+
+        xml.find('./front/journal-meta').append(journaltitlegroup)
 
         return data

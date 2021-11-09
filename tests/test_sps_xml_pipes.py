@@ -24,6 +24,8 @@ def get_tree(xml_str):
 def _get_journal():
     record = {
         "v068": [{"_": "jacron"}],
+        "v100": [{"_": "Título do Periódico"}],
+        "v150": [{"_": "Título Abreviado do Periódico"}],
     }
     journal_record = JournalRecord(record)
     return Journal(journal_record)
@@ -44,6 +46,10 @@ class TestGetXmlRsps(TestCase):
             '<front>'
             '<journal-meta>'
             '<journal-id journal-id-type="publisher-id">jacron</journal-id>'
+            '<journal-title-group>'
+            '<journal-title>Título do Periódico</journal-title>'
+            '<abbrev-journal-title abbrev-type="publisher">Título Abreviado do Periódico</abbrev-journal-title>'
+            '</journal-title-group>'
             '</journal-meta>'
             '<article-meta/>'
             '</front>'
@@ -72,6 +78,10 @@ class TestGetXmlRsps(TestCase):
             '<front>'
             '<journal-meta>'
             '<journal-id journal-id-type="publisher-id">jacron</journal-id>'
+            '<journal-title-group>'
+            '<journal-title>Título do Periódico</journal-title>'
+            '<abbrev-journal-title abbrev-type="publisher">Título Abreviado do Periódico</abbrev-journal-title>'
+            '</journal-title-group>'
             '</journal-meta>'
             '<article-meta/>'
             '</front>'
