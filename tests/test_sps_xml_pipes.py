@@ -26,6 +26,8 @@ def _get_journal():
         "v068": [{"_": "jacron"}],
         "v100": [{"_": "Título do Periódico"}],
         "v150": [{"_": "Título Abreviado do Periódico"}],
+        "v435": [{"_": "1234-5678", "t": "PRINT"}, {"_": "5678-1234", "t": "ONLIN"}, ],
+        "v150": [{"_": "Título Abreviado do Periódico"}],
     }
     journal_record = JournalRecord(record)
     return Journal(journal_record)
@@ -50,38 +52,8 @@ class TestGetXmlRsps(TestCase):
             '<journal-title>Título do Periódico</journal-title>'
             '<abbrev-journal-title abbrev-type="publisher">Título Abreviado do Periódico</abbrev-journal-title>'
             '</journal-title-group>'
-            '</journal-meta>'
-            '<article-meta/>'
-            '</front>'
-            '</article>'
-        ).encode("utf-8")
-        result = get_xml_rsps(document)
-        self.assertEqual(expected, result)
-
-    def test_get_xml_rsps_add_new_article_attribs(self):
-        record = {
-            "v040": [{"_": "en"}],
-            "v071": [{"_": "oa"}],
-            "v706": [{"_": "f"}],
-        }
-        h_record = ArticleRecord(record)
-        journal = _get_journal()
-        document = Document(h_record, journal)
-        expected = (
-            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
-            'Journal Publishing DTD v1.0 20120330//EN" '
-            '"JATS-journalpublishing1.dtd">\n'
-            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
-            'specific-use="sps-1.4" dtd-version="1.0" '
-            'xml:lang="en" article-type="research-article"'
-            '>'
-            '<front>'
-            '<journal-meta>'
-            '<journal-id journal-id-type="publisher-id">jacron</journal-id>'
-            '<journal-title-group>'
-            '<journal-title>Título do Periódico</journal-title>'
-            '<abbrev-journal-title abbrev-type="publisher">Título Abreviado do Periódico</abbrev-journal-title>'
-            '</journal-title-group>'
+            '<issn pub-type="ppub">1234-5678</issn>'
+            '<issn pub-type="epub">5678-1234</issn>'
             '</journal-meta>'
             '<article-meta/>'
             '</front>'

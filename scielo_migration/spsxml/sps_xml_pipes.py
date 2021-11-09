@@ -32,6 +32,7 @@ def _process(document):
             XMLFrontPipe(),
             XMLJournalMetaJournalIdPipe(),
             XMLJournalMetaJournalTitleGroupPipe(),
+            XMLJournalMetaISSNPipe(),
             XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -140,5 +141,24 @@ class XMLJournalMetaJournalTitleGroupPipe(plumber.Pipe):
         journaltitlegroup.append(journalabbrevtitle)
 
         xml.find('./front/journal-meta').append(journaltitlegroup)
+
+        return data
+
+
+class XMLJournalMetaISSNPipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+
+        if raw.journal.print_issn:
+            pissn = ET.Element('issn')
+            pissn.text = raw.journal.print_issn
+            pissn.set('pub-type', 'ppub')
+            xml.find('./front/journal-meta').append(pissn)
+
+        if raw.journal.electronic_issn:
+            eissn = ET.Element('issn')
+            eissn.text = raw.journal.electronic_issn
+            eissn.set('pub-type', 'epub')
+            xml.find('./front/journal-meta').append(eissn)
 
         return data
