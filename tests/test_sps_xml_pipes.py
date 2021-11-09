@@ -28,6 +28,10 @@ def _get_journal():
         "v150": [{"_": "Título Abreviado do Periódico"}],
         "v435": [{"_": "1234-5678", "t": "PRINT"}, {"_": "5678-1234", "t": "ONLIN"}, ],
         "v150": [{"_": "Título Abreviado do Periódico"}],
+        "v310": [{"_": "BR"}],
+        "v320": [{"_": "SP"}],
+        "v490": [{"_": "São Paulo"}],
+        "v480": [{"_": "XXX Society"}],
     }
     journal_record = JournalRecord(record)
     return Journal(journal_record)
@@ -54,12 +58,17 @@ class TestGetXmlRsps(TestCase):
             '</journal-title-group>'
             '<issn pub-type="ppub">1234-5678</issn>'
             '<issn pub-type="epub">5678-1234</issn>'
+            '<publisher>'
+            '<publisher-name>XXX Society</publisher-name>'
+            '<publisher-loc>São Paulo, SP, Brazil</publisher-loc>'
+            '</publisher>'
             '</journal-meta>'
             '<article-meta/>'
             '</front>'
             '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
+        print(result)
         self.assertEqual(expected, result)
 
 

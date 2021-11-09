@@ -4,6 +4,7 @@ from lxml import etree as ET
 
 from scielo_migration.spsxml.sps_xml_attributes import (
     ARTICLE_TYPES,
+    COUNTRY_ITEMS,
 )
 
 
@@ -33,6 +34,7 @@ def _process(document):
             XMLJournalMetaJournalIdPipe(),
             XMLJournalMetaJournalTitleGroupPipe(),
             XMLJournalMetaISSNPipe(),
+            XMLJournalMetaPublisherPipe(),
             XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -160,5 +162,37 @@ class XMLJournalMetaISSNPipe(plumber.Pipe):
             eissn.text = raw.journal.electronic_issn
             eissn.set('pub-type', 'epub')
             xml.find('./front/journal-meta').append(eissn)
+
+        return data
+
+
+class XMLJournalMetaPublisherPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        publisher = ET.Element('publisher')
+
+        publishername = ET.Element('publisher-name')
+        publishername.text = u'; '.join(raw.journal.publisher_name or [])
+        publisher.append(publishername)
+
+        if raw.journal.publisher_country:
+            countrycode = raw.journal.publisher_country
+            countryname = COUNTRY_ITEMS.name(countrycode)
+            publishercountry = countryname or countrycode
+
+        publisherloc = [
+            raw.journal.publisher_city or u'',
+            raw.journal.publisher_state or u'',
+            publishercountry
+        ]
+
+        if raw.journal.publisher_country:
+            publishercountry = ET.Element('publisher-loc')
+            publishercountry.text = ', '.join(publisherloc)
+            publisher.append(publishercountry)
+
+        xml.find('./front/journal-meta').append(publisher)
 
         return data
