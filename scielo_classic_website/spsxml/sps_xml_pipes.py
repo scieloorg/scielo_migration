@@ -7,6 +7,10 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
     COUNTRY_ITEMS,
 )
 
+from scielo_migration.spsxml.sps_xml_article_meta import (
+    XMLArticleMetaSciELOArticleIdPipe,
+)
+
 
 def get_xml_rsps(document):
     """
@@ -35,6 +39,7 @@ def _process(document):
             XMLJournalMetaJournalTitleGroupPipe(),
             XMLJournalMetaISSNPipe(),
             XMLJournalMetaPublisherPipe(),
+            XMLArticleMetaSciELOArticleIdPipe(),
             XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)

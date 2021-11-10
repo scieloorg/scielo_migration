@@ -39,10 +39,20 @@ def _get_journal():
     return Journal(journal_record)
 
 
+def _get_article_record_content():
+    return {
+        "v002": [{"_": "S0044-5967(99)000300260"}],
+        "v880": [{"_": "S0044-59671999000300260"}],
+        "v881": [{"_": "S0044-59671998005000260"}],
+        "v885": [{"_": "zGfhXPfmQxVkLNzXy9FTkFf"}],
+        "v121": [{"_": "00260"}],
+    }
+
+
 class TestGetXmlRsps(TestCase):
 
     def test_get_xml_rsps(self):
-        h_record = ArticleRecord(None)
+        h_record = ArticleRecord(_get_article_record_content())
         journal = _get_journal()
         document = Document(h_record, journal)
         expected = (
@@ -65,12 +75,17 @@ class TestGetXmlRsps(TestCase):
             '<publisher-loc>São Paulo, SP, Brazil</publisher-loc>'
             '</publisher>'
             '</journal-meta>'
-            '<article-meta/>'
+            '<article-meta>'
+            '<article-id pub-id-type="publisher-id" specific-use="scielo-v1">S0044-5967(99)000300260</article-id>'
+            '<article-id pub-id-type="publisher-id" specific-use="scielo-v2">S0044-59671999000300260</article-id>'
+            '<article-id pub-id-type="publisher-id" specific-use="scielo-v3">zGfhXPfmQxVkLNzXy9FTkFf</article-id>'
+            '<article-id specific-use="previous-pid">S0044-59671998005000260</article-id>'
+            '<article-id pub-id-type="other">00260</article-id>'
+            '</article-meta>'
             '</front>'
             '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
-        print(result)
         self.assertEqual(expected, result)
 
 
