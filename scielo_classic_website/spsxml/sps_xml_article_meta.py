@@ -3,6 +3,7 @@ from lxml import etree as ET
 
 from scielo_migration.spsxml.sps_xml_attributes import (
     CONTRIB_ROLES,
+    get_attribute_value,
 )
 
 
@@ -201,63 +202,61 @@ class XMLArticleMetaAffiliationPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        for affiliation in raw.mixed_affiliations:
+        for affiliation in raw.affiliations:
 
             aff = ET.Element('aff')
+            try:
+                aff.set('id', affiliation['id'])
+            except KeyError:
+                pass
 
-            ndx = AFF_REGEX_JUST_NUMBERS.findall(affiliation['index'])
+            addrline = None
+            for tag in ("city", "state"):
+                try:
+                    value = affiliation[tag]
+                except KeyError:
+                    pass
+                else:
+                    elem = ET.Element('named-content')
+                    elem.set('content-type', tag)
+                    elem.text = value
+                    if not addrline:
+                        addrline = ET.Element('addr-line')
+                    addrline.append(elem)
 
-            if len(ndx) == 0:
-                ndx = affiliation['index']
+            attribs = ("orgname", "div", "div1", "div2", "div3")
+            content_types = ("orgname", "orgdiv1", "orgdiv1", "orgdiv2", "orgdiv3")
+            for attr, content_type in zip(attribs, content_types):
+                try:
+                    value = affiliation[attr]
+                except KeyError:
+                    pass
+                else:
+                    elem = ET.Element('institution')
+                    elem.set('content-type', content_type)
+                    elem.text = value
+                    aff.append(elem)
+
+            try:
+                country = affiliation['country']
+            except KeyError:
+                pass
             else:
-                ndx = 'aff%s' % ndx[0]
+                country = get_attribute_value("country", country)
+                if country:
+                    elem = ET.Element('country')
+                    elem.text = country['name']
+                    elem.set('country', country['code'])
+                    aff.append(country)
 
-            aff.set('id', ndx)
-
-            if 'city' in affiliation or 'state' in affiliation:
-                addrline = ET.Element('addr-line')
-                if 'city' in affiliation:
-                    city = ET.Element('named-content')
-                    city.set('content-type', 'city')
-                    city.text = affiliation['city']
-                    addrline.append(city)
-                if 'state' in affiliation:
-                    state = ET.Element('named-content')
-                    state.set('content-type', 'state')
-                    state.text = affiliation['state']
-                    addrline.append(state)
-                aff.append(addrline)
-
-            if 'institution' in affiliation:
-                institution = ET.Element('institution')
-                institution.text = affiliation['institution']
-                institution.set('content-type', 'orgname')
-                aff.append(institution)
-
-            if 'orgdiv1' in affiliation or 'division' in affiliation:
-                institution = ET.Element('institution')
-                institution.text = ' '.join([affiliation.get('orgdiv1', ''), affiliation.get('division', '')])
-                institution.set('content-type', 'orgdiv1')
-                aff.append(institution)
-
-            if 'orgdiv2' in affiliation:
-                institution = ET.Element('institution')
-                institution.text = affiliation['orgdiv2']
-                institution.set('content-type', 'orgdiv2')
-                aff.append(institution)
-
-            if 'country' in affiliation:
-                country = ET.Element('country')
-                country.text = affiliation['country']
-                if 'country_iso_3166' in affiliation:
-                    country.set('country', affiliation['country_iso_3166'])
-                aff.append(country)
-
-            if 'email' in affiliation:
-                email = ET.Element('email')
-                email.text = affiliation.get('email_html_removed', affiliation['email'])
-                aff.append(email)
-
+            try:
+                value = affiliation['email']
+            except KeyError:
+                pass
+            else:
+                elem = ET.Element('email')
+                elem.text = value
+                aff.append(elem)
 
             xml.find('./front/article-meta').append(aff)
 
