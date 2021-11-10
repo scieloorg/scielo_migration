@@ -46,6 +46,8 @@ def _get_article_record_content():
         "v881": [{"_": "S0044-59671998005000260"}],
         "v885": [{"_": "zGfhXPfmQxVkLNzXy9FTkFf"}],
         "v121": [{"_": "00260"}],
+        "v237": [{"_": "10.1590/adjdadla"}],
+        "v049": [{"_": "Biotechnology"}],
     }
 
 
@@ -81,11 +83,18 @@ class TestGetXmlRsps(TestCase):
             '<article-id pub-id-type="publisher-id" specific-use="scielo-v3">zGfhXPfmQxVkLNzXy9FTkFf</article-id>'
             '<article-id specific-use="previous-pid">S0044-59671998005000260</article-id>'
             '<article-id pub-id-type="other">00260</article-id>'
+            '<article-id pub-id-type="doi">10.1590/adjdadla</article-id>'
+            '<article-categories>'
+                '<subj-group subj-group-type="heading">'
+                    '<subject>Biotechnology</subject>'
+                '</subj-group>'
+            '</article-categories>'
             '</article-meta>'
             '</front>'
             '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
+        print(result)
         self.assertEqual(expected, result)
 
 

@@ -32,3 +32,51 @@ class XMLArticleMetaSciELOArticleIdPipe(plumber.Pipe):
                 article_id.text = value
                 article_meta.append(article_id)
         return data
+
+
+class XMLArticleMetaArticleIdDOIPipe(plumber.Pipe):
+
+    def precond(data):
+        raw, xml = data
+
+        if not raw.doi:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        article_id = ET.Element('article-id')
+        article_id.set('pub-id-type', 'doi')
+        article_id.text = raw.doi
+
+        xml.find('./front/article-meta').append(article_id)
+
+        return data
+
+
+class XMLArticleMetaArticleCategoriesPipe(plumber.Pipe):
+    def precond(data):
+        raw, xml = data
+        if not raw.original_section:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        subject_group = ET.Element('subj-group')
+        subject_group.set('subj-group-type', 'heading')
+
+        subject = ET.Element('subject')
+        subject.text = raw.original_section
+
+        subject_group.append(subject)
+
+        article_categories = ET.Element('article-categories')
+        article_categories.append(subject_group)
+
+        xml.find('./front/article-meta').append(article_categories)
+
+        return data
+

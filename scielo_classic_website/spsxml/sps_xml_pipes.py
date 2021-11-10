@@ -9,6 +9,8 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
 
 from scielo_migration.spsxml.sps_xml_article_meta import (
     XMLArticleMetaSciELOArticleIdPipe,
+    XMLArticleMetaArticleIdDOIPipe,
+    XMLArticleMetaArticleCategoriesPipe,
 )
 
 
@@ -40,6 +42,8 @@ def _process(document):
             XMLJournalMetaISSNPipe(),
             XMLJournalMetaPublisherPipe(),
             XMLArticleMetaSciELOArticleIdPipe(),
+            XMLArticleMetaArticleIdDOIPipe(),
+            XMLArticleMetaArticleCategoriesPipe(),
             XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
