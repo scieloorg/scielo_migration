@@ -5,6 +5,8 @@ from scielo_classic_website.config import (
     ATTRIBUTES_PATH,
 )
 
+from scielo_migration.attr_values import AttrValues
+
 
 def _read_csv_file(file_path):
     with open(file_path, newline='') as csvfile:
@@ -23,6 +25,10 @@ def _get_dict(items):
 def _load_values(filename):
     file_path = os.path.join(ATTRIBUTES_PATH, filename)
     return _get_dict(_read_csv_file(file_path))
+
+
+def _get_file_path(filename):
+    return os.path.join(ATTRIBUTES_PATH, filename)
 
 
 def _load_countries(filename):
@@ -54,3 +60,5 @@ class Country:
 
 ARTICLE_TYPES = _load_values('isis2sps_article_types.csv')
 COUNTRY_ITEMS = Country(_load_countries("country.csv"))
+
+CONTRIB_ROLES = AttrValues(_read_csv_file(_get_file_path('contrib_roles.csv')))
