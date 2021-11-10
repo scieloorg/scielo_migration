@@ -20,3 +20,19 @@ class ArticleRecord(BaseArticleRecord):
         value = self.get_field_content("v002", subfields={}, single=True, simple=True)
         if value and len(value) == 23:
             return value
+
+    @property
+    def original_title(self):
+        """
+        Original article title
+        v012
+        """
+        return super().article_titles[0]['text']
+
+    @property
+    def translated_titles(self):
+        """
+        Translated article titles
+        v012
+        """
+        return super().article_titles[1:]

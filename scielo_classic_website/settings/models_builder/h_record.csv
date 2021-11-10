@@ -9,14 +9,14 @@ article,,,,,,journal,journal,Journal
 article,,,,,,mixed_affiliations,mixed affiliations,Mixed Affiliations
 article,,,,,,pdf_url,pdf url,Pdf Url
 article,,,,,,translated_htmls,translated htmls,Translated Htmls
-article,10,1,xref,,,author,author,Author
-article,10,k,orcid,,,author,author,Author
-article,10,l,lattes,,,author,author,Author
-article,10,n,given_names,,,author,author,Author
-article,10,n,given_names,,,author,author,Author
-article,10,p,prefix,,,author,author,Author
-article,10,r,role,,,author,author,Author
-article,10,s,surname,,,author,author,Author
+article,10,1,xref,,,authors,author,Author
+article,10,k,orcid,,,authors,author,Author
+article,10,l,lattes,,,authors,author,Author
+article,10,n,given_names,,,authors,author,Author
+article,10,n,given_names,,,authors,author,Author
+article,10,p,prefix,,,authors,author,Author
+article,10,r,role,,,authors,author,Author
+article,10,s,surname,,,authors,author,Author
 article,11,,,true,,corporative_authors,corporative authors,Corporative Authors
 article,112,,,,,receive_date_iso,receive date ISO,Receive Date ISO
 article,114,,,,,acceptance_date_iso,acceptance date ISO,Acceptance Date ISO
