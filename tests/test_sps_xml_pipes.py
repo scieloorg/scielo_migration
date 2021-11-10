@@ -53,6 +53,10 @@ def _get_article_record_content():
             {"_": "Conocimientos de los pediatras sobre la laringomalacia: ¿siempre es un proceso banal?", "l": "es"},
             {"_": "Pediatrician knowledge about laryngomalacia: is it always a banal process?", "l": "en"},
         ],
+        "v010": [
+            {"n": "Albert", "s": "Einstein", "r": "ND", "k": "0000-0001-8528-2091"},
+            {"n": "Rogerio", "s": "Meneghini", "r": "ND", "l": "4760273612238540"},
+        ],
     }
 
 
@@ -100,6 +104,22 @@ class TestGetXmlRsps(TestCase):
                     '<trans-title>Pediatrician knowledge about laryngomalacia: is it always a banal process?</trans-title>'
             '</trans-title-group>'
             '</title-group>'
+            '<contrib-group>'
+                '<contrib contrib-type="author">'
+                    '<contrib-id contrib-id-type="orcid">0000-0001-8528-2091</contrib-id>'
+                    '<name>'
+                        '<surname>Einstein</surname>'
+                        '<given-names>Albert</given-names>'
+                    '</name>'
+                '</contrib>'
+                '<contrib contrib-type="author">'
+                    '<contrib-id contrib-id-type="lattes">4760273612238540</contrib-id>'
+                    '<name>'
+                        '<surname>Meneghini</surname>'
+                        '<given-names>Rogerio</given-names>'
+                    '</name>'
+                '</contrib>'
+            '</contrib-group>'
             '</article-meta>'
             '</front>'
             '</article>'
