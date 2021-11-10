@@ -58,6 +58,7 @@ article,601,,,true,,xml_languages,xml languages,Xml Languages
 article,65,,,,,issue_publication_date,issue publication date,Issue Publication Date
 article,65,,,,,publication_date,publication date,Publication Date
 article,690,,,,,scielo_domain,scielo domain,Scielo Domain
+article,70,d,div,,,affiliations,affiliations,Affiliations
 article,70,1,div1,,,affiliations,affiliations,Affiliations
 article,70,2,div2,,,affiliations,affiliations,Affiliations
 article,70,3,div3,,,affiliations,affiliations,Affiliations
