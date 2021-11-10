@@ -11,6 +11,8 @@ from scielo_migration.spsxml.sps_xml_article_meta import (
     XMLArticleMetaSciELOArticleIdPipe,
     XMLArticleMetaArticleIdDOIPipe,
     XMLArticleMetaArticleCategoriesPipe,
+    XMLArticleMetaTitleGroupPipe,
+    XMLArticleMetaTranslatedTitleGroupPipe,
 )
 
 
@@ -44,6 +46,8 @@ def _process(document):
             XMLArticleMetaSciELOArticleIdPipe(),
             XMLArticleMetaArticleIdDOIPipe(),
             XMLArticleMetaArticleCategoriesPipe(),
+            XMLArticleMetaTitleGroupPipe(),
+            XMLArticleMetaTranslatedTitleGroupPipe(),
             XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)

@@ -48,6 +48,11 @@ def _get_article_record_content():
         "v121": [{"_": "00260"}],
         "v237": [{"_": "10.1590/adjdadla"}],
         "v049": [{"_": "Biotechnology"}],
+        "v040": [{"_": "es"}],
+        "v012": [
+            {"_": "Conocimientos de los pediatras sobre la laringomalacia: ¿siempre es un proceso banal?", "l": "es"},
+            {"_": "Pediatrician knowledge about laryngomalacia: is it always a banal process?", "l": "en"},
+        ],
     }
 
 
@@ -89,6 +94,12 @@ class TestGetXmlRsps(TestCase):
                     '<subject>Biotechnology</subject>'
                 '</subj-group>'
             '</article-categories>'
+            '<title-group>'
+            '<article-title>Conocimientos de los pediatras sobre la laringomalacia: ¿siempre es un proceso banal?</article-title>'
+            '<trans-title-group xml:lang="en">'
+                    '<trans-title>Pediatrician knowledge about laryngomalacia: is it always a banal process?</trans-title>'
+            '</trans-title-group>'
+            '</title-group>'
             '</article-meta>'
             '</front>'
             '</article>'

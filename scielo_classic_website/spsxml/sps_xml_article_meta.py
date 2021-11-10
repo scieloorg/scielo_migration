@@ -80,3 +80,43 @@ class XMLArticleMetaArticleCategoriesPipe(plumber.Pipe):
 
         return data
 
+
+class XMLArticleMetaTitleGroupPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        article_title = ET.Element('article-title')
+        article_title.text = raw.original_title
+
+        titlegroup = ET.Element('title-group')
+        titlegroup.append(article_title)
+
+        xml.find('./front/article-meta').append(titlegroup)
+
+        return data
+
+
+class XMLArticleMetaTranslatedTitleGroupPipe(plumber.Pipe):
+
+    def precond(data):
+        raw, xml = data
+        if not raw.translated_titles:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        for item in raw.translated_titles:
+            trans_title = ET.Element('trans-title')
+            trans_title.text = item["text"]
+
+            trans_titlegrp = ET.Element('trans-title-group')
+            trans_titlegrp.set('{http://www.w3.org/XML/1998/namespace}lang', item["language"])
+            trans_titlegrp.append(trans_title)
+
+            xml.find('./front/article-meta/title-group').append(trans_titlegrp)
+
+        return data
+
