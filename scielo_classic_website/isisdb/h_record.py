@@ -10,3 +10,13 @@ class ArticleRecord(BaseArticleRecord):
             data_dictionary=None):
         super().__init__(
             record, multi_val_tags, data_dictionary)
+
+    @property
+    def scielo_pid_v1(self):
+        """
+        SciELO PID v1
+        v002
+        """
+        value = self.get_field_content("v002", subfields={}, single=True, simple=True)
+        if value and len(value) == 23:
+            return value
