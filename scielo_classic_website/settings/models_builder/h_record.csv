@@ -77,7 +77,7 @@ article,85,k,text,,,keywords,keywords,Keywords
 article,85,l,language,,,keywords,keywords,Keywords
 article,880,,,,,publisher_id,publisher id,Publisher Id
 article,880,,,,,scielo_pid_v2,scielo pid v2,SciELO PID v2
-article,881,,,,,publisher_ahead_id,publisher ahead id,Publisher Ahead Id
+article,881,,,,,aop_pid,aop_pid,AOP PID
 article,885,,,,,scielo_pid_v3,scielo pid v3,SciELO PID v3
 article,91,,,,,processing_date,processing date,Processing Date
 article,91,,,,,update_date,update date,Update Date
