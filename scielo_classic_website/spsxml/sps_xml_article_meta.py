@@ -191,16 +191,27 @@ class XMLArticleMetaContribGroupPipe(plumber.Pipe):
 
 class XMLArticleMetaAffiliationPipe(plumber.Pipe):
 
-    def precond(data):
+    def _addrline(self, affiliation):
+        addrline = None
+        for tag in ("city", "state"):
+            try:
+                value = affiliation[tag]
+            except KeyError:
+                pass
+            else:
+                elem = ET.Element('named-content')
+                elem.set('content-type', tag)
+                elem.text = value
+                if not addrline:
+                    addrline = ET.Element('addr-line')
+                addrline.append(elem)
+        return addrline
 
-        raw, xml = data
-
-        if not raw.mixed_affiliations:
-            raise plumber.UnmetPrecondition()
-
-    @plumber.precondition(precond)
     def transform(self, data):
         raw, xml = data
+
+        attribs = ("orgname", "div", "div1", "div2", "div3")
+        content_types = ("orgname", "orgdiv1", "orgdiv1", "orgdiv2", "orgdiv3")
 
         for affiliation in raw.affiliations:
 
@@ -210,22 +221,6 @@ class XMLArticleMetaAffiliationPipe(plumber.Pipe):
             except KeyError:
                 pass
 
-            addrline = None
-            for tag in ("city", "state"):
-                try:
-                    value = affiliation[tag]
-                except KeyError:
-                    pass
-                else:
-                    elem = ET.Element('named-content')
-                    elem.set('content-type', tag)
-                    elem.text = value
-                    if not addrline:
-                        addrline = ET.Element('addr-line')
-                    addrline.append(elem)
-
-            attribs = ("orgname", "div", "div1", "div2", "div3")
-            content_types = ("orgname", "orgdiv1", "orgdiv1", "orgdiv2", "orgdiv3")
             for attr, content_type in zip(attribs, content_types):
                 try:
                     value = affiliation[attr]
@@ -237,17 +232,23 @@ class XMLArticleMetaAffiliationPipe(plumber.Pipe):
                     elem.text = value
                     aff.append(elem)
 
+            addrline = self._addrline(affiliation)
+            if addrline is not None:
+                elem = ET.Element('addr-line')
+                elem.extend(addrline)
+                aff.append(elem)
+
             try:
-                country = affiliation['country']
+                aff_country = affiliation['country']
             except KeyError:
                 pass
             else:
-                country = get_attribute_value("country", country)
-                if country:
+                std_country = get_attribute_value("country", aff_country)
+                if std_country:
                     elem = ET.Element('country')
-                    elem.text = country['name']
-                    elem.set('country', country['code'])
-                    aff.append(country)
+                    elem.text = aff_country
+                    elem.set('country', std_country['code'])
+                    aff.append(elem)
 
             try:
                 value = affiliation['email']

@@ -51,8 +51,22 @@ def _process(document):
             XMLArticleMetaTitleGroupPipe(),
             XMLArticleMetaTranslatedTitleGroupPipe(),
             XMLArticleMetaContribGroupPipe(),
-            # XMLArticleMetaAffiliationPipe(),
+            XMLArticleMetaAffiliationPipe(),
+            # XMLArticleMetaDatesInfoPipe(),
+            # XMLArticleMetaIssueInfoPipe(),
+            # XMLArticleMetaElocationInfoPipe(),
+            # XMLArticleMetaPagesInfoPipe(),
+            # XMLArticleMetaHistoryPipe(),
+            # XMLArticleMetaPermissionPipe(),
+            # XMLArticleMetaSelfUriPipe(),
+            # XMLArticleMetaAbstractsPipe(),
+            # XMLArticleMetaKeywordsPipe(),
+            # XMLArticleMetaCountsPipe(),
+            # XMLBodyPipe(),
+            # XMLArticleMetaCitationsPipe(),
+            # XMLSubArticlePipe(),
             XMLClosePipe(),
+
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
