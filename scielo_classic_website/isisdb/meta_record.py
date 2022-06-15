@@ -9,6 +9,15 @@ def build_object(obj, record_as_dict):
         setattr(obj, name, data)
 
 
+def _get_tag_content(record, tag):
+    # v10 or v010
+    try:
+        return record[tag]
+    except KeyError:
+        number = str(int(tag[1:]))
+        return record.get("v" + number) or record.get("v" + number.zfill(3))
+
+
 class MetaRecord:
 
     def __init__(self, record,
@@ -86,17 +95,26 @@ class MetaRecord:
         if subfields and len(subfields):
             simple = False
 
+        # v10 or v010
+        tag_content = _get_tag_content(self._record, tag)
+        if not tag_content:
+            if single and simple:
+                return None
+            if single:
+                return {}
+            return []
+
         if simple and single:
             # str and ocorrencia única
             try:
-                return self._record[tag][0]["_"]
+                return tag_content[0]["_"]
             except (IndexError, KeyError, TypeError):
                 return None
 
         if single:
             # dict and ocorrencia única
             try:
-                return self._get_occ(self._record[tag][0], subfields or {})
+                return self._get_occ(tag_content[0], subfields or {})
             except (IndexError, KeyError, TypeError) as e:
                 print(e)
                 return {}
@@ -104,14 +122,14 @@ class MetaRecord:
         if simple:
             # str and ocorrencia multipla
             try:
-                return [item["_"] for item in self._record[tag]]
+                return [item["_"] for item in tag_content]
             except (IndexError, KeyError, TypeError):
                 return []
 
         # dict and multiple
         return [
             self._get_occ(occ, subfields or {})
-            for occ in self._record.get(tag) or []
+            for occ in tag_content
         ]
 
     def _get_occ(self, occ, subfields):
