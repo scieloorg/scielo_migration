@@ -13,6 +13,33 @@
     }
   },
   "article": {
+    "volume": {
+      "field_name": "volume",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v031",
+      "name": "volume",
+      "description": "Volume"
+    },
+    "number": {
+      "field_name": "number",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v032",
+      "name": "number",
+      "description": "Number"
+    },
+    "supplment": {
+      "field_name": "supplment",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v132",
+      "name": "supplment",
+      "description": "Supplment"
+    },
     "fulltexts": {
       "field_name": "fulltexts",
       "subfields": {},
@@ -103,8 +130,8 @@
       "name": "translated htmls",
       "description": "Translated Htmls"
     },
-    "author": {
-      "field_name": "author",
+    "authors": {
+      "field_name": "authors",
       "subfields": {
         "1": "xref",
         "k": "orcid",
@@ -438,6 +465,7 @@
     "affiliations": {
       "field_name": "affiliations",
       "subfields": {
+        "d": "div",
         "1": "div1",
         "2": "div2",
         "3": "div3",
@@ -532,14 +560,14 @@
       "name": "scielo pid v2",
       "description": "SciELO PID v2"
     },
-    "publisher_ahead_id": {
-      "field_name": "publisher_ahead_id",
+    "aop_pid": {
+      "field_name": "aop_pid",
       "subfields": {},
       "is_multi_val": false,
       "is_composite": false,
       "tag": "v881",
-      "name": "publisher ahead id",
-      "description": "Publisher Ahead Id"
+      "name": "aop_pid",
+      "description": "AOP PID"
     },
     "scielo_pid_v3": {
       "field_name": "scielo_pid_v3",

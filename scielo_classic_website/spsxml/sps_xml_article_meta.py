@@ -202,7 +202,7 @@ class XMLArticleMetaAffiliationPipe(plumber.Pipe):
                 elem = ET.Element('named-content')
                 elem.set('content-type', tag)
                 elem.text = value
-                if not addrline:
+                if addrline is None:
                     addrline = ET.Element('addr-line')
                 addrline.append(elem)
         return addrline
@@ -260,5 +260,71 @@ class XMLArticleMetaAffiliationPipe(plumber.Pipe):
                 aff.append(elem)
 
             xml.find('./front/article-meta').append(aff)
+
+        return data
+
+
+class XMLArticleMetaPublicationDatesPipe(plumber.Pipe):
+
+    def precond(data):
+        raw, xml = data
+
+        if not raw.document_publication_date and not raw.issue_publication_date:
+            raise plumber.UnmetPrecondition()
+
+    def _node_pub_date(self, date_text, date_type):
+        # '<pub-date publication-format="electronic" date-type="pub">'
+        if not date_text:
+            return
+
+        pubdate = ET.Element('pub-date')
+        pubdate.set('publication-format', 'electronic')
+        pubdate.set('date-type', date_type)
+        year, month, day = date_text[:4], date_text[4:6], date_text[6:]
+        labels = ("day", "month", "year")
+        for label, value in zip(labels, (day, month, year)):
+            if int(value) != 0:
+                e = ET.Element(label)
+                e.text = value
+                pubdate.append(e)
+        return pubdate
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        articlemeta = xml.find('./front/article-meta')
+
+        pubdate = self._node_pub_date(raw.document_publication_date, "pub")
+        if pubdate is not None:
+            articlemeta.append(pubdate)
+
+        pubdate = self._node_pub_date(raw.issue_publication_date, "collection")
+        if pubdate is not None:
+            articlemeta.append(pubdate)
+        return data
+
+
+class XMLArticleMetaIssueInfoPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        articlemeta = xml.find('./front/article-meta')
+
+        if raw.volume:
+            elem = ET.Element("volume")
+            elem.text = raw.volume
+            articlemeta.append(elem)
+
+        if raw.issue_number:
+            elem = ET.Element("issue")
+            elem.text = raw.issue_number
+            articlemeta.append(elem)
+
+        if raw.supplement:
+            elem = ET.Element("supplement")
+            elem.text = raw.supplement
+            articlemeta.append(elem)
 
         return data

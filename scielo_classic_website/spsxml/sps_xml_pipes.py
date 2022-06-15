@@ -15,6 +15,7 @@ from scielo_migration.spsxml.sps_xml_article_meta import (
     XMLArticleMetaTranslatedTitleGroupPipe,
     XMLArticleMetaContribGroupPipe,
     XMLArticleMetaAffiliationPipe,
+    XMLArticleMetaPublicationDatesPipe,
 )
 
 
@@ -52,7 +53,7 @@ def _process(document):
             XMLArticleMetaTranslatedTitleGroupPipe(),
             XMLArticleMetaContribGroupPipe(),
             XMLArticleMetaAffiliationPipe(),
-            # XMLArticleMetaDatesInfoPipe(),
+            XMLArticleMetaPublicationDatesPipe(),
             # XMLArticleMetaIssueInfoPipe(),
             # XMLArticleMetaElocationInfoPipe(),
             # XMLArticleMetaPagesInfoPipe(),

@@ -125,7 +125,6 @@ class TestGetXmlRsps(TestCase):
             '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
-        print(result)
         self.assertEqual(expected, result)
 
 
