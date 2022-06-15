@@ -35,12 +35,11 @@ def _get_journal():
         "v490": [{"_": "São Paulo"}],
         "v480": [{"_": "XXX Society"}],
     }
-    journal_record = JournalRecord(record)
-    return Journal(journal_record)
+    return {"title": record}
 
 
 def _get_article_record_content():
-    return {
+    data = {
         "v002": [{"_": "S0044-5967(99)000300260"}],
         "v880": [{"_": "S0044-59671999000300260"}],
         "v881": [{"_": "S0044-59671998005000260"}],
@@ -58,14 +57,15 @@ def _get_article_record_content():
             {"n": "Rogerio", "s": "Meneghini", "r": "ND", "l": "4760273612238540"},
         ],
     }
+    return {"article": data}
 
 
 class TestGetXmlRsps(TestCase):
 
     def test_get_xml_rsps(self):
-        h_record = ArticleRecord(_get_article_record_content())
-        journal = _get_journal()
-        document = Document(h_record, journal)
+        data = _get_article_record_content()
+        data.update(_get_journal())
+        document = Article(data)
         expected = (
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
             'Journal Publishing DTD v1.0 20120330//EN" '

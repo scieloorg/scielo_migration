@@ -1,5 +1,11 @@
+<<<<<<< HEAD:scielo_classic_website/models/document.py
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.h_record import ArticleRecord
+=======
+from scielo_migration.iid2json.meta_record import MetaRecord
+from scielo_migration.isisdb.h_record import ArticleRecord
+from scielo_migration.isisdb.journal_record import JournalRecord
+>>>>>>> 1c656c1... Simplifica a interface de Document() que deve receber um dicionário, similar ao xylose.Article:scielo_migration/isisdb/models.py
 
 
 RECORD = dict(
@@ -11,19 +17,41 @@ RECORD = dict(
 )
 
 
+<<<<<<< HEAD:scielo_classic_website/models/document.py
+=======
+class Journal:
+    def __init__(self, journal_data):
+        self._journal_record = JournalRecord(journal_data)
+
+    def __getattr__(self, name):
+        # desta forma Journal não precisa herdar de JournalRecord
+        # fica menos acoplado
+        if hasattr(self._journal_record, name):
+            return getattr(self._journal_record, name)
+        raise AttributeError(name)
+
+
+>>>>>>> 1c656c1... Simplifica a interface de Document() que deve receber um dicionário, similar ao xylose.Article:scielo_migration/isisdb/models.py
 class Document:
-    def __init__(self, h_record, journal=None, issue=None, citations=None):
-        self.h_record = h_record
-        self.journal = journal
-        self.issue = issue
-        self.citations = citations
+    def __init__(self, data):
+        self.data = data
+        self._h_record = ArticleRecord(data["article"])
+        self._journal = Journal(data["title"])
 
     def __getattr__(self, name):
         # desta forma Document não precisa herdar de ArticleRecord
         # fica menos acoplado
-        if hasattr(self.h_record, name):
-            return getattr(self.h_record, name)
+        if hasattr(self._h_record, name):
+            return getattr(self._h_record, name)
         raise AttributeError(name)
+
+    @property
+    def page(self):
+        return self._h_record.page
+
+    @property
+    def journal(self):
+        return self._journal
 
 
 class DocumentRecords:

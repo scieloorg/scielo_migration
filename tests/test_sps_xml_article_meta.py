@@ -6,15 +6,10 @@ from scielo_migration.spsxml.sps_xml_article_meta import (
     XMLArticleMetaAffiliationPipe,
     XMLArticleMetaPublicationDatesPipe,
     XMLArticleMetaIssueInfoPipe,
+    XMLArticleMetaElocationInfoPipe,
+    XMLArticleMetaPagesInfoPipe,
 )
-from scielo_migration.isisdb.journal_record import (
-    JournalRecord,
-)
-from scielo_migration.isisdb.models import (
-    Document,
-    ArticleRecord,
-    Journal,
-)
+from scielo_migration.isisdb.xylose import Article
 
 
 def tostring(node):
@@ -37,14 +32,13 @@ def _get_journal():
         "v490": [{"_": "São Paulo"}],
         "v480": [{"_": "XXX Society"}],
     }
-    journal_record = JournalRecord(record)
-    return Journal(journal_record)
+    return {"title": record}
 
 
 def _get_document(data):
-    h_record = ArticleRecord(data)
-    journal = _get_journal()
-    return Document(h_record, journal)
+    data = {"article": data}
+    data.update(_get_journal())
+    return Article(data)
 
 
 class TestXMLArticleMetaAffiliationPipe(TestCase):
@@ -278,7 +272,7 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
             '<front>'
             '<article-meta>'
             '<issue>2</issue>'
-            '<supplement>suppl</supplement>'
+            '<supplement>0</supplement>'
             '</article-meta>'
             '</front>'
             '</article>'
@@ -314,4 +308,26 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
         )
         result = tostring(transformed[1])
         self.assertEqual(expected, result)
+
+    def test_transform_aop(self):
+        d = {
+            "v032": [
+                {
+                    "_": "ahead"
+                }
+            ],
+        }
+        transformed = XMLArticleMetaIssueInfoPipe().transform(
+            self._get_document(d))
+        expected = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta/>'
+            '</front>'
+            '</article>'
+        )
+        result = tostring(transformed[1])
+        self.assertEqual(expected, result)
+
 
