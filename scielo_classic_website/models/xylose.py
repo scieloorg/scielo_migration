@@ -25,5 +25,4 @@ class Article(models.Document):
 
     @property
     def elocation(self):
-        print("page", self.page)
         return self.page.get("elocation")
