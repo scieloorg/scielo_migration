@@ -317,7 +317,7 @@ class XMLArticleMetaIssueInfoPipe(plumber.Pipe):
             elem.text = raw.volume
             articlemeta.append(elem)
 
-        if raw.issue_number:
+        if raw.issue_number and raw.issue_number != "ahead":
             elem = ET.Element("issue")
             elem.text = raw.issue_number
             articlemeta.append(elem)
@@ -326,5 +326,56 @@ class XMLArticleMetaIssueInfoPipe(plumber.Pipe):
             elem = ET.Element("supplement")
             elem.text = raw.supplement
             articlemeta.append(elem)
+
+        return data
+
+
+class XMLArticleMetaElocationInfoPipe(plumber.Pipe):
+
+    def precond(data):
+        raw, xml = data
+
+        if not raw.elocation:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        elocation = ET.Element('elocation-id')
+        elocation.text = raw.elocation
+
+        articlemeta = xml.find('./front/article-meta')
+        articlemeta.append(elocation)
+
+        return data
+
+
+class XMLArticleMetaPagesInfoPipe(plumber.Pipe):
+
+    def precond(data):
+        raw, xml = data
+
+        if not raw.start_page:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        fpage = ET.Element('fpage')
+        fpage.text = raw.start_page
+
+        seq = raw.start_page_sequence
+        if seq:
+            fpage.set("seq", seq)
+
+        articlemeta = xml.find('./front/article-meta')
+        articlemeta.append(fpage)
+
+        if raw.end_page:
+            lpage = ET.Element('lpage')
+            lpage.text = raw.end_page
+            articlemeta.append(lpage)
 
         return data

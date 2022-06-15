@@ -331,3 +331,43 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
         self.assertEqual(expected, result)
 
 
+class TestXMLArticleMetaElocationInfoPipe(TestCase):
+
+    def _get_document(self, document_data=None):
+        document_data_default = {
+            "v014": [
+                {
+                    "e": "44444"
+                }
+            ],
+        }
+        document = _get_document(document_data or document_data_default)
+        xml = (
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
+            'Journal Publishing DTD v1.0 20120330//EN" '
+            '"JATS-journalpublishing1.dtd">\n'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta>'
+            '</article-meta>'
+            '</front>'
+            '</article>'
+        )
+        return document, etree.fromstring(xml)
+
+    def test_transform(self):
+        transformed = XMLArticleMetaElocationInfoPipe().transform(
+            self._get_document())
+        expected = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta>'
+            '<elocation-id>44444</elocation-id>'
+            '</article-meta>'
+            '</front>'
+            '</article>'
+        )
+        result = tostring(transformed[1])
+        self.assertEqual(expected, result)
