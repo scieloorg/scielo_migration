@@ -83,17 +83,31 @@ class MetaRecord:
         """
         if tag in self._multi_val_tags:
             single = False
+        if subfields and len(subfields):
+            simple = False
 
-        try:
-            if simple and single:
+        if simple and single:
+            # str and ocorrencia única
+            try:
                 return self._record[tag][0]["_"]
-            elif single:
-                return self._record[tag][0]
-            elif simple:
-                return [item["_"] for item in self._record[tag]]
-        except (IndexError, KeyError, TypeError):
-            pass
+            except (IndexError, KeyError, TypeError):
+                return None
 
+        if single:
+            # dict and ocorrencia única
+            try:
+                return self._record[tag][0]
+            except (IndexError, KeyError, TypeError):
+                return {}
+
+        if simple:
+            # str and ocorrencia multipla
+            try:
+                return [item["_"] for item in self._record[tag]]
+            except (IndexError, KeyError, TypeError):
+                return []
+
+        # dict and multiple
         return [
             self._get_occ(occ, subfields or {})
             for occ in self._record.get(tag) or []
