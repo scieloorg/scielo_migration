@@ -96,8 +96,9 @@ class MetaRecord:
         if single:
             # dict and ocorrencia única
             try:
-                return self._record[tag][0]
-            except (IndexError, KeyError, TypeError):
+                return self._get_occ(self._record[tag][0], subfields or {})
+            except (IndexError, KeyError, TypeError) as e:
+                print(e)
                 return {}
 
         if simple:
