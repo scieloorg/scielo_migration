@@ -8,6 +8,15 @@ from scielo_migration.spsxml.sps_xml_article_meta import (
     XMLArticleMetaIssueInfoPipe,
     XMLArticleMetaElocationInfoPipe,
     XMLArticleMetaPagesInfoPipe,
+    XMLArticleMetaHistoryPipe,
+    # XMLArticleMetaPermissionPipe,
+    # XMLArticleMetaSelfUriPipe,
+    # XMLArticleMetaAbstractsPipe,
+    # XMLArticleMetaKeywordsPipe,
+    # XMLArticleMetaCountsPipe,
+    # XMLBodyPipe,
+    # XMLArticleMetaCitationsPipe,
+    # XMLSubArticlePipe,
 )
 from scielo_migration.isisdb.xylose import Article
 
@@ -408,6 +417,67 @@ class TestXMLArticleMetaPagesInfoPipe(TestCase):
             '<article-meta>'
             '<fpage seq="a">4</fpage>'
             '<lpage>9</lpage>'
+            '</article-meta>'
+            '</front>'
+            '</article>'
+        )
+        result = tostring(transformed[1])
+        self.assertEqual(expected, result)
+
+
+class TestXMLArticleMetaHistoryPipe(TestCase):
+    def _get_document(self, document_data=None):
+        document_data_default = {
+            "v112": [
+                {
+                    "_": "20200220"
+                }
+            ],
+            "v116": [
+                {
+                    "_": "20200515"
+                }
+            ],
+            "v114": [
+                {
+                    "_": "20200905"
+                }
+            ],
+        }
+        document = _get_document(document_data or document_data_default)
+        xml = (
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
+            'Journal Publishing DTD v1.0 20120330//EN" '
+            '"JATS-journalpublishing1.dtd">\n'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta>'
+            '</article-meta>'
+            '</front>'
+            '</article>'
+        )
+        return document, etree.fromstring(xml)
+
+    def test_transform(self):
+        transformed = XMLArticleMetaHistoryPipe().transform(
+            self._get_document())
+        expected = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta>'
+            '<history>'
+            '<date date-type="received">'
+            '<day>20</day><month>02</month><year>2020</year>'
+            '</date>'
+            '<date date-type="rev-recd">'
+            '<day>15</day><month>05</month><year>2020</year>'
+            '</date>'
+            '<date date-type="accepted">'
+            '<day>05</day><month>09</month><year>2020</year>'
+            '</date>'
+            '</history>'
             '</article-meta>'
             '</front>'
             '</article>'

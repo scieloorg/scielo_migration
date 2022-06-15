@@ -7,6 +7,24 @@ from scielo_migration.spsxml.sps_xml_attributes import (
 )
 
 
+def _create_date_element(element_name, attributes, date_text):
+    # '<pub-date publication-format="electronic" date-type="pub">'
+    if not date_text:
+        return
+
+    date_element = ET.Element(element_name)
+    for attr_name, attr_value in attributes.items():
+        date_element.set(attr_name, attr_value)
+    year, month, day = date_text[:4], date_text[4:6], date_text[6:]
+    labels = ("day", "month", "year")
+    for label, value in zip(labels, (day, month, year)):
+        if int(value) != 0:
+            e = ET.Element(label)
+            e.text = value
+            date_element.append(e)
+    return date_element
+
+
 class XMLArticleMetaSciELOArticleIdPipe(plumber.Pipe):
 
     def transform(self, data):
@@ -277,16 +295,12 @@ class XMLArticleMetaPublicationDatesPipe(plumber.Pipe):
         if not date_text:
             return
 
-        pubdate = ET.Element('pub-date')
-        pubdate.set('publication-format', 'electronic')
-        pubdate.set('date-type', date_type)
-        year, month, day = date_text[:4], date_text[4:6], date_text[6:]
-        labels = ("day", "month", "year")
-        for label, value in zip(labels, (day, month, year)):
-            if int(value) != 0:
-                e = ET.Element(label)
-                e.text = value
-                pubdate.append(e)
+        attributes = dict([
+            ('publication-format', 'electronic'),
+            ('date-type', date_type),
+        ])
+        pubdate = _create_date_element('pub-date', attributes, date_text)
+
         return pubdate
 
     @plumber.precondition(precond)
@@ -377,5 +391,30 @@ class XMLArticleMetaPagesInfoPipe(plumber.Pipe):
             lpage = ET.Element('lpage')
             lpage.text = raw.end_page
             articlemeta.append(lpage)
+
+        return data
+
+
+class XMLArticleMetaHistoryPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        history = ET.Element('history')
+
+        dates = {
+         'received': raw.receive_date_iso,
+         'rev-recd': raw.review_date_iso,
+         'accepted': raw.acceptance_date_iso,
+        }
+
+        for date_type, date_ in dates.items():
+            if date_:
+                attributes = {"date-type": date_type}
+                elem = _create_date_element('date', attributes, date_)
+                history.append(elem)
+
+        if len(history.findall('date')) > 0:
+            xml.find('./front/article-meta').append(history)
 
         return data
