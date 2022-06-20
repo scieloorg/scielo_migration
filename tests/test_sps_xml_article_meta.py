@@ -11,14 +11,14 @@ from scielo_migration.spsxml.sps_xml_article_meta import (
     XMLArticleMetaHistoryPipe,
     # XMLArticleMetaPermissionPipe,
     # XMLArticleMetaSelfUriPipe,
-    # XMLArticleMetaAbstractsPipe,
+    XMLArticleMetaAbstractsPipe,
     # XMLArticleMetaKeywordsPipe,
     # XMLArticleMetaCountsPipe,
     # XMLBodyPipe,
     # XMLArticleMetaCitationsPipe,
     # XMLSubArticlePipe,
 )
-from scielo_migration.isisdb.xylose import Article
+from scielo_migration.isisdb.models import Document
 
 
 def tostring(node):
@@ -47,7 +47,7 @@ def _get_journal():
 def _get_document(data):
     data = {"article": data}
     data.update(_get_journal())
-    return Article(data)
+    return Document(data)
 
 
 class TestXMLArticleMetaAffiliationPipe(TestCase):
@@ -478,6 +478,58 @@ class TestXMLArticleMetaHistoryPipe(TestCase):
             '<day>05</day><month>09</month><year>2020</year>'
             '</date>'
             '</history>'
+            '</article-meta>'
+            '</front>'
+            '</article>'
+        )
+        result = tostring(transformed[1])
+        self.assertEqual(expected, result)
+
+
+class TestXMLArticleMetaAbstractsPipe(TestCase):
+    def _get_document(self, document_data=None):
+        document_data_default = {
+            "v083": [
+                {
+                    "_": "Resumo",
+                    "l": "pt"
+                },
+                {
+                    "_": "Resumen",
+                    "l": "es"
+                },
+                {
+                    "_": "Abstract",
+                    "l": "en"
+                }
+            ],
+        }
+        document = _get_document(document_data or document_data_default)
+        xml = (
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
+            'Journal Publishing DTD v1.0 20120330//EN" '
+            '"JATS-journalpublishing1.dtd">\n'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta>'
+            '</article-meta>'
+            '</front>'
+            '</article>'
+        )
+        return document, etree.fromstring(xml)
+
+    def test_transform(self):
+        transformed = XMLArticleMetaAbstractsPipe().transform(
+            self._get_document())
+        expected = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta>'
+            '<abstract><p>Resumo</p></abstract>'
+            '<trans-abstract xml:lang="es"><p>Resumen</p></trans-abstract>'
+            '<trans-abstract xml:lang="en"><p>Abstract</p></trans-abstract>'
             '</article-meta>'
             '</front>'
             '</article>'

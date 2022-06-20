@@ -7,6 +7,7 @@ from scielo_classic_website.spsxml.sps_xml_pipes import (
     SetupArticlePipe,
     XMLClosePipe,
 )
+<<<<<<< HEAD
 from scielo_classic_website.isisdb.journal_record import (
     JournalRecord,
 )
@@ -17,6 +18,10 @@ from scielo_classic_website.models.document import (
 from scielo_classic_website.models.journal import (
     Journal,
 )
+=======
+
+from scielo_migration.isisdb.models import Document
+>>>>>>> 19993c7... Remove o "xylose"
 
 
 def get_tree(xml_str):
@@ -65,7 +70,7 @@ class TestGetXmlRsps(TestCase):
     def test_get_xml_rsps(self):
         data = _get_article_record_content()
         data.update(_get_journal())
-        document = Article(data)
+        document = Document(data)
         expected = (
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
             'Journal Publishing DTD v1.0 20120330//EN" '

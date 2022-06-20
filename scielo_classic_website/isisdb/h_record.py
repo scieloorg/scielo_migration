@@ -36,3 +36,25 @@ class ArticleRecord(BaseArticleRecord):
         v012
         """
         return super().article_titles[1:]
+
+    @property
+    def original_abstract(self):
+        """
+        Original article abstract
+        v012
+        """
+        try:
+            return super().abstracts[0]['text']
+        except IndexError:
+            return None
+
+    @property
+    def translated_abstracts(self):
+        """
+        Translated article abstracts
+        v012
+        """
+        try:
+            return super().abstracts[1:]
+        except IndexError:
+            return None

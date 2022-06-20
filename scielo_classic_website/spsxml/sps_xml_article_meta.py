@@ -418,3 +418,40 @@ class XMLArticleMetaHistoryPipe(plumber.Pipe):
             xml.find('./front/article-meta').append(history)
 
         return data
+
+
+class XMLArticleMetaAbstractsPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        articlemeta = xml.find('./front/article-meta')
+
+        print(type(raw))
+        if raw.original_abstract:
+            p = ET.Element('p')
+            p.text = raw.original_abstract
+
+            abstract = ET.Element('abstract')
+            abstract.append(p)
+
+            articlemeta.append(abstract)
+
+        if raw.translated_abstracts:
+            langs = list(raw.translated_htmls.keys())
+
+            for item in raw.translated_abstracts:
+
+                if item['language'] in langs:
+                    continue
+
+                p = ET.Element('p')
+                p.text = item['text']
+
+                abstract = ET.Element('trans-abstract')
+                abstract.set('{http://www.w3.org/XML/1998/namespace}lang', item['language'])
+                abstract.append(p)
+
+                articlemeta.append(abstract)
+
+        return data
