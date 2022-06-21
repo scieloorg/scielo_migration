@@ -58,3 +58,15 @@ class ArticleRecord(BaseArticleRecord):
             return super().abstracts[1:]
         except IndexError:
             return None
+
+    @property
+    def keywords_groups(self):
+        _kwg = {}
+        for item in self.keywords:
+            if not item.get("language"):
+                continue
+            try:
+                _kwg[item['language']].append(item)
+            except KeyError:
+                _kwg[item['language']] = [item]
+        return _kwg

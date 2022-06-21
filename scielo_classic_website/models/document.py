@@ -41,7 +41,6 @@ class Document:
     def __getattr__(self, name):
         # desta forma Document não precisa herdar de ArticleRecord
         # fica menos acoplado
-        print(type(self._h_record))
         if hasattr(self._h_record, name):
             return getattr(self._h_record, name)
         raise AttributeError(name)

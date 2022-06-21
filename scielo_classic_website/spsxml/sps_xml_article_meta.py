@@ -427,7 +427,6 @@ class XMLArticleMetaAbstractsPipe(plumber.Pipe):
 
         articlemeta = xml.find('./front/article-meta')
 
-        print(type(raw))
         if raw.original_abstract:
             p = ET.Element('p')
             p.text = raw.original_abstract
@@ -453,5 +452,44 @@ class XMLArticleMetaAbstractsPipe(plumber.Pipe):
                 abstract.append(p)
 
                 articlemeta.append(abstract)
+
+        return data
+
+
+class XMLArticleMetaKeywordsPipe(plumber.Pipe):
+
+    def precond(data):
+
+        raw, xml = data
+
+        if not raw.keywords:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        translated_langs = list(raw.translated_htmls.keys())
+
+        articlemeta = xml.find('./front/article-meta')
+
+        for lang, keywords in raw.keywords_groups.items():
+
+            if lang in translated_langs:
+                continue
+
+            kwdgroup = ET.Element('kwd-group')
+            kwdgroup.set('{http://www.w3.org/XML/1998/namespace}lang', lang)
+            kwdgroup.set('kwd-group-type', 'author-generated')
+
+            for item in keywords:
+                kwd = ET.Element('kwd')
+                try:
+                    kwd.text = ", ".join([item['text'], item['subkey']])
+                except KeyError:
+                    kwd.text = item['text']
+
+                kwdgroup.append(kwd)
+            articlemeta.append(kwdgroup)
 
         return data
