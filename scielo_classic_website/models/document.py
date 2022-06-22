@@ -1,11 +1,6 @@
-<<<<<<< HEAD:scielo_classic_website/models/document.py
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.h_record import ArticleRecord
-=======
-from scielo_migration.iid2json.meta_record import MetaRecord
-from scielo_migration.isisdb.h_record import ArticleRecord
-from scielo_migration.isisdb.journal_record import JournalRecord
->>>>>>> 1c656c1... Simplifica a interface de Document() que deve receber um dicionário, similar ao xylose.Article:scielo_migration/isisdb/models.py
+from scielo_classic_website.models.journal import Journal
 
 
 RECORD = dict(
@@ -17,21 +12,6 @@ RECORD = dict(
 )
 
 
-<<<<<<< HEAD:scielo_classic_website/models/document.py
-=======
-class Journal:
-    def __init__(self, journal_data):
-        self._journal_record = JournalRecord(journal_data)
-
-    def __getattr__(self, name):
-        # desta forma Journal não precisa herdar de JournalRecord
-        # fica menos acoplado
-        if hasattr(self._journal_record, name):
-            return getattr(self._journal_record, name)
-        raise AttributeError(name)
-
-
->>>>>>> 1c656c1... Simplifica a interface de Document() que deve receber um dicionário, similar ao xylose.Article:scielo_migration/isisdb/models.py
 class Document:
     def __init__(self, data):
         self.data = data
@@ -73,6 +53,11 @@ class Document:
         except KeyError:
             pass
         return _translated_htmls
+
+    @property
+    def permissions(self):
+        #FIXME
+        return {"url": "", "text": ""}
 
 
 class DocumentRecords:

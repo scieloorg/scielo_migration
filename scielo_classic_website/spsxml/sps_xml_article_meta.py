@@ -493,3 +493,34 @@ class XMLArticleMetaKeywordsPipe(plumber.Pipe):
             articlemeta.append(kwdgroup)
 
         return data
+
+
+class XMLArticleMetaPermissionPipe(plumber.Pipe):
+
+    def precond(data):
+
+        raw, xml = data
+
+        if not raw.permissions:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        articlemeta = xml.find('./front/article-meta')
+
+        permissions = ET.Element('permissions')
+        dlicense = ET.Element('license')
+        dlicense.set('license-type', 'open-access')
+        dlicense.set('{http://www.w3.org/1999/xlink}href', raw.permissions['url'])
+        dlicense.set('{http://www.w3.org/XML/1998/namespace}lang', 'en')
+
+        licensep = ET.Element('license-p')
+        licensep.text = raw.permissions['text']
+
+        dlicense.append(licensep)
+        permissions.append(dlicense)
+        articlemeta.append(permissions)
+
+        return data

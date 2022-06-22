@@ -7,21 +7,9 @@ from scielo_classic_website.spsxml.sps_xml_pipes import (
     SetupArticlePipe,
     XMLClosePipe,
 )
-<<<<<<< HEAD
-from scielo_classic_website.isisdb.journal_record import (
-    JournalRecord,
-)
 from scielo_classic_website.models.document import (
     Document,
-    ArticleRecord,
 )
-from scielo_classic_website.models.journal import (
-    Journal,
-)
-=======
-
-from scielo_migration.isisdb.models import Document
->>>>>>> 19993c7... Remove o "xylose"
 
 
 def get_tree(xml_str):

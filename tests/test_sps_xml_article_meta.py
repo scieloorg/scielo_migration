@@ -9,7 +9,7 @@ from scielo_migration.spsxml.sps_xml_article_meta import (
     XMLArticleMetaElocationInfoPipe,
     XMLArticleMetaPagesInfoPipe,
     XMLArticleMetaHistoryPipe,
-    # XMLArticleMetaPermissionPipe,
+    XMLArticleMetaPermissionPipe,
     # XMLArticleMetaSelfUriPipe,
     XMLArticleMetaAbstractsPipe,
     XMLArticleMetaKeywordsPipe,
@@ -615,6 +615,107 @@ class TestXMLArticleMetaKeywordsPipe(TestCase):
 
     def test_transform(self):
         transformed = XMLArticleMetaKeywordsPipe().transform(
+            self._get_document())
+        expected = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta>'
+            '<kwd-group xml:lang="en" kwd-group-type="author-generated">'
+            '<kwd>lung, growth and development</kwd>'
+            '<kwd>nutrition disorders</kwd>'
+            '<kwd>Wistar rats</kwd>'
+            '</kwd-group>'
+            '<kwd-group xml:lang="pt" kwd-group-type="author-generated">'
+            '<kwd>pulmão, crescimento</kwd>'
+            '<kwd>transtornos nutricionais</kwd>'
+            '<kwd>ratos wistar</kwd>'
+            '</kwd-group>'
+            '</article-meta>'
+            '</front>'
+            '</article>'
+        )
+        result = tostring(transformed[1])
+        self.assertEqual(expected, result)
+
+
+class TestXMLArticleMetaPermissionPipe(TestCase):
+    def _get_document(self, document_data=None):
+        document_data_default = {
+            "v85": [
+                {
+                    "_": "",
+                    "d": "nd",
+                    "i": "1"
+                },
+                {
+                    "_": "",
+                    "s": "growth and development",
+                    "k": "lung",
+                    "i": "1",
+                    "l": "en",
+                    "t": "m"
+                },
+                {
+                    "l": "en",
+                    "_": "",
+                    "t": "m",
+                    "k": "nutrition disorders",
+                    "i": "1"
+                },
+                {
+                    "l": "en",
+                    "_": "",
+                    "t": "m",
+                    "k": "Wistar rats",
+                    "i": "1"
+                },
+                {
+                    "_": "",
+                    "d": "nd",
+                    "i": "2"
+                },
+                {
+                    "_": "",
+                    "s": "crescimento",
+                    "k": "pulm\u00e3o",
+                    "i": "2",
+                    "l": "pt",
+                    "t": "m"
+                },
+                {
+                    "l": "pt",
+                    "_": "",
+                    "t": "m",
+                    "k": "transtornos nutricionais",
+                    "i": "2"
+                },
+                {
+                    "l": "pt",
+                    "_": "",
+                    "t": "m",
+                    "k": "ratos wistar",
+                    "i": "2"
+                }
+            ],
+        }
+        document = _get_document(document_data or document_data_default)
+        xml = (
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
+            'Journal Publishing DTD v1.0 20120330//EN" '
+            '"JATS-journalpublishing1.dtd">\n'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            '<front>'
+            '<article-meta>'
+            '</article-meta>'
+            '</front>'
+            '</article>'
+        )
+        return document, etree.fromstring(xml)
+
+    def test_transform(self):
+        transformed = XMLArticleMetaPermissionPipe().transform(
             self._get_document())
         expected = (
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
