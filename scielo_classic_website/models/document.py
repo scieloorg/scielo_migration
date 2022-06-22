@@ -1,5 +1,5 @@
-from scielo_migration.iid2json.meta_record import MetaRecord
-from scielo_migration.isisdb.h_record import ArticleRecord
+from scielo_classic_website.isisdb.meta_record import MetaRecord
+from scielo_classic_website.isisdb.h_record import ArticleRecord
 
 
 RECORD = dict(
@@ -9,18 +9,6 @@ RECORD = dict(
     l=MetaRecord,
     c=ArticleRecord,
 )
-
-
-class Journal:
-    def __init__(self, journal_record):
-        self.journal_record = journal_record
-
-    def __getattr__(self, name):
-        # desta forma Journal não precisa herdar de JournalRecord
-        # fica menos acoplado
-        if hasattr(self.journal_record, name):
-            return getattr(self.journal_record, name)
-        raise AttributeError(name)
 
 
 class Document:

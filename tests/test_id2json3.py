@@ -1,5 +1,5 @@
 from unittest import TestCase
-from scielo_migration.iid2json import id2json3
+from scielo_classic_website.iid2json import id2json3
 
 
 class TestIsisIdToJson3(TestCase):

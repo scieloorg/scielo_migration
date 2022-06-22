@@ -1,5 +1,5 @@
 from unittest import TestCase
-from scielo_migration.iid2json import meta_record
+from scielo_classic_website.isisdb import meta_record
 
 
 class TestMetaRecord(TestCase):

@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 
-from scielo_migration.attr_values import (
+from scielo_classic_website.attr_values import (
     AttrValues,
 )
 
