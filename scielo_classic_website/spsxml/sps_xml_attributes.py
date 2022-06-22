@@ -1,7 +1,7 @@
 import os
 import csv
 
-from scielo_migration.config import (
+from scielo_classic_website.config import (
     ATTRIBUTES_PATH,
 )
 

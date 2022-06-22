@@ -2,17 +2,19 @@ from unittest import TestCase
 
 from lxml import etree
 
-from scielo_migration.spsxml.sps_xml_pipes import (
+from scielo_classic_website.spsxml.sps_xml_pipes import (
     get_xml_rsps,
     SetupArticlePipe,
     XMLClosePipe,
 )
-from scielo_migration.isisdb.journal_record import (
+from scielo_classic_website.isisdb.journal_record import (
     JournalRecord,
 )
-from scielo_migration.isisdb.models import (
+from scielo_classic_website.models.document import (
     Document,
     ArticleRecord,
+)
+from scielo_classic_website.models.journal import (
     Journal,
 )
 

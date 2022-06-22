@@ -2,7 +2,7 @@
 import plumber
 from lxml import etree as ET
 
-from scielo_migration.spsxml.sps_xml_attributes import (
+from scielo_classic_website.spsxml.sps_xml_attributes import (
     ARTICLE_TYPES,
     COUNTRY_ITEMS,
 )
