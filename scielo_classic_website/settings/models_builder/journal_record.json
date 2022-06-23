@@ -52,23 +52,23 @@
       "name": "is publishing model continuous",
       "description": "Is Publishing Model Continuous"
     },
-    "editor_address": {
-      "field_name": "editor_address",
+    "publisher_address": {
+      "field_name": "publisher_address",
       "subfields": {},
       "is_multi_val": true,
       "is_composite": false,
       "tag": "v063",
-      "name": "editor address",
-      "description": "Editor Address"
+      "name": "publisher address",
+      "description": "Publisher Address"
     },
-    "editor_email": {
-      "field_name": "editor_email",
+    "publisher_email": {
+      "field_name": "publisher_email",
       "subfields": {},
       "is_multi_val": false,
       "is_composite": false,
       "tag": "v064",
-      "name": "editor email",
-      "description": "Editor Email"
+      "name": "publisher email",
+      "description": "Publisher Email"
     },
     "is_indexed_in_scie": {
       "field_name": "is_indexed_in_scie",
@@ -537,14 +537,14 @@
       "name": "mission",
       "description": "Mission"
     },
-    "copyrighter": {
-      "field_name": "copyrighter",
+    "copyright_holder": {
+      "field_name": "copyright_holder",
       "subfields": {},
       "is_multi_val": false,
       "is_composite": false,
       "tag": "v062",
-      "name": "copyrighter",
-      "description": "Copyrighter"
+      "name": "copyright_holder",
+      "description": "Copyright holder"
     },
     "parallel_titles": {
       "field_name": "parallel_titles",

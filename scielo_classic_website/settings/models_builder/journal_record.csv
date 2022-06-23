@@ -4,8 +4,8 @@ Journal,435,t,type,,,issns,ISSNs,ISSNs
 Journal,541,,,,,permissions,permissions,Permissions
 Journal,699,,,,,publishing_model,publishing model,Publishing Model
 Journal,699,,,,,is_publishing_model_continuous,is publishing model continuous,Is Publishing Model Continuous
-Journal,63,,,true,,editor_address,editor address,Editor Address
-Journal,64,,,,,editor_email,editor email,Editor Email
+Journal,63,,,true,,publisher_address,editor address,Publisher Address
+Journal,64,,,,,publisher_email,editor email,Publisher Email
 Journal,851,,,,,is_indexed_in_scie,is indexed in scie,Is Indexed In Scie
 Journal,852,,,,,is_indexed_in_ssci,is indexed in ssci,Is Indexed In Ssci
 Journal,853,,,,,is_indexed_in_ahci,is indexed in ahci,Is Indexed In Ahci
@@ -61,7 +61,7 @@ Journal,941,,,,,update_date,update date,Update Date
 Journal,941,,,,,processing_date,processing date,Processing Date
 Journal,901,_,text,,,mission,mission,Mission
 Journal,901,l,language,,,mission,mission,Mission
-Journal,62,,,,,copyrighter,copyrighter,Copyrighter
+Journal,62,,,,,copyright_holder,copyright_holder,Copyright holder
 Journal,230,,,true,,parallel_titles,parallel titles,Parallel Titles - official titles in other languages 
 Journal,240,,,true,,other_titles,other titles,Other Titles - alternative titles, differents forms
 Journal,140,,,true,,sponsors,sponsors,Sponsors

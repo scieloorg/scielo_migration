@@ -1,4 +1,6 @@
 from scielo_classic_website import controller
+from scielo_classic_website.models.journal import Journal
+from scielo_classic_website.models.document import Document
 
 
 def get_document_pids_to_migrate(from_date, to_date):
