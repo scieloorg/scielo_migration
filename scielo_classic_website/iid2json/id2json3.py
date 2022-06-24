@@ -29,6 +29,12 @@ to JSON
 """
 
 
+def pids_and_their_records(id_file_path, id_function):
+    rows = _get_id_file_rows(id_file_path)
+    records = _join_id_file_rows_and_return_records(rows)
+    return _get_id_and_json_records(records, id_function)
+
+
 def _get_value(data, tag):
     """
     Returns first value of field `tag`
@@ -154,7 +160,7 @@ def _get_fields_and_their_content(content):
 
 
 # ok
-def get_id_file_rows(id_file_path):
+def _get_id_file_rows(id_file_path):
     """
     Obtém uma lista de linhas do arquivo `id_file_path`
 
@@ -173,7 +179,7 @@ def get_id_file_rows(id_file_path):
 
 
 # ok
-def join_id_file_rows_and_return_records(id_file_rows):
+def _join_id_file_rows_and_return_records(id_file_rows):
     """
     Junta linhas `id_file_rows` que formam registros (str) e os retorna
 
@@ -205,7 +211,7 @@ def join_id_file_rows_and_return_records(id_file_rows):
 
 
 # ok
-def get_id_and_json_records(records, get_id_function):
+def _get_id_and_json_records(records, get_id_function):
     """
     Given `records` e `get_id_function`, returns `_id` and `json_records`
 

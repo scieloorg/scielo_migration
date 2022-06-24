@@ -10,3 +10,63 @@ class ArticleRecord(BaseArticleRecord):
             data_dictionary=None):
         super().__init__(
             record, multi_val_tags, data_dictionary)
+
+    @property
+    def scielo_pid_v1(self):
+        """
+        SciELO PID v1
+        v002
+        """
+        value = self.get_field_content("v002", subfields={}, single=True, simple=True)
+        if value and len(value) == 23:
+            return value
+
+    @property
+    def original_title(self):
+        """
+        Original article title
+        v012
+        """
+        return super().article_titles[0]['text']
+
+    @property
+    def translated_titles(self):
+        """
+        Translated article titles
+        v012
+        """
+        return super().article_titles[1:]
+
+    @property
+    def original_abstract(self):
+        """
+        Original article abstract
+        v012
+        """
+        try:
+            return super().abstracts[0]['text']
+        except IndexError:
+            return None
+
+    @property
+    def translated_abstracts(self):
+        """
+        Translated article abstracts
+        v012
+        """
+        try:
+            return super().abstracts[1:]
+        except IndexError:
+            return None
+
+    @property
+    def keywords_groups(self):
+        _kwg = {}
+        for item in self.keywords:
+            if not item.get("language"):
+                continue
+            try:
+                _kwg[item['language']].append(item)
+            except KeyError:
+                _kwg[item['language']] = [item]
+        return _kwg

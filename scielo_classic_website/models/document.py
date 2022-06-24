@@ -1,5 +1,6 @@
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.h_record import ArticleRecord
+from scielo_classic_website.models.journal import Journal
 
 
 RECORD = dict(
@@ -12,18 +13,51 @@ RECORD = dict(
 
 
 class Document:
-    def __init__(self, h_record, journal=None, issue=None, citations=None):
-        self.h_record = h_record
-        self.journal = journal
-        self.issue = issue
-        self.citations = citations
+    def __init__(self, data):
+        self.data = data
+        self._h_record = ArticleRecord(data["article"])
+        self._journal = Journal(data["title"])
 
     def __getattr__(self, name):
         # desta forma Document não precisa herdar de ArticleRecord
         # fica menos acoplado
-        if hasattr(self.h_record, name):
-            return getattr(self.h_record, name)
+        if hasattr(self._h_record, name):
+            return getattr(self._h_record, name)
         raise AttributeError(name)
+
+    @property
+    def start_page(self):
+        return self.page.get("start")
+
+    @property
+    def end_page(self):
+        return self.page.get("end")
+
+    @property
+    def start_page_sequence(self):
+        return self.page.get("sequence")
+
+    @property
+    def elocation(self):
+        return self.page.get("elocation")
+
+    @property
+    def journal(self):
+        return self._journal
+
+    @property
+    def translated_htmls(self):
+        _translated_htmls = (self.data.get("body") or {}).copy()
+        try:
+            del _translated_htmls[self.original_language]
+        except KeyError:
+            pass
+        return _translated_htmls
+
+    @property
+    def permissions(self):
+        #FIXME
+        return {"url": "", "text": ""}
 
 
 class DocumentRecords:

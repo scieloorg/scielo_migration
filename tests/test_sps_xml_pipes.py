@@ -7,15 +7,8 @@ from scielo_classic_website.spsxml.sps_xml_pipes import (
     SetupArticlePipe,
     XMLClosePipe,
 )
-from scielo_classic_website.isisdb.journal_record import (
-    JournalRecord,
-)
 from scielo_classic_website.models.document import (
     Document,
-    ArticleRecord,
-)
-from scielo_classic_website.models.journal import (
-    Journal,
 )
 
 
@@ -35,16 +28,37 @@ def _get_journal():
         "v490": [{"_": "São Paulo"}],
         "v480": [{"_": "XXX Society"}],
     }
-    journal_record = JournalRecord(record)
-    return Journal(journal_record)
+    return {"title": record}
+
+
+def _get_article_record_content():
+    data = {
+        "v002": [{"_": "S0044-5967(99)000300260"}],
+        "v880": [{"_": "S0044-59671999000300260"}],
+        "v881": [{"_": "S0044-59671998005000260"}],
+        "v885": [{"_": "zGfhXPfmQxVkLNzXy9FTkFf"}],
+        "v121": [{"_": "00260"}],
+        "v237": [{"_": "10.1590/adjdadla"}],
+        "v049": [{"_": "Biotechnology"}],
+        "v040": [{"_": "es"}],
+        "v012": [
+            {"_": "Conocimientos de los pediatras sobre la laringomalacia: ¿siempre es un proceso banal?", "l": "es"},
+            {"_": "Pediatrician knowledge about laryngomalacia: is it always a banal process?", "l": "en"},
+        ],
+        "v010": [
+            {"n": "Albert", "s": "Einstein", "r": "ND", "k": "0000-0001-8528-2091"},
+            {"n": "Rogerio", "s": "Meneghini", "r": "ND", "l": "4760273612238540"},
+        ],
+    }
+    return {"article": data}
 
 
 class TestGetXmlRsps(TestCase):
 
     def test_get_xml_rsps(self):
-        h_record = ArticleRecord(None)
-        journal = _get_journal()
-        document = Document(h_record, journal)
+        data = _get_article_record_content()
+        data.update(_get_journal())
+        document = Document(data)
         expected = (
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
             'Journal Publishing DTD v1.0 20120330//EN" '
@@ -65,12 +79,45 @@ class TestGetXmlRsps(TestCase):
             '<publisher-loc>São Paulo, SP, Brazil</publisher-loc>'
             '</publisher>'
             '</journal-meta>'
-            '<article-meta/>'
+            '<article-meta>'
+            '<article-id pub-id-type="publisher-id" specific-use="scielo-v1">S0044-5967(99)000300260</article-id>'
+            '<article-id pub-id-type="publisher-id" specific-use="scielo-v2">S0044-59671999000300260</article-id>'
+            '<article-id pub-id-type="publisher-id" specific-use="scielo-v3">zGfhXPfmQxVkLNzXy9FTkFf</article-id>'
+            '<article-id specific-use="previous-pid">S0044-59671998005000260</article-id>'
+            '<article-id pub-id-type="other">00260</article-id>'
+            '<article-id pub-id-type="doi">10.1590/adjdadla</article-id>'
+            '<article-categories>'
+                '<subj-group subj-group-type="heading">'
+                    '<subject>Biotechnology</subject>'
+                '</subj-group>'
+            '</article-categories>'
+            '<title-group>'
+            '<article-title>Conocimientos de los pediatras sobre la laringomalacia: ¿siempre es un proceso banal?</article-title>'
+            '<trans-title-group xml:lang="en">'
+                    '<trans-title>Pediatrician knowledge about laryngomalacia: is it always a banal process?</trans-title>'
+            '</trans-title-group>'
+            '</title-group>'
+            '<contrib-group>'
+                '<contrib contrib-type="author">'
+                    '<contrib-id contrib-id-type="orcid">0000-0001-8528-2091</contrib-id>'
+                    '<name>'
+                        '<surname>Einstein</surname>'
+                        '<given-names>Albert</given-names>'
+                    '</name>'
+                '</contrib>'
+                '<contrib contrib-type="author">'
+                    '<contrib-id contrib-id-type="lattes">4760273612238540</contrib-id>'
+                    '<name>'
+                        '<surname>Meneghini</surname>'
+                        '<given-names>Rogerio</given-names>'
+                    '</name>'
+                '</contrib>'
+            '</contrib-group>'
+            '</article-meta>'
             '</front>'
             '</article>'
         ).encode("utf-8")
         result = get_xml_rsps(document)
-        print(result)
         self.assertEqual(expected, result)
 
 

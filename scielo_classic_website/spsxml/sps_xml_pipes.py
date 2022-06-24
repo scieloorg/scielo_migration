@@ -7,6 +7,29 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
     COUNTRY_ITEMS,
 )
 
+from scielo_migration.spsxml.sps_xml_article_meta import (
+    XMLArticleMetaSciELOArticleIdPipe,
+    XMLArticleMetaArticleIdDOIPipe,
+    XMLArticleMetaArticleCategoriesPipe,
+    XMLArticleMetaTitleGroupPipe,
+    XMLArticleMetaTranslatedTitleGroupPipe,
+    XMLArticleMetaContribGroupPipe,
+    XMLArticleMetaAffiliationPipe,
+    XMLArticleMetaPublicationDatesPipe,
+    XMLArticleMetaIssueInfoPipe,
+    XMLArticleMetaElocationInfoPipe,
+    XMLArticleMetaPagesInfoPipe,
+    XMLArticleMetaHistoryPipe,
+    XMLArticleMetaPermissionPipe,
+    # XMLArticleMetaSelfUriPipe,
+    XMLArticleMetaAbstractsPipe,
+    XMLArticleMetaKeywordsPipe,
+    # XMLArticleMetaCountsPipe,
+    # XMLBodyPipe,
+    # XMLArticleMetaCitationsPipe,
+    # XMLSubArticlePipe,
+)
+
 
 def get_xml_rsps(document):
     """
@@ -35,7 +58,28 @@ def _process(document):
             XMLJournalMetaJournalTitleGroupPipe(),
             XMLJournalMetaISSNPipe(),
             XMLJournalMetaPublisherPipe(),
+            XMLArticleMetaSciELOArticleIdPipe(),
+            XMLArticleMetaArticleIdDOIPipe(),
+            XMLArticleMetaArticleCategoriesPipe(),
+            XMLArticleMetaTitleGroupPipe(),
+            XMLArticleMetaTranslatedTitleGroupPipe(),
+            XMLArticleMetaContribGroupPipe(),
+            XMLArticleMetaAffiliationPipe(),
+            XMLArticleMetaPublicationDatesPipe(),
+            XMLArticleMetaIssueInfoPipe(),
+            XMLArticleMetaElocationInfoPipe(),
+            XMLArticleMetaPagesInfoPipe(),
+            XMLArticleMetaHistoryPipe(),
+            XMLArticleMetaPermissionPipe(),
+            # XMLArticleMetaSelfUriPipe(),
+            XMLArticleMetaAbstractsPipe(),
+            XMLArticleMetaKeywordsPipe(),
+            # XMLArticleMetaCountsPipe(),
+            # XMLBodyPipe(),
+            # XMLArticleMetaCitationsPipe(),
+            # XMLSubArticlePipe(),
             XMLClosePipe(),
+
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)

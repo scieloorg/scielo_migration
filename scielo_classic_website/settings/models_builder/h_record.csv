@@ -1,4 +1,8 @@
 record,tag,subfield,subfield_name,multi_val,composite,field_name,name,description
+article,31,,,,,volume,volume,Volume
+article,32,,,,,number,number,Number
+article,131,,,,,supplment,supplment,Supplment
+article,132,,,,,supplment,supplment,Supplment
 article,,,,,,fulltexts,fulltexts,Fulltexts
 article,,,,,,html_url,html url,Html Url
 article,,,,,,is_ahead_of_print,is ahead of print,Is Ahead Of Print
@@ -9,14 +13,14 @@ article,,,,,,journal,journal,Journal
 article,,,,,,mixed_affiliations,mixed affiliations,Mixed Affiliations
 article,,,,,,pdf_url,pdf url,Pdf Url
 article,,,,,,translated_htmls,translated htmls,Translated Htmls
-article,10,1,xref,,,author,author,Author
-article,10,k,orcid,,,author,author,Author
-article,10,l,lattes,,,author,author,Author
-article,10,n,given_names,,,author,author,Author
-article,10,n,given_names,,,author,author,Author
-article,10,p,prefix,,,author,author,Author
-article,10,r,role,,,author,author,Author
-article,10,s,surname,,,author,author,Author
+article,10,1,xref,,,authors,author,Author
+article,10,k,orcid,,,authors,author,Author
+article,10,l,lattes,,,authors,author,Author
+article,10,n,given_names,,,authors,author,Author
+article,10,n,given_names,,,authors,author,Author
+article,10,p,prefix,,,authors,author,Author
+article,10,r,role,,,authors,author,Author
+article,10,s,surname,,,authors,author,Author
 article,11,,,true,,corporative_authors,corporative authors,Corporative Authors
 article,112,,,,,receive_date_iso,receive date ISO,Receive Date ISO
 article,114,,,,,acceptance_date_iso,acceptance date ISO,Acceptance Date ISO
@@ -58,6 +62,7 @@ article,601,,,true,,xml_languages,xml languages,Xml Languages
 article,65,,,,,issue_publication_date,issue publication date,Issue Publication Date
 article,65,,,,,publication_date,publication date,Publication Date
 article,690,,,,,scielo_domain,scielo domain,Scielo Domain
+article,70,d,div,,,affiliations,affiliations,Affiliations
 article,70,1,div1,,,affiliations,affiliations,Affiliations
 article,70,2,div2,,,affiliations,affiliations,Affiliations
 article,70,3,div3,,,affiliations,affiliations,Affiliations
@@ -77,7 +82,7 @@ article,85,k,text,,,keywords,keywords,Keywords
 article,85,l,language,,,keywords,keywords,Keywords
 article,880,,,,,publisher_id,publisher id,Publisher Id
 article,880,,,,,scielo_pid_v2,scielo pid v2,SciELO PID v2
-article,881,,,,,publisher_ahead_id,publisher ahead id,Publisher Ahead Id
+article,881,,,,,aop_pid,aop_pid,AOP PID
 article,885,,,,,scielo_pid_v3,scielo pid v3,SciELO PID v3
 article,91,,,,,processing_date,processing date,Processing Date
 article,91,,,,,update_date,update date,Update Date
