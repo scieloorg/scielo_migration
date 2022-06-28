@@ -1,27 +1,6 @@
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 
-"""
 
-
-
-
-
-    'copyrighter',
-    'editor_email',
-    'eletronic_issn',
-    'enable_contact',
-    'is_public',
-    'issue_count',
-    'logo_url',
-    'previous_journal_ref',
-    'publisher_telephone',
-    'scielo_issn',
-    'scimago_id',
-    'short_title',
-    'title_iso',
-    'title_slug',
-    'url_segment',
-"""
 class Journal:
     def __init__(self, journal_record):
         self.journal_record = journal_record

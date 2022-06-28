@@ -47,13 +47,18 @@ class DataDictionaryBuilder:
             for l in ("multi_val", "composite"):
                 # assume que o campo composto tender a ser
                 # também multivalorado (nem sempre é)
-                recs[rec_type][field][f"is_{l}"] = bool(
-                    recs[rec_type][field].get(l) or
-                    recs[rec_type][field]["subfields"] or
-                    row.get(l) or
-                    row["subfield"] or
-                    row["subfield_name"]
-                )
+                value = row[l]
+                if (value or '').lower() == 'false':
+                    value = False
+                else:
+                    value = bool(
+                        recs[rec_type][field]["subfields"] or
+                        row["subfield"] or
+                        row["subfield_name"] or
+                        row[l]
+                    )
+
+                recs[rec_type][field][f"is_{l}"] = value
             recs[rec_type][field]["tag"] = tag
             recs[rec_type][field]["name"] = row.get("name") or ""
             recs[rec_type][field]["description"] = row.get("description") or ""
@@ -92,6 +97,7 @@ class ModelBuilder:
     def get_attributes(self):
         attribs = []
         for group_name, tag_info in sorted(self._data_dictionary.items(), key=lambda x: x[1]['tag']):
+            tag = tag_info.get('tag')
             field_name = tag_info.get('field_name') or tag
             attribs.append(field_name)
         return attribs
@@ -125,8 +131,7 @@ class ModelBuilder:
             tag = tag_info.get('tag')
             field_name = tag_info.get('field_name') or tag
             subfields = tag_info.get('subfields') or {}
-            is_multi_val = bool(tag_info.get('is_multi_val'))
-
+            is_multi_val = tag_info.get('is_multi_val')
             comment = _get_comment(tag, tag_info)
             blocks.append(
                 _attribute_builder(
@@ -255,8 +260,7 @@ def _attribute_builder(attribute_name, tag, subfields, is_multi_val, comment="")
         f"""    @property""",
         f"""    def {attribute_name}(self):""",
         f"""{comment}""",
-        f"""        return self.get_field_content(""",
-        f"""            {params})""",
+        f"""        return self.get_field_content({params})""",
     ))
 
 

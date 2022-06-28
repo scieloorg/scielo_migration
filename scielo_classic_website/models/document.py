@@ -1,25 +1,25 @@
 from scielo_classic_website.isisdb.meta_record import MetaRecord
-from scielo_classic_website.isisdb.h_record import ArticleRecord
+from scielo_classic_website.isisdb.h_record import DocumentRecord
 from scielo_classic_website.models.journal import Journal
 
 
 RECORD = dict(
-    o=ArticleRecord,
-    h=ArticleRecord,
-    f=ArticleRecord,
+    o=DocumentRecord,
+    h=DocumentRecord,
+    f=DocumentRecord,
     l=MetaRecord,
-    c=ArticleRecord,
+    c=DocumentRecord,
 )
 
 
 class Document:
     def __init__(self, data):
         self.data = data
-        self._h_record = ArticleRecord(data["article"])
+        self._h_record = DocumentRecord(data["article"])
         self._journal = Journal(data["title"])
 
     def __getattr__(self, name):
-        # desta forma Document não precisa herdar de ArticleRecord
+        # desta forma Document não precisa herdar de DocumentRecord
         # fica menos acoplado
         if hasattr(self._h_record, name):
             return getattr(self._h_record, name)
@@ -35,6 +35,18 @@ class Document:
 
     @property
     def start_page_sequence(self):
+        return self.page.get("sequence")
+
+    @property
+    def fpage(self):
+        return self.page.get("start")
+
+    @property
+    def lpage(self):
+        return self.page.get("end")
+
+    @property
+    def fpage_seq(self):
         return self.page.get("sequence")
 
     @property
@@ -58,6 +70,16 @@ class Document:
     def permissions(self):
         #FIXME
         return {"url": "", "text": ""}
+
+    @property
+    def authors_with_aff(self):
+        affs = {
+            item['id']: item
+            for item in self.affiliations
+        }
+        for author in self.authors:
+            author['affiliation'] = affs[author['xref']]['orgname']
+            yield author
 
 
 class DocumentRecords:
