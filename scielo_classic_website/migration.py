@@ -3,6 +3,8 @@ from scielo_classic_website.models.journal import Journal
 from scielo_classic_website.models.issue import Issue
 from scielo_classic_website.models.document import Document
 
+from scielo_classic_website.models.migrated_document import MigratedDocument
+
 
 def get_document_pids_to_migrate(from_date, to_date):
     return controller.isis_cmd.get_document_pids_to_migrate(from_date, to_date)

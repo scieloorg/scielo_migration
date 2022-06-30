@@ -1,6 +1,12 @@
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.h_record import DocumentRecord
+from scielo_classic_website.isisdb.p_record import ParagraphRecord
 from scielo_classic_website.models.journal import Journal
+from scielo_classic_website.models.issue import Issue
+from scielo_classic_website.models.html_body import (
+    BodyFromISIS,
+    BodyFromHTMLFile,
+)
 
 
 RECORD = dict(
@@ -9,14 +15,45 @@ RECORD = dict(
     f=DocumentRecord,
     l=MetaRecord,
     c=DocumentRecord,
+    p=ParagraphRecord,
 )
+
+
+def _get_value(data, tag):
+    """
+    Returns first value of field `tag`
+    """
+    # data['v880'][0]['_']
+    try:
+        _data = data[tag][0]
+        if len(_data) > 1:
+            return _data
+        else:
+            return _data['_']
+    except (KeyError, IndexError):
+        return None
 
 
 class Document:
     def __init__(self, data):
-        self.data = data
-        self._h_record = DocumentRecord(data["article"])
-        self._journal = Journal(data["title"])
+        self.data = {}
+        try:
+            self.data['article'] = data['article']
+        except KeyError:
+            self.data['article'] = data
+        self.document_records = DocumentRecords(self.data['article'])
+        self._h_record = self.document_records.article_meta
+        self.body_from_isis = BodyFromISIS(
+            self.document_records.get_record("p")
+        )
+        try:
+            self._journal = Journal(data["title"])
+        except KeyError:
+            self._journal = None
+        try:
+            self._issue = Issue(data["issue"])
+        except KeyError:
+            self._issue = None
 
     def __getattr__(self, name):
         # desta forma Document não precisa herdar de DocumentRecord
@@ -24,6 +61,22 @@ class Document:
         if hasattr(self._h_record, name):
             return getattr(self._h_record, name)
         raise AttributeError(name)
+
+    @property
+    def journal(self):
+        return self._journal
+
+    @property
+    def issue(self):
+        return self._issue
+
+    @journal.setter
+    def journal(self, record):
+        self._journal = Journal(record)
+
+    @issue.setter
+    def issue(self, record):
+        self._issue = Issue(record)
 
     @property
     def start_page(self):
@@ -54,10 +107,6 @@ class Document:
         return self.page.get("elocation")
 
     @property
-    def journal(self):
-        return self._journal
-
-    @property
     def translated_htmls(self):
         _translated_htmls = (self.data.get("body") or {}).copy()
         try:
@@ -68,7 +117,7 @@ class Document:
 
     @property
     def permissions(self):
-        #FIXME
+        # FIXME
         return {"url": "", "text": ""}
 
     @property

@@ -11,6 +11,9 @@ class DocumentRecord(BaseDocumentRecord):
         super().__init__(
             record, multi_val_tags, data_dictionary)
 
+        self._filename_no_ext, ext = os.path.splitext(self.file_code)
+        self._file_type = "xml" if ext == ".xml" else "html"
+
     @property
     def supplement(self):
         """
@@ -91,3 +94,15 @@ class DocumentRecord(BaseDocumentRecord):
             if value:
                 items.append(f"{label}{value}")
         return "".join(items)
+
+    @property
+    def filename(self):
+        return os.path.basename(self.file_code)
+
+    @property
+    def file_type(self):
+        return self._file_type
+
+    @property
+    def filename_without_extension(self):
+        return self._filename_no_ext
