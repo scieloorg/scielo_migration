@@ -25,6 +25,11 @@ class IssueFiles:
         Returns
         -------
         dict which keys: zip_file_path, files
+        files = {
+            "a01": {
+                "pt": {"before": "pt_a01.htm", "after": "pt_ba01.htm"}
+            }
+        }
         """
         if self._bases_translation_files is None:
 
@@ -41,15 +46,17 @@ class IssueFiles:
             document_files = {}
             for path in paths:
                 basename = os.path.basename(path)
-                lang = basename[:2]
-                name = basename[3:]
+                name, ext = os.path.splitext(basename)
+                lang = name[:2]
+                name = name[3:]
+
                 label = "before"
                 if name[0] == "b":
                     name = name[1:]
                     label = "after"
                 document_files.setdefault(name, {})
                 document_files[name].setdefault(lang, {})
-                document_files[name][lang].setdefault(label, basename)
+                document_files[name][lang][label] = basename
             self._bases_translation_files = {
                 "zip_file_path": zip_file_path,
                 "files": document_files,
@@ -65,11 +72,12 @@ class IssueFiles:
         Returns
         -------
         dict which keys: zip_file_path, files
-                "files":
+        "files":
+            {"a01":
                     {"pt": "a01.pdf",
                      "en": "en_a01.pdf",
                      "es": "es_a01.pdf"}
-
+            }
         """
         if self._bases_pdf_files is None:
 
@@ -86,16 +94,16 @@ class IssueFiles:
             document_files = {}
             for path in paths:
                 basename = os.path.basename(path)
-                if basename[2] == "_":
+                name, ext = os.path.splitext(basename)
+                if name[2] == "_":
                     # translations
-                    lang = basename[:2]
-                    name = basename[3:]
+                    lang = name[:2]
+                    name = name[3:]
                 else:
                     # main pdf
                     lang = "main"
-                    name = basename
                 document_files.setdefault(name, {})
-                document_files[name].setdefault(lang, basename)
+                document_files[name][lang] = basename
             self._bases_pdf_files = {
                 "zip_file_path": zip_file_path,
                 "files": document_files,
@@ -113,7 +121,13 @@ class IssueFiles:
         -------
         dict
             zip_file_path
-            files (original paths)
+            files (original paths):
+                {
+                    path_completo_original: basename,
+                    path_completo_original: basename,
+                    path_completo_original: basename,
+                    path_completo_original: basename,
+                }
         """
         if self._htdocs_img_revistas_files is None:
             paths = glob.glob(
@@ -138,7 +152,7 @@ class IssueFiles:
             self._htdocs_img_revistas_files = {
                 "zip_file_path": zip_file_path,
                 "files": {
-                    os.path.basename(file_path): file_path
+                    file_path: os.path.basename(file_path)
                     for file_path in files
                 }
             }
@@ -157,8 +171,13 @@ class IssueFiles:
             zip_file_path = create_zip_file(
                 paths, zip_name+".zip", zip_folder=None)
 
+            files = {}
+            for path in paths:
+                basename = os.path.basename(path)
+                name, ext = os.path.splitext(basename)
+                files[name] = basename
             self._bases_xml_files = {
                 "zip_file_path": zip_file_path,
-                "files": [os.path.basename(file) for file in paths],
+                "files": files,
             }
         return self._bases_xml_files
