@@ -1,6 +1,6 @@
 record,tag,subfield,subfield_name,multi_val,composite,field_name,name,description
 Issue,43,,,,,bibliographic_legends,bibliographic legends,Bibliographic Legends
-Issue,,,,,,journal,journal,Journal
+Issue,35,,,,,journal,journal,Journal
 Issue,880,,,,,publisher_id,publisher id,Publisher Id
 Issue,992,,,,,collection_acronym,collection acronym,Collection Acronym
 Issue,690,,,,,scielo_domain,scielo domain,Scielo Domain

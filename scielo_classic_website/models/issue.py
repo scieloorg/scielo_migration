@@ -16,3 +16,20 @@ class Issue:
     @property
     def record(self):
         return self._record
+
+    @property
+    def supplement(self):
+        return self.supplement_volume or self.supplement_number
+
+    @property
+    def suppl(self):
+        return self.supplement_volume or self.supplement_number
+
+    @property
+    def order(self):
+        return self.issue_record.order[:4] + self.issue_record.order[4:].zfill(4)
+
+    @property
+    def pid(self):
+        # 0001-371419980003
+        return self.journal + self.order
