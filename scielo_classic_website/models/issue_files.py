@@ -17,17 +17,33 @@ class IssueFiles:
         self._bases_xml_files = None
 
     @property
+    def files(self):
+        if self.bases_xml_files:
+            yield from self.bases_xml_files
+        if self.bases_translation_files:
+            yield from self.bases_translation_files
+        if self.bases_pdf_files:
+            yield from self.bases_pdf_files
+        if self.htdocs_img_revistas_files:
+            yield from self.htdocs_img_revistas_files
+
+    @property
     def bases_translation_files(self):
         """
-        Cria um zip dos arquivos HTML de bases/translation/acron/volnum
-        E os organiza num dicionário
+        Obtém os arquivos HTML de bases/translation/acron/volnum
+        E os agrupa pelo nome do arquivo e idioma
 
         Returns
         -------
-        dict which keys: zip_file_path, files
-        files = {
+        dict which keys: paths, info
+        "paths": [
+            "/path/bases/translations/acron/volnum/pt_a01.htm",
+            "/path/bases/translations/acron/volnum/pt_ba01.htm",
+        ]
+        "info": {
             "a01": {
-                "pt": {"before": "pt_a01.htm", "after": "pt_ba01.htm"}
+                "pt": {"before": "pt_a01.htm",
+                       "after": "pt_ba01.htm"}
             }
         }
         """
@@ -38,12 +54,7 @@ class IssueFiles:
                     config.BASES_TRANSLATION_PATH,
                     self._subdir_acron_issue, "*")
             )
-            zip_name = "_".join(
-                ["translations", self.acron, self.issue_folder])
-            zip_file_path = create_zip_file(
-                paths, zip_name+".zip", zip_folder=None)
-
-            document_files = {}
+            files = []
             for path in paths:
                 basename = os.path.basename(path)
                 name, ext = os.path.splitext(basename)
@@ -54,20 +65,19 @@ class IssueFiles:
                 if name[0] == "b":
                     name = name[1:]
                     label = "after"
-                document_files.setdefault(name, {})
-                document_files[name].setdefault(lang, {})
-                document_files[name][lang][label] = basename
-            self._bases_translation_files = {
-                "zip_file_path": zip_file_path,
-                "files": document_files,
-            }
+                files.append(
+                    {"type": "html",
+                     "key": name, "path": path, "name": basename,
+                     "lang": lang, "part": label}
+                )
+            self._bases_translation_files = files
         return self._bases_translation_files
 
     @property
     def bases_pdf_files(self):
         """
-        Cria um zip dos arquivos HTML de bases/translation/acron/volnum
-        E os organiza num dicionário
+        Obtém os arquivos PDF de bases/pdf/acron/volnum
+        E os agrupa pelo nome do arquivo e idioma
 
         Returns
         -------
@@ -86,12 +96,7 @@ class IssueFiles:
                     config.BASES_PDF_PATH,
                     self._subdir_acron_issue, "*")
             )
-            zip_name = "_".join(
-                ["pdfs", self.acron, self.issue_folder])
-            zip_file_path = create_zip_file(
-                paths, zip_name+".zip", zip_folder=None)
-
-            document_files = {}
+            files = []
             for path in paths:
                 basename = os.path.basename(path)
                 name, ext = os.path.splitext(basename)
@@ -102,12 +107,12 @@ class IssueFiles:
                 else:
                     # main pdf
                     lang = "main"
-                document_files.setdefault(name, {})
-                document_files[name][lang] = basename
-            self._bases_pdf_files = {
-                "zip_file_path": zip_file_path,
-                "files": document_files,
-            }
+                files.append(
+                    {"type": "pdf",
+                     "key": name, "path": path, "name": basename,
+                     "lang": lang}
+                )
+            self._bases_pdf_files = files
         return self._bases_pdf_files
 
     @property
@@ -140,22 +145,19 @@ class IssueFiles:
             files = []
             for path in paths:
                 if os.path.isfile(path):
-                    files.append(path)
+                    files.append({
+                        "type": "asset",
+                        "path": path,
+                        "name": os.path.basename(path)
+                    })
                 elif os.path.isdir(path):
-                    files.extend(glob.glob(os.path.join(path, "*")))
-
-            zip_name = "_".join(
-                ["img_revistas", self.acron, self.issue_folder])
-            zip_file_path = create_zip_file(
-                files, zip_name+".zip", zip_folder=None)
-
-            self._htdocs_img_revistas_files = {
-                "zip_file_path": zip_file_path,
-                "files": {
-                    file_path: os.path.basename(file_path)
-                    for file_path in files
-                }
-            }
+                    for item in glob.glob(os.path.join(path, "*")):
+                        files.append({
+                            "type": "asset",
+                            "path": path,
+                            "name": os.path.basename(path)
+                        })
+            self._htdocs_img_revistas_files = files
         return self._htdocs_img_revistas_files
 
     @property
@@ -166,18 +168,14 @@ class IssueFiles:
                 self._subdir_acron_issue,
                 "*.xml"
             )
-            zip_name = "_".join(
-                ["xml", self.acron, self.issue_folder])
-            zip_file_path = create_zip_file(
-                paths, zip_name+".zip", zip_folder=None)
-
-            files = {}
+            files = []
             for path in paths:
                 basename = os.path.basename(path)
                 name, ext = os.path.splitext(basename)
-                files[name] = basename
-            self._bases_xml_files = {
-                "zip_file_path": zip_file_path,
-                "files": files,
-            }
+                files.append(
+                    {"type": "xml",
+                     "key": name, "path": path, "name": basename,
+                     }
+                )
+            self._bases_xml_files = files
         return self._bases_xml_files

@@ -32,12 +32,4 @@ def get_records_by_source_path(db_type, source_path):
 
 def get_issue_files(acron, issue_folder):
     issue_files = IssueFiles(acron, issue_folder)
-    files = dict(
-        img=issue_files.htdocs_img_revistas_files,
-        pdf=issue_files.bases_pdf_files,
-    )
-    if issue_files.bases_xml_files:
-        files["xml"] = issue_files.bases_xml_files
-    else:
-        files["html"] = issue_files.bases_translation_files
-    return files
+    return issue_files.files
