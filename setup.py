@@ -13,7 +13,7 @@ tests_require = [
 ]
 
 setuptools.setup(
-    name="scielo_migration",
+    name="scielo_classic_website",
     version="0.1",
     author="SciELO",
     author_email="scielo-dev@googlegroups.com",
