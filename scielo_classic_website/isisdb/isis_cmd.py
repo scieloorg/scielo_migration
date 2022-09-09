@@ -139,7 +139,7 @@ def get_id_file_path(source_file_path):
         return create_id_file(source_file_path)
 
 
-def get_document_pids_to_migrate(from_date=None, to_date=None):
+def get_document_pids(from_date=None, to_date=None):
     """
     Consulta a base de dados ISIS artigo e retorna os pids atualizados
     em um intervalo de datas (data de processamento do converter)

@@ -1,0 +1,53 @@
+{
+  "record": {
+    "field_name": {
+      "field_name": "field_name",
+      "subfields": {
+        "subfield": "subfield_name"
+      },
+      "is_multi_val": true,
+      "is_composite": true,
+      "tag": "vtag",
+      "name": "name",
+      "description": "description"
+    }
+  },
+  "Paragraph": {
+    "record_type_index": {
+      "field_name": "record_type_index",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v701",
+      "name": "record_type_index",
+      "description": "record_type_index"
+    },
+    "record_type": {
+      "field_name": "record_type",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v706",
+      "name": "record_type",
+      "description": "record_type"
+    },
+    "reference_index": {
+      "field_name": "reference_index",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v888",
+      "name": "reference_index",
+      "description": "reference_index"
+    },
+    "paragraph_text": {
+      "field_name": "paragraph_text",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v704",
+      "name": "paragraph_text",
+      "description": ""
+    }
+  }
+}

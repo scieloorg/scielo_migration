@@ -13,6 +13,29 @@
     }
   },
   "article": {
+    "page": {
+      "field_name": "page",
+      "subfields": {
+        "e": "elocation",
+        "f": "start",
+        "l": "end",
+        "s": "sequence"
+      },
+      "is_multi_val": false,
+      "is_composite": true,
+      "tag": "v014",
+      "name": "page",
+      "description": "Page"
+    },
+    "journal_id": {
+      "field_name": "journal_id",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v035",
+      "name": "journal_id",
+      "description": "Journal ID"
+    },
     "volume": {
       "field_name": "volume",
       "subfields": {},
@@ -22,23 +45,32 @@
       "name": "volume",
       "description": "Volume"
     },
-    "number": {
-      "field_name": "number",
+    "issue_number": {
+      "field_name": "issue_number",
       "subfields": {},
       "is_multi_val": false,
       "is_composite": false,
       "tag": "v032",
-      "name": "number",
+      "name": "issue_number",
       "description": "Number"
     },
-    "supplment": {
-      "field_name": "supplment",
+    "vol_suppl": {
+      "field_name": "vol_suppl",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v131",
+      "name": "volume supplement",
+      "description": "Supplement"
+    },
+    "num_suppl": {
+      "field_name": "num_suppl",
       "subfields": {},
       "is_multi_val": false,
       "is_composite": false,
       "tag": "v132",
-      "name": "supplment",
-      "description": "Supplment"
+      "name": "number supplement",
+      "description": "Supplement"
     },
     "fulltexts": {
       "field_name": "fulltexts",
@@ -144,7 +176,7 @@
       "is_multi_val": true,
       "is_composite": true,
       "tag": "v010",
-      "name": "author",
+      "name": "authors",
       "description": "Author"
     },
     "corporative_authors": {
@@ -222,20 +254,6 @@
       "tag": "v121",
       "name": "order",
       "description": "Order"
-    },
-    "page": {
-      "field_name": "page",
-      "subfields": {
-        "e": "elocation",
-        "f": "start",
-        "l": "end",
-        "s": "sequence"
-      },
-      "is_multi_val": true,
-      "is_composite": true,
-      "tag": "v014",
-      "name": "Page",
-      "description": ""
     },
     "ahead_publication_date": {
       "field_name": "ahead_publication_date",
@@ -465,10 +483,11 @@
     "affiliations": {
       "field_name": "affiliations",
       "subfields": {
-        "d": "div",
+        "d": "div1",
         "1": "div1",
         "2": "div2",
         "3": "div3",
+        "o": "orgname",
         "_": "orgname",
         "c": "city",
         "e": "email",
@@ -521,6 +540,7 @@
     "abstracts": {
       "field_name": "abstracts",
       "subfields": {
+        "_": "text",
         "a": "text",
         "l": "language"
       },
@@ -534,6 +554,7 @@
       "field_name": "keywords",
       "subfields": {
         "k": "text",
+        "s": "subkey",
         "l": "language"
       },
       "is_multi_val": true,
@@ -560,14 +581,23 @@
       "name": "scielo pid v2",
       "description": "SciELO PID v2"
     },
+    "publisher_ahead_id": {
+      "field_name": "publisher_ahead_id",
+      "subfields": {},
+      "is_multi_val": false,
+      "is_composite": false,
+      "tag": "v881",
+      "name": "publisher ahead id",
+      "description": "Publisher Ahead Id"
+    },
     "aop_pid": {
       "field_name": "aop_pid",
       "subfields": {},
       "is_multi_val": false,
       "is_composite": false,
       "tag": "v881",
-      "name": "aop_pid",
-      "description": "AOP PID"
+      "name": "aop pid",
+      "description": "Ahead Of Print Id"
     },
     "scielo_pid_v3": {
       "field_name": "scielo_pid_v3",

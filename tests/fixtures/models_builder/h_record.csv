@@ -1,8 +1,13 @@
 record,tag,subfield,subfield_name,multi_val,composite,field_name,name,description
+article,14,e,elocation,false,,page,page,Page
+article,14,f,start,false,,page,page,Page
+article,14,l,end,false,,page,page,Page
+article,14,s,sequence,false,,page,page,Page
+article,35,,,,,journal_id,journal_id,Journal ID
 article,31,,,,,volume,volume,Volume
-article,32,,,,,number,number,Number
-article,131,,,,,supplment,supplment,Supplment
-article,132,,,,,supplment,supplment,Supplment
+article,32,,,,,issue_number,issue_number,Number
+article,131,,,,,vol_suppl,volume supplement,Supplement
+article,132,,,,,num_suppl,number supplement,Supplement
 article,,,,,,fulltexts,fulltexts,Fulltexts
 article,,,,,,html_url,html url,Html Url
 article,,,,,,is_ahead_of_print,is ahead of print,Is Ahead Of Print
@@ -13,14 +18,14 @@ article,,,,,,journal,journal,Journal
 article,,,,,,mixed_affiliations,mixed affiliations,Mixed Affiliations
 article,,,,,,pdf_url,pdf url,Pdf Url
 article,,,,,,translated_htmls,translated htmls,Translated Htmls
-article,10,1,xref,,,authors,author,Author
-article,10,k,orcid,,,authors,author,Author
-article,10,l,lattes,,,authors,author,Author
-article,10,n,given_names,,,authors,author,Author
-article,10,n,given_names,,,authors,author,Author
-article,10,p,prefix,,,authors,author,Author
-article,10,r,role,,,authors,author,Author
-article,10,s,surname,,,authors,author,Author
+article,10,1,xref,true,true,authors,authors,Author
+article,10,k,orcid,true,true,authors,authors,Author
+article,10,l,lattes,true,true,authors,authors,Author
+article,10,n,given_names,true,true,authors,authors,Author
+article,10,n,given_names,true,true,authors,authors,Author
+article,10,p,prefix,true,true,authors,authors,Author
+article,10,r,role,true,true,authors,authors,Author
+article,10,s,surname,true,true,authors,authors,Author
 article,11,,,true,,corporative_authors,corporative authors,Corporative Authors
 article,112,,,,,receive_date_iso,receive date ISO,Receive Date ISO
 article,114,,,,,acceptance_date_iso,acceptance date ISO,Acceptance Date ISO
@@ -31,10 +36,6 @@ article,12,l,language,,,article_titles,article titles,Article Titles
 article,120,,,,,data_model_version,data model version,Data Model Version
 article,121,,,,,internal_sequence_id,internal sequence id,Internal Sequence Id
 article,121,,,,,order,order,Order
-article,14,e,elocation,,,page,Page
-article,14,f,start,,,page,Page
-article,14,l,end,,,page,Page
-article,14,s,sequence,,page,page,Page
 article,223,,,,,ahead_publication_date,ahead publication date,Ahead Publication Date
 article,223,,,,,document_publication_date,document publication date,Document Publication Date
 article,237,,,,,doi,doi,DOI
@@ -62,27 +63,31 @@ article,601,,,true,,xml_languages,xml languages,Xml Languages
 article,65,,,,,issue_publication_date,issue publication date,Issue Publication Date
 article,65,,,,,publication_date,publication date,Publication Date
 article,690,,,,,scielo_domain,scielo domain,Scielo Domain
-article,70,d,div,,,affiliations,affiliations,Affiliations
-article,70,1,div1,,,affiliations,affiliations,Affiliations
-article,70,2,div2,,,affiliations,affiliations,Affiliations
-article,70,3,div3,,,affiliations,affiliations,Affiliations
-article,70,_,orgname,,,affiliations,affiliations,Affiliations
-article,70,c,city,,,affiliations,affiliations,Affiliations
-article,70,e,email,,,affiliations,affiliations,Affiliations
-article,70,i,id,,,affiliations,affiliations,Affiliations
-article,70,p,country,,,affiliations,affiliations,Affiliations
-article,70,s,state,,,affiliations,affiliations,Affiliations
+article,70,d,div1,true,true,affiliations,affiliations,Affiliations
+article,70,1,div1,true,true,affiliations,affiliations,Affiliations
+article,70,2,div2,true,true,affiliations,affiliations,Affiliations
+article,70,3,div3,true,true,affiliations,affiliations,Affiliations
+article,70,o,orgname,true,true,affiliations,affiliations,Affiliations
+article,70,_,orgname,true,true,affiliations,affiliations,Affiliations
+article,70,c,city,true,true,affiliations,affiliations,Affiliations
+article,70,e,email,true,true,affiliations,affiliations,Affiliations
+article,70,i,id,true,true,affiliations,affiliations,Affiliations
+article,70,p,country,true,true,affiliations,affiliations,Affiliations
+article,70,s,state,true,true,affiliations,affiliations,Affiliations
 article,702,,,,,file_code,file code,File Code
 article,702,,,,,original_html,original html,Original Html
 article,71,,,,,article_type,article type,Article Type
 article,71,,,,,document_type,document type,Document Type
+article,83,_,text,,,abstracts,abstracts,Abstracts
 article,83,a,text,,,abstracts,abstracts,Abstracts
 article,83,l,language,,,abstracts,abstracts,Abstracts
-article,85,k,text,,,keywords,keywords,Keywords
-article,85,l,language,,,keywords,keywords,Keywords
+article,85,k,text,true,true,keywords,keywords,Keywords
+article,85,s,subkey,true,true,keywords,keywords,Keywords
+article,85,l,language,true,true,keywords,keywords,Keywords
 article,880,,,,,publisher_id,publisher id,Publisher Id
 article,880,,,,,scielo_pid_v2,scielo pid v2,SciELO PID v2
-article,881,,,,,aop_pid,aop_pid,AOP PID
+article,881,,,,,publisher_ahead_id,publisher ahead id,Publisher Ahead Id
+article,881,,,,,aop_pid,aop pid,Ahead Of Print Id
 article,885,,,,,scielo_pid_v3,scielo pid v3,SciELO PID v3
 article,91,,,,,processing_date,processing date,Processing Date
 article,91,,,,,update_date,update date,Update Date

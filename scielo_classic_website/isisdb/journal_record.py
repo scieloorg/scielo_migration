@@ -30,3 +30,23 @@ class JournalRecord(BaseJournalRecord):
                     self._electronic_issn = issn["value"]
                     break
         return self._electronic_issn
+
+    @property
+    def copyrighter(self):
+        return self.copyright_holder
+
+    @property
+    def editor_email(self):
+        return self.publisher_email
+
+    @property
+    def eletronic_issn(self):
+        return self.electronic_issn
+
+    @property
+    def short_title(self):
+        return self.abbreviated_title
+
+    @property
+    def title_iso(self):
+        return self.abbreviated_iso_title

@@ -1,0 +1,5 @@
+record,tag,subfield,subfield_name,multi_val,composite,field_name,name,description
+Paragraph,701,,record_type_index,false,false,record_type_index,record_type_index,record_type_index
+Paragraph,706,,record_type,false,false,record_type,record_type,record_type
+Paragraph,888,,reference_index,false,false,reference_index,reference_index,reference_index
+Paragraph,704,,paragraph_text,false,false,paragraph_text,paragraph_text,
