@@ -1,16 +1,19 @@
 from scielo_classic_website.isisdb.meta_record import MetaRecord
+from scielo_classic_website.isisdb.journal_record import JournalRecord
 
 
 class Journal:
     def __init__(self, journal_record):
-        self.journal_record = journal_record
+        self.journal_record = JournalRecord(journal_record)
 
     def __getattr__(self, name):
         # desta forma Journal não precisa herdar de JournalRecord
         # fica menos acoplado
         if hasattr(self.journal_record, name):
             return getattr(self.journal_record, name)
-        raise AttributeError(name)
+        raise AttributeError(
+            "classic_website.Journal has no attribute %s %s" %
+            (name, str()))
 
     @property
     def record(self):
@@ -56,13 +59,6 @@ class Journal:
     @property
     def publication_status(self):
         return self.journal_record.current_status
-
-    @property
-    def mission(self):
-        return {
-            m['l']: m['_']
-            for m in self.journal_record.mission
-        }
 
     @property
     def index_at(self):

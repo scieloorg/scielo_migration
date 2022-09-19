@@ -5,7 +5,7 @@ from scielo_classic_website.config import (
     ATTRIBUTES_PATH,
 )
 
-from scielo_migration.attr_values import AttrValues
+from scielo_classic_website.attr_values import AttrValues
 
 
 def _read_csv_file(file_path):
