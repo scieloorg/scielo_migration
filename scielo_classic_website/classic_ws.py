@@ -7,6 +7,14 @@ from scielo_classic_website.models.issue import Issue
 from scielo_classic_website.models.document import Document
 
 
+def get_bases_work_acron_path(cisis_path, bases_work_acron_file_path, issue_folder=None):
+    if issue_folder:
+        return controller.isis_cmd.get_documents_by_issue_folder(
+            cisis_path, bases_work_acron_file_path, issue_folder)
+    else:
+        return bases_work_acron_file_path
+
+
 def get_document_pids(from_date, to_date):
     return controller.isis_cmd.get_document_pids(from_date, to_date)
 
