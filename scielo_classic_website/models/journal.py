@@ -12,8 +12,7 @@ class Journal:
         if hasattr(self.journal_record, name):
             return getattr(self.journal_record, name)
         raise AttributeError(
-            "classic_website.Journal has no attribute %s %s" %
-            (name, str()))
+            f"classic_website.Journal has no attribute {name}")
 
     @property
     def record(self):
