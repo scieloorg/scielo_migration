@@ -7,7 +7,7 @@ from scielo_classic_website import config
 
 class IssueFiles:
 
-    def __init__(self, acron, issue_folder):
+    def __init__(self, acron, issue_folder, config):
         self.acron = acron
         self.issue_folder = issue_folder
         self._subdir_acron_issue = os.path.join(acron, issue_folder)
@@ -15,6 +15,7 @@ class IssueFiles:
         self._bases_translation_files = None
         self._bases_pdf_files = None
         self._bases_xml_files = None
+        self._config = config
 
     @property
     def files(self):
@@ -51,7 +52,7 @@ class IssueFiles:
 
             paths = glob.glob(
                 os.path.join(
-                    config.BASES_TRANSLATION_PATH,
+                    self._config["BASES_TRANSLATION_PATH"],
                     self._subdir_acron_issue, "*")
             )
             files = []
@@ -93,7 +94,7 @@ class IssueFiles:
 
             paths = glob.glob(
                 os.path.join(
-                    config.BASES_PDF_PATH,
+                    self._config["BASES_PDF_PATH"],
                     self._subdir_acron_issue, "*")
             )
             files = []
@@ -137,7 +138,7 @@ class IssueFiles:
         if self._htdocs_img_revistas_files is None:
             paths = glob.glob(
                 os.path.join(
-                    config.HTDOCS_IMG_REVISTAS_PATH,
+                    self._config["HTDOCS_IMG_REVISTAS_PATH"],
                     self._subdir_acron_issue,
                     "*"
                 )
@@ -163,10 +164,12 @@ class IssueFiles:
     @property
     def bases_xml_files(self):
         if self._bases_xml_files is None:
-            paths = os.path.join(
-                config.BASES_XML_PATH,
-                self._subdir_acron_issue,
-                "*.xml"
+            paths = glob.glob(
+                os.path.join(
+                    self._config["BASES_XML_PATH"],
+                    self._subdir_acron_issue,
+                    "*.xml"
+                )
             )
             files = []
             for path in paths:

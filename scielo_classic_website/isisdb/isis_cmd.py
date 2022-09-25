@@ -12,9 +12,7 @@ from scielo_classic_website.utils.files_utils import (
 
 def get_document_isis_db(pid):
     """
-    Consulta a base de dados ISIS artigo e retorna os pids atualizados
-    em um intervalo de datas (data de processamento do converter)
-
+    Consulta a base de dados ISIS artigo e retorna os registros do pid
     """
     BASES_ARTIGO_PATH = config.get_bases_artigo_path()
     name = date_now_as_folder_name()
@@ -179,3 +177,27 @@ def get_document_pids(from_date=None, to_date=None):
             # 1|OAITS=20210917=2675-54752021000300700
             parts = row.strip().split("=")
             yield {"updated": parts[1], "pid": "S" + parts[-1]}
+
+
+def get_documents_by_issue_folder(cisis_path, bases_work_acron_file_path, issue_folder):
+    """
+    Consulta a base de dados ISIS bases-work/acron/acron e filtra por issue_folder
+
+    """
+    name = date_now_as_folder_name()
+    finished_file_path = create_temp_file(f"{name}_{issue_folder}_finished.out")
+    output_file_path = create_temp_file(f"{name}_{issue_folder}_output")
+
+    cmds = []
+    cmds.append(
+        f'''{cisis_path}/mx {bases_work_acron_file_path} btell=0 '''
+        f'''"bool={issue_folder}" '''
+        f'''append={output_file_path} now -all'''
+    )
+    cmds.append(
+        f"echo finished > {finished_file_path}"
+    )
+    os.system(";".join(cmds))
+    while "finished" not in read_file(finished_file_path):
+        pass
+    return output_file_path

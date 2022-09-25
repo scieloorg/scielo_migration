@@ -7,7 +7,7 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
     COUNTRY_ITEMS,
 )
 
-from scielo_migration.spsxml.sps_xml_article_meta import (
+from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLArticleMetaSciELOArticleIdPipe,
     XMLArticleMetaArticleIdDOIPipe,
     XMLArticleMetaArticleCategoriesPipe,

@@ -1,4 +1,4 @@
-from dsm.utils.files_utils import read_file
+from scielo_classic_website.utils.files_utils import read_file
 
 
 class BodyFromISIS:
