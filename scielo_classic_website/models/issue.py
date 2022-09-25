@@ -1,3 +1,5 @@
+import logging
+
 from scielo_classic_website.isisdb.issue_record import IssueRecord
 
 
@@ -11,7 +13,7 @@ class Issue:
         # fica menos acoplado
         if hasattr(self.issue_record, name):
             return getattr(self.issue_record, name)
-        raise AttributeError(name)
+        raise AttributeError(f"classic_website.Issue has no attribute {name}")
 
     @property
     def record(self):
