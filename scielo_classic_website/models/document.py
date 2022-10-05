@@ -60,7 +60,7 @@ class Document:
         # fica menos acoplado
         if hasattr(self._h_record, name):
             return getattr(self._h_record, name)
-        raise AttributeError(name)
+        raise AttributeError(f"Document.{name} does not exist")
 
     @property
     def journal(self):
@@ -147,9 +147,12 @@ class DocumentRecords:
         for _record in _records:
             meta_record = MetaRecord(_record)
             rec_type = meta_record.rec_type
-            record = RECORD[rec_type](_record)
-            self._records[rec_type] = self._records.get(rec_type) or []
-            self._records[rec_type].append(record)
+            try:
+                record = RECORD[rec_type](_record)
+                self._records[rec_type] = self._records.get(rec_type) or []
+                self._records[rec_type].append(record)
+            except KeyError:
+                pass
 
     def get_record(self, rec_type):
         return self._records.get(rec_type)
