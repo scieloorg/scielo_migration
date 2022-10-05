@@ -15,6 +15,11 @@ def get_document_isis_db(pid):
     Consulta a base de dados ISIS artigo e retorna os registros do pid
     """
     BASES_ARTIGO_PATH = config.get_bases_artigo_path()
+
+    if not os.path.isfile(BASES_ARTIGO_PATH + ".mst"):
+        raise FileNotFoundError(
+            f"Unable to get document isis database. {BASES_ARTIGO_PATH}.mst not found")
+
     name = date_now_as_folder_name()
     finished_file_path = create_temp_file(f"{name}_finished.out")
     output_file_path = create_temp_file(f"{name}_output")
@@ -181,16 +186,26 @@ def get_document_pids(from_date=None, to_date=None):
 
 def get_documents_by_issue_folder(cisis_path, bases_work_acron_file_path, issue_folder):
     """
-    Consulta a base de dados ISIS bases-work/acron/acron e filtra por issue_folder
+    Consulta a base de dados ISIS bases-work/acron/acron e
+    filtra por issue_folder
 
     """
+    if not os.path.isfile(bases_work_acron_file_path + ".mst"):
+        raise FileNotFoundError(
+            f"Unable to get {issue_folder} documents. {bases_work_acron_file_path}.mst not found")
+
+    mx = os.path.join(cisis_path, "mx")
+    if not os.path.isfile(mx):
+        raise FileNotFoundError(
+            f"Unable to get {issue_folder} documents. {mx} not found")
+
     name = date_now_as_folder_name()
     finished_file_path = create_temp_file(f"{name}_{issue_folder}_finished.out")
     output_file_path = create_temp_file(f"{name}_{issue_folder}_output")
 
     cmds = []
     cmds.append(
-        f'''{cisis_path}/mx {bases_work_acron_file_path} btell=0 '''
+        f'''{mx} {bases_work_acron_file_path} btell=0 '''
         f'''"bool={issue_folder}" '''
         f'''append={output_file_path} now -all'''
     )
