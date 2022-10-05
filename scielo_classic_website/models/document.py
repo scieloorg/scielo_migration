@@ -35,13 +35,13 @@ def _get_value(data, tag):
 
 
 class Document:
-    def __init__(self, data):
+    def __init__(self, data, _id=None):
         self.data = {}
         try:
             self.data['article'] = data['article']
         except KeyError:
             self.data['article'] = data
-        self.document_records = DocumentRecords(self.data['article'])
+        self.document_records = DocumentRecords(self.data['article'], _id)
         self._h_record = self.document_records.article_meta
         self.body_from_isis = BodyFromISIS(
             self.document_records.get_record("p")
@@ -132,7 +132,7 @@ class Document:
 
 
 class DocumentRecords:
-    def __init__(self, _id, records):
+    def __init__(self, records, _id=None):
         self._id = _id
         self._records = None
         self.records = records
