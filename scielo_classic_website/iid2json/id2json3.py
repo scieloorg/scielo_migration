@@ -27,6 +27,7 @@ to JSON
 ```
 
 """
+import logging
 
 
 def pids_and_their_records(id_file_path, id_function):
@@ -137,15 +138,15 @@ def article_id(data):
     if record_type == "i":
         return issue_id(data)
     try:
-        return _get_value(data, 'v880')[:23]
-    except (TypeError, IndexError, KeyError):
-        return "".join([
-            "S",
-            _get_value(data, 'v035'),
-            _get_value(data, 'v036')[:4],
-            _get_value(data, 'v036')[4:].zfill(4),
-            _get_value(data, 'v121').zfill(5),
-        ])
+        try:
+            return _get_value(data, 'v880')[:23]
+        except (TypeError, IndexError, KeyError):
+            # bases em serial não tem o campo v880 inserido no GeraPadrao
+            # pode-se agrupar os registros pelo v702 (path do XML ou HTML)
+            return _get_value(data, 'v702')
+    except Exception as e:
+        logging.exception(e)
+        raise
 
 
 def _get_fields_and_their_content(content):
@@ -236,7 +237,7 @@ def _get_id_and_json_records(records, get_id_function):
         if not data:
             continue
         _next_id = get_id_function(data)
-        if _next_id != _id and _id:
+        if _id and _next_id != _id:
             # _id changed
 
             # returns current _id, _id_records
