@@ -1,11 +1,12 @@
 import os
 import glob
+import logging
 
 from scielo_classic_website.utils.files_utils import create_zip_file
 from scielo_classic_website import config
 
 
-class IssueFiles:
+class ClassicWebsiteFileSystem:
 
     def __init__(self, acron, issue_folder, config):
         self.acron = acron
@@ -155,8 +156,8 @@ class IssueFiles:
                     for item in glob.glob(os.path.join(path, "*")):
                         files.append({
                             "type": "asset",
-                            "path": path,
-                            "name": os.path.basename(path)
+                            "path": item,
+                            "name": os.path.basename(item)
                         })
             self._htdocs_img_revistas_files = files
         return self._htdocs_img_revistas_files
@@ -182,3 +183,73 @@ class IssueFiles:
                 )
             self._bases_xml_files = files
         return self._bases_xml_files
+
+
+class ArtigoDBPath:
+
+    def __init__(self, classic_website, journal_acron, issue_folder):
+        self.classic_website = classic_website
+        self.journal_acron = journal_acron
+        self.issue_folder = issue_folder
+
+    def get_db_from_serial_base_xml_dir(self):
+        items = []
+        _serial_path = os.path.join(
+            self.classic_website.serial_path,
+            self.journal_acron, self.issue_folder, "base_xml", "id")
+
+        if os.path.isdir(_serial_path):
+            items.append(os.path.join(_serial_path, "i.id"))
+            for item in os.listdir(_serial_path):
+                if item != 'i.id' and item.endswith(".id"):
+                    items.append(os.path.join(_serial_path, item))
+        return items
+
+    def get_db_from_serial_base_dir(self):
+        items = []
+        _serial_path = os.path.join(
+            self.classic_website.serial_path,
+            self.journal_acron, self.issue_folder, "base")
+
+        if os.path.isdir(_serial_path):
+            items.append(os.path.join(_serial_path, self.issue_folder))
+        return items
+
+    def get_db_from_bases_work_acron_id(self):
+        items = []
+        _bases_work_acron_path = os.path.join(
+            self.classic_website.bases_work_path,
+            self.journal_acron,
+            self.journal_acron,
+        )
+        if os.path.isfile(_bases_work_acron_path + ".id"):
+            items.append(_bases_work_acron_path + ".id")
+        return items
+
+    def get_db_from_bases_work_acron(self):
+        items = []
+        _bases_work_acron_path = os.path.join(
+            self.classic_website.bases_work_path,
+            self.journal_acron,
+            self.journal_acron,
+        )
+        items.append(_bases_work_acron_path)
+        return items
+
+    def get_db_from_bases_work_acron_subset(self):
+        items = []
+        _bases_work_acron_path = os.path.join(
+            self.classic_website.bases_work_path,
+            self.journal_acron,
+            self.journal_acron,
+        )
+        try:
+            items.append(
+                controller.isis_cmd.get_documents_by_issue_folder(
+                    self.classic_website.cisis_path,
+                    _bases_work_acron_path,
+                    self.issue_folder)
+            )
+        except Exception as e:
+            logging.exception(e)
+        return items
