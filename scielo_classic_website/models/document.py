@@ -1,3 +1,6 @@
+import logging
+
+from scielo_classic_website.isisdb.issue_record import IssueRecord
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.h_record import DocumentRecord
 from scielo_classic_website.isisdb.p_record import ParagraphRecord
@@ -10,6 +13,7 @@ from scielo_classic_website.models.html_body import (
 
 
 RECORD = dict(
+    i=IssueRecord,
     o=DocumentRecord,
     h=DocumentRecord,
     f=DocumentRecord,
@@ -51,7 +55,7 @@ class Document:
         except KeyError:
             self._journal = None
         try:
-            self._issue = Issue(data["issue"])
+            self._issue = Issue(self.document_records.get_record("i") or data["issue"])
         except KeyError:
             self._issue = None
 
@@ -61,6 +65,10 @@ class Document:
         if hasattr(self._h_record, name):
             return getattr(self._h_record, name)
         raise AttributeError(f"Document.{name} does not exist")
+
+    @property
+    def pid(self):
+        return f"{self.journal.scielo_issn}{self.issue.order}{self.order.zfill(5)}"
 
     @property
     def journal(self):
@@ -130,11 +138,18 @@ class Document:
             author['affiliation'] = affs[author['xref']]['orgname']
             yield author
 
+    @property
+    def isis_updated_date(self):
+        return self.update_date
+
+    @property
+    def isis_created_date(self):
+        return self.creation_date
+
 
 class DocumentRecords:
     def __init__(self, records, _id=None):
         self._id = _id
-        self._records = None
         self.records = records
 
     @property
@@ -143,16 +158,22 @@ class DocumentRecords:
 
     @records.setter
     def records(self, _records):
-        self._records = {}
+        if not hasattr(self, '_records'):
+            self._records = {}
         for _record in _records:
+            logging.info("Read ISIS record")
             meta_record = MetaRecord(_record)
             rec_type = meta_record.rec_type
+            logging.info("rec_type={}".format(rec_type))
             try:
                 record = RECORD[rec_type](_record)
                 self._records[rec_type] = self._records.get(rec_type) or []
                 self._records[rec_type].append(record)
-            except KeyError:
-                pass
+            except KeyError as e:
+                logging.info("DocumentRecords.records")
+                logging.info(rec_type)
+                logging.info(_record)
+                logging.exception(e)
 
     def get_record(self, rec_type):
         return self._records.get(rec_type)

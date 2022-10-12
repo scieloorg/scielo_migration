@@ -1,18 +1,15 @@
+import logging
+
 from scielo_classic_website import controller, config
-from scielo_classic_website.models.issue_files import IssueFiles
+from scielo_classic_website.models.issue_files import (
+    ClassicWebsiteFileSystem,
+    ArtigoDBPath,
+)
 
 # Para Journal, Issue, Document devem ficar disponíveis neste módulo
 from scielo_classic_website.models.journal import Journal
 from scielo_classic_website.models.issue import Issue
 from scielo_classic_website.models.document import Document
-
-
-def get_bases_work_acron_path(cisis_path, bases_work_acron_file_path, issue_folder=None):
-    if issue_folder:
-        return controller.isis_cmd.get_documents_by_issue_folder(
-            cisis_path, bases_work_acron_file_path, issue_folder)
-    else:
-        return bases_work_acron_file_path
 
 
 def get_document_pids(from_date, to_date):
@@ -39,5 +36,28 @@ def get_records_by_source_path(db_type, source_path):
 
 
 def get_issue_files(acron, issue_folder, config):
-    issue_files = IssueFiles(acron, issue_folder, config)
-    return issue_files.files
+    classic_ws_fs = ClassicWebsiteFileSystem(acron, issue_folder, config)
+    return classic_ws_fs.files
+
+
+def get_artigo_db_path(acron, issue_folder, config):
+    artigo_db_path = ArtigoDBPath(config, acron, issue_folder)
+
+    # ordem de preferencia para obter os arquivos de base de dados isis que 
+    # contém registros dos artigos
+    callables = (
+        artigo_db_path.get_db_from_serial_base_xml_dir,
+        artigo_db_path.get_db_from_bases_work_acron_id,
+        artigo_db_path.get_db_from_serial_base_dir,
+        artigo_db_path.get_db_from_bases_work_acron_subset,
+        artigo_db_path.get_db_from_bases_work_acron,
+    )
+    for func in callables:
+        try:
+            files = func()
+            if files:
+                return files
+        except Exception as e:
+            logging.exception(e)
+            continue
+    return []

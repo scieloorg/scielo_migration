@@ -7,7 +7,7 @@ class BodyFromISIS:
     que estão no formato JSON
     """
     def __init__(self, p_records):
-        self.p_records = p_records
+        self.p_records = p_records or []
         self.first_reference = None
         self.last_reference = None
         self._identify_references_range()
