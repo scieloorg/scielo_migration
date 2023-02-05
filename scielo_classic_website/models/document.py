@@ -1,3 +1,5 @@
+import logging
+
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.h_record import DocumentRecord
 from scielo_classic_website.isisdb.p_record import ParagraphRecord
@@ -257,17 +259,19 @@ class Document:
             }
         """
         if not self.main_html_paragraphs:
+            logging.info("generate_body_and_back_from_html: No main HTML found")
             return
         langs = {}
         # obtém os textos html
         html_texts = html_texts or {}
         for lang, html_text in html_texts.items():
+            logging.info("generate_body_and_back_from_html %s" % lang)
             document.add_translated_html(
                 lang,
                 html_text['before references'],
                 html_text['after references']
             )
-        return sps_xml_body_pipes.generate_body_and_back_from_html(self)
+        return sps_xml_body_pipes.convert_html_to_xml(self)
 
     def generate_full_xml(self, selected_xml_body=None):
         """

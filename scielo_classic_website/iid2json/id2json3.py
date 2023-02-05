@@ -30,7 +30,17 @@ to JSON
 import logging
 
 
-def pids_and_their_records(id_file_path, id_function):
+def get_id_function(db_type):
+    id_function = article_id
+    if db_type == "title":
+        id_function = journal_id
+    elif db_type == "issue":
+        id_function = issue_id
+    return id_function
+
+
+def pids_and_their_records(id_file_path, db_type):
+    id_function = get_id_function(db_type)
     rows = _get_id_file_rows(id_file_path)
     records = _join_id_file_rows_and_return_records(rows)
     return _get_id_and_json_records(records, id_function)
