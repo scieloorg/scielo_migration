@@ -59,3 +59,9 @@ class Issue:
             if v
             ])
 
+    def get_sections(self, code):
+        for item in self.sections:
+            if item['code'] == code:
+                yield item
+
+

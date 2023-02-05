@@ -1,3 +1,4 @@
+from copy import deepcopy
 
 import plumber
 from lxml import etree as ET
@@ -6,7 +7,6 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
     ARTICLE_TYPES,
     COUNTRY_ITEMS,
 )
-
 from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLArticleMetaSciELOArticleIdPipe,
     XMLArticleMetaArticleIdDOIPipe,
@@ -21,13 +21,13 @@ from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLArticleMetaPagesInfoPipe,
     XMLArticleMetaHistoryPipe,
     XMLArticleMetaPermissionPipe,
-    # XMLArticleMetaSelfUriPipe,
+    XMLArticleMetaSelfUriPipe,
     XMLArticleMetaAbstractsPipe,
     XMLArticleMetaKeywordsPipe,
-    # XMLArticleMetaCountsPipe,
-    # XMLBodyPipe,
-    # XMLArticleMetaCitationsPipe,
-    # XMLSubArticlePipe,
+    XMLArticleMetaCountsPipe,
+)
+from scielo_classic_website.spsxml.sps_xml_refs import (
+    XMLArticleMetaCitationsPipe,
 )
 
 
@@ -71,13 +71,14 @@ def _process(document):
             XMLArticleMetaPagesInfoPipe(),
             XMLArticleMetaHistoryPipe(),
             XMLArticleMetaPermissionPipe(),
-            # XMLArticleMetaSelfUriPipe(),
+            XMLArticleMetaSelfUriPipe(),
             XMLArticleMetaAbstractsPipe(),
             XMLArticleMetaKeywordsPipe(),
-            # XMLArticleMetaCountsPipe(),
-            # XMLBodyPipe(),
-            # XMLArticleMetaCitationsPipe(),
-            # XMLSubArticlePipe(),
+            XMLBodyPipe(),
+            XMLBackPipe(),
+            XMLArticleMetaCitationsPipe(),
+            XMLSubArticlePipe(),
+            XMLArticleMetaCountsPipe(),
             XMLClosePipe(),
 
     )
@@ -239,4 +240,112 @@ class XMLJournalMetaPublisherPipe(plumber.Pipe):
 
         xml.find('./front/journal-meta').append(publisher)
 
+        return data
+
+
+class XMLBodyPipe(plumber.Pipe):
+
+    def precond(data):
+
+        raw, xml = data
+
+        if not raw.xml_body:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        converted_html_body = ET.fromstring(raw.xml_body[-1])
+        body = deepcopy(converted_html_body.find(".//body"))
+        body.set('specific-use', 'quirks-mode')
+        xml.append(body)
+        return data
+
+
+class XMLBackPipe(plumber.Pipe):
+
+    def precond(data):
+
+        raw, xml = data
+
+        if not raw.converted_html_body:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        converted_html_body = ET.fromstring(raw.xml_body[-1])
+        back = converted_html_body.find(".//back")
+        if back is not None:
+            xml.append(deepcopy(back))
+        return data
+
+
+class XMLSubArticlePipe(plumber.Pipe):
+
+    def precond(data):
+
+        raw, xml = data
+
+        if not raw.xml_body:
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+
+        converted_html_body = ET.fromstring(raw.xml_body[-1])
+        for subart in converted_html_body.findall(".//sub-article"):
+            subarticle = deepcopy(subart)
+            xml.append(subarticle)
+
+            language = subarticle.get('{http://www.w3.org/XML/1998/namespace}lang')
+
+            # FRONT STUB
+            frontstub = ET.Element('front-stub')
+
+            # ARTICLE CATEGORY
+            if raw.section:
+                articlecategories = ET.Element('article-categories')
+                subjectgroup = ET.Element('subj-group')
+                subjectgroup.set('subj-group-type', 'heading')
+                sbj = ET.Element('subject')
+                sbj.text = raw.get_section(language)
+                subjectgroup.append(sbj)
+                articlecategories.append(subjectgroup)
+                frontstub.append(articlecategories)
+
+            # ARTICLE TITLE
+            if raw.translated_titles:
+                titlegroup = ET.Element('title-group')
+                articletitle = ET.Element('article-title')
+                articletitle.set(
+                    '{http://www.w3.org/XML/1998/namespace}lang', language)
+                articletitle.text = raw.get_article_title(language)
+                titlegroup.append(articletitle)
+                frontstub.append(titlegroup)
+
+            # ABSTRACT
+            if raw.translated_abstracts:
+                p = ET.Element('p')
+                p.text = raw.get_abstract(language)
+                abstract = ET.Element('abstract')
+                abstract.set(
+                    '{http://www.w3.org/XML/1998/namespace}lang', language)
+                abstract.append(p)
+                frontstub.append(abstract)
+
+            # KEYWORDS
+            keywords_group = raw.get_keywords_group(language)
+            if keywords_group:
+                kwd_group = ET.Element('kwd-group')
+                kwd_group.set('{http://www.w3.org/XML/1998/namespace}lang', language)
+                for item in keywords_group:
+                    kwd = ET.Element('kwd')
+                    kwd.text = item['kwd']
+                    kwd_group.append(kwd)
+                frontstub.append(kwd_group)
+            subarticle.append(frontstub)
         return data

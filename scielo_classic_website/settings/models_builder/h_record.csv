@@ -3,7 +3,7 @@ article,31,,,,,volume,volume,Volume
 article,32,,,,,number,number,Number
 article,131,,,,,supplment,supplment,Supplment
 article,132,,,,,supplment,supplment,Supplment
-article,,,,,,fulltexts,fulltexts,Fulltexts
+article,601,,,true,,text_languages,text_languages,Fulltexts languages
 article,,,,,,html_url,html url,Html Url
 article,,,,,,is_ahead_of_print,is ahead of print,Is Ahead Of Print
 article,,,,,,issue,issue,Issue
