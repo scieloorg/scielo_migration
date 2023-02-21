@@ -12,7 +12,7 @@ def html_decode(text):
 class Reference:
     def __init__(self, record=None, fix_function=None):
         self._reference_record = ReferenceRecord(record)
-        self._reference_record.fix_function = fix_function
+        self._reference_record.fix_function = lambda x: x
 
     def __getattr__(self, name):
         # desta forma Reference não precisa herdar de ReferenceRecord
@@ -120,8 +120,9 @@ class Reference:
         Book: Alice's Adventures in Wonderland
         """
         return (
-            self._reference_record.monographic_title.get("text") or
-            self._reference_record.source.get("text")
+            self.journal_title or
+            self._reference_record.monographic_title and
+            self._reference_record.monographic_title.get("text")
         )
 
     @property
@@ -131,7 +132,9 @@ class Reference:
         Journal: Journal of Microbiology
         Book: Alice's Adventures in Wonderland
         """
-        return self._reference_record.source.get("text")
+        return (
+            self._reference_record.journal_title and
+            self._reference_record.journal_title.get("text"))
 
     @property
     def article_title(self):

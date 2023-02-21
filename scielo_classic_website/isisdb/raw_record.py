@@ -22,10 +22,11 @@ class RawRecord:
 
     def __init__(self, record):
         self._record = record
+        self._fix_function = lambda x: x
 
     @property
     def fix_function(self):
-        return self._fix_function or (lambda x: x)
+        return self._fix_function
 
     @fix_function.setter
     def fix_function(self, func):
@@ -39,29 +40,33 @@ class RawRecord:
             return
 
     def get_items(self, tag, subfields):
+        if not self._record.get(tag):
+            return []
         for item in self._record[tag]:
             if isinstance(item, dict):
                 _item = {}
                 for k, v in item.items():
                     try:
-                        _item[subfields[k]] = self.fix_function(v)
+                        _k = subfields[k]
                     except KeyError:
-                        _item[k] = self.fix_function(item[k])
+                        _k = k
+                    _item[_k] = self.fix_function(v)
                 yield _item
             else:
-                yield self.fix_function(item)
+                yield self.fix_function(_item)
 
-    def get_field_content(self, tag, field_name, subfields, single):
+
+    def get_field_content(self, tag, subfields, single):
+        items = []
         for item in self.get_items(tag, subfields):
-            if isinstance(item, dict) and len(subfields) == 1 and subfields.get("_"):
+            if isinstance(item, dict) and len(subfields) == 1 and subfields.get("_") is not None:
                 data = list(item.values())
-                if data:
-                    if single:
-                        return data[0]
-                    else:
-                        yield data[0]
+                items.append(data[0])
             else:
-                if single:
-                    return item
-                else:
-                    yield item
+                items.append(item)
+        if single:
+            try:
+                return items[0]
+            except IndexError:
+                return None
+        return items
