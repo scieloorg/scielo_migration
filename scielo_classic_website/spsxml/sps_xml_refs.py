@@ -1,5 +1,6 @@
 from io import StringIO
 from datetime import datetime
+import logging
 
 import plumber
 from lxml import etree as ET
@@ -8,7 +9,7 @@ from . import (
     utils,
     xylose_adapters,
 )
-from scielo_classic_website.utils.html_code_utils import (
+from scielo_classic_website.htmlbody.html_code_utils import (
     html_decode,
 )
 
@@ -67,20 +68,24 @@ class XMLArticleMetaCitationsPipe(plumber.Pipe):
         refs = ET.Element("ref-list")
 
         cit = XMLCitation()
-        for citation in raw.citations:
-            # citation (scielo_classic_website.models.reference.Reference)
-            ref = cit.deploy(
-                    xylose_adapters.ReferenceXyloseAdapter(
-                        citation, html_decode))[1]
-            if ref is not None:
-                if ref.find(".//mixed-citation") is None:
-                    ref_id = ref.get("id")
-                    r = reflist.find(f".//ref[@id='{ref_id}']")
-                    if r is not None:
-                        mixed_citation = r.find(".//mixed-citation")
-                        if mixed_citation is not None:
-                            ref.insert(0, mixed_citation)
-                refs.append(ref)
+        for i, citation in enumerate(raw.citations):
+            try:
+                citation.fix_function = html_decode
+                ref = cit.deploy(
+                    xylose_adapters.ReferenceXyloseAdapter(citation))[1]
+                if ref is not None:
+                    if ref.find(".//mixed-citation") is None:
+                        ref_id = ref.get("id")
+                        r = reflist.find(f".//ref[@id='{ref_id}']")
+                        if r is not None:
+                            mixed_citation = r.find(".//mixed-citation")
+                            if mixed_citation is not None:
+                                ref.insert(0, mixed_citation)
+                    refs.append(ref)
+            except Exception as e:
+                logging.info(i)
+                logging.exception(e)
+                raise e
         back.replace(reflist, refs)
         return data
 
@@ -120,7 +125,6 @@ class XMLCitation(object):
             self.PubIdPipe(),
 
             self.DatePipe(),
-            self.PublisherPipe(),
 
             self.EditionPipe(),
             self.IsbnPipe(),
@@ -157,6 +161,7 @@ class XMLCitation(object):
             raw, xml = data
             mixed_citation = raw.mixed_citation
             if mixed_citation is not None:
+                logging.info("mixed_citation %s" % mixed_citation)
                 xml.append(utils.convert_all_html_tags_to_jats(mixed_citation))
 
             return data
@@ -183,7 +188,7 @@ class XMLCitation(object):
         @plumber.precondition(precond)
         def transform(self, data):
             raw, xml = data
-
+            logging.info(type(raw))
             articletitle = ET.Element('article-title')
 
             articletitle.text = raw.article_title
@@ -461,7 +466,7 @@ class XMLCitation(object):
     class VolumePipe(plumber.Pipe):
         def transform(self, data):
             raw, xml = data
-
+            print((raw.volume, raw.colvolid, raw.tome))
             if raw.volume or raw.colvolid or raw.tome:
                 volume = ET.Element('volume')
                 volume.text = raw.volume or raw.colvolid or raw.tome

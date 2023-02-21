@@ -1,7 +1,7 @@
 import logging
 
 from scielo_classic_website.isisdb.c_record import ReferenceRecord
-from scielo_classic_website.htmlbody import html_utils
+from scielo_classic_website.htmlbody import html_style_fixer
 
 
 def html_decode(text):
@@ -10,8 +10,8 @@ def html_decode(text):
 
 
 class Reference:
-    def __init__(self, record=None, fix_function=None):
-        self._reference_record = ReferenceRecord(record)
+    def __init__(self, reference_record=None, fix_function=None):
+        self._reference_record = reference_record
         self._reference_record.fix_function = lambda x: x
 
     def __getattr__(self, name):
@@ -141,7 +141,8 @@ class Reference:
         """
         If it is an article citation, this method retrieves the article title, if it exists.
         """
-        return self._reference_record.article_title.get('text')
+        return (self._reference_record.article_title and
+            self._reference_record.article_title.get('text'))
 
     @property
     def chapter_title(self):
@@ -215,4 +216,4 @@ class Reference:
     @property
     def mixed_citation(self):
         if self.paragraph_text:
-            return html_utils.get_mixed_citation_node(self.paragraph_text)
+            return html_style_fixer.get_mixed_citation_node(self.paragraph_text)

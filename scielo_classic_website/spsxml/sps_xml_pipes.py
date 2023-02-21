@@ -1,3 +1,4 @@
+import logging
 from copy import deepcopy
 
 import plumber
@@ -256,7 +257,7 @@ class XMLBodyPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        converted_html_body = ET.fromstring(raw.xml_body[-1])
+        converted_html_body = ET.fromstring(raw.xml_body)
         body = deepcopy(converted_html_body.find(".//body"))
         body.set('specific-use', 'quirks-mode')
         xml.append(body)
@@ -269,14 +270,14 @@ class XMLBackPipe(plumber.Pipe):
 
         raw, xml = data
 
-        if not raw.converted_html_body:
+        if not raw.xml_body:
             raise plumber.UnmetPrecondition()
 
     @plumber.precondition(precond)
     def transform(self, data):
         raw, xml = data
 
-        converted_html_body = ET.fromstring(raw.xml_body[-1])
+        converted_html_body = ET.fromstring(raw.xml_body)
         back = converted_html_body.find(".//back")
         if back is not None:
             xml.append(deepcopy(back))
@@ -296,7 +297,7 @@ class XMLSubArticlePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        converted_html_body = ET.fromstring(raw.xml_body[-1])
+        converted_html_body = ET.fromstring(raw.xml_body)
         for subart in converted_html_body.findall(".//sub-article"):
             subarticle = deepcopy(subart)
             xml.append(subarticle)
@@ -307,6 +308,7 @@ class XMLSubArticlePipe(plumber.Pipe):
             frontstub = ET.Element('front-stub')
 
             # ARTICLE CATEGORY
+            logging.info("raw %s" % type(raw))
             if raw.section:
                 articlecategories = ET.Element('article-categories')
                 subjectgroup = ET.Element('subj-group')
@@ -344,7 +346,7 @@ class XMLSubArticlePipe(plumber.Pipe):
                 kwd_group.set('{http://www.w3.org/XML/1998/namespace}lang', language)
                 for item in keywords_group:
                     kwd = ET.Element('kwd')
-                    kwd.text = item['kwd']
+                    kwd.text = item
                     kwd_group.append(kwd)
                 frontstub.append(kwd_group)
             subarticle.append(frontstub)

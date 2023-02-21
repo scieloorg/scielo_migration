@@ -1,0 +1,486 @@
+{
+  "record": {
+    "tag": {
+      "description": "description",
+      "tag": "vtag",
+      "field_name": "field_name",
+      "subfields": {
+        "subfield": "subfield_name"
+      },
+      "single": true
+    }
+  },
+  "ref": {
+    "10": {
+      "description": "Analytic Anonymous",
+      "tag": "v010",
+      "field_name": "analytic_person_authors",
+      "subfields": {
+        "_": "anonymous",
+        "n": "given_names",
+        "p": "prefix",
+        "r": "role",
+        "s": "surname"
+      },
+      "single": false
+    },
+    "11": {
+      "description": "Analytic Corporative Author",
+      "tag": "v011",
+      "field_name": "analytic_corporative_authors",
+      "subfields": {
+        "_": "name",
+        "d": "division"
+      },
+      "single": false
+    },
+    "109": {
+      "description": "Access date",
+      "tag": "v109",
+      "field_name": "access_date",
+      "subfields": {},
+      "single": true
+    },
+    "110": {
+      "description": "Access date_iso",
+      "tag": "v110",
+      "field_name": "access_date_iso",
+      "subfields": {},
+      "single": true
+    },
+    "118": {
+      "description": "Label",
+      "tag": "v118",
+      "field_name": "label",
+      "subfields": {},
+      "single": true
+    },
+    "12": {
+      "description": "Article Title",
+      "tag": "v012",
+      "field_name": "article_title",
+      "subfields": {
+        "_": "text",
+        "l": "language"
+      },
+      "single": true
+    },
+    "14": {
+      "description": "",
+      "tag": "v014",
+      "field_name": "pages_range",
+      "subfields": {
+        "_": "range",
+        "e": "elocation"
+      },
+      "single": true
+    },
+    "22": {
+      "description": "",
+      "tag": "v022",
+      "field_name": "tome",
+      "subfields": {},
+      "single": true
+    },
+    "150": {
+      "description": "Patent",
+      "tag": "v150",
+      "field_name": "patent",
+      "subfields": {
+        "_": "country",
+        "a": "id",
+        "b": "date",
+        "c": "date_iso",
+        "d": "organization"
+      },
+      "single": true
+    },
+    "16": {
+      "description": "Monographic Anonymous",
+      "tag": "v016",
+      "field_name": "monographic_person_authors",
+      "subfields": {
+        "_": "anonymous",
+        "n": "given_names",
+        "p": "prefix",
+        "r": "role",
+        "s": "surname"
+      },
+      "single": false
+    },
+    "17": {
+      "description": "Monographic Corporative Author",
+      "tag": "v017",
+      "field_name": "monographic_corporative_authors",
+      "subfields": {
+        "_": "name",
+        "d": "division"
+      },
+      "single": false
+    },
+    "18": {
+      "description": "Monographic Title",
+      "tag": "v018",
+      "field_name": "monographic_title",
+      "subfields": {
+        "_": "text",
+        "l": "language"
+      },
+      "single": true
+    },
+    "20": {
+      "description": "Size",
+      "tag": "v020",
+      "field_name": "size",
+      "subfields": {
+        "_": "size",
+        "u": "unit"
+      },
+      "single": true
+    },
+    "237": {
+      "description": "Doi",
+      "tag": "v237",
+      "field_name": "doi",
+      "subfields": {},
+      "single": true
+    },
+    "238": {
+      "description": "Pmid",
+      "tag": "v238",
+      "field_name": "pmid",
+      "subfields": {},
+      "single": true
+    },
+    "239": {
+      "description": "Pmcid",
+      "tag": "v239",
+      "field_name": "pmcid",
+      "subfields": {},
+      "single": true
+    },
+    "25": {
+      "description": "Collection title",
+      "tag": "v025",
+      "field_name": "coltitle",
+      "subfields": {},
+      "single": true
+    },
+    "26": {
+      "description": "Collection volume",
+      "tag": "v026",
+      "field_name": "colvolid",
+      "subfields": {},
+      "single": true
+    },
+    "28": {
+      "description": "Monographic Anonymous",
+      "tag": "v028",
+      "field_name": "serial_person_authors",
+      "subfields": {
+        "_": "anonymous",
+        "n": "given_names",
+        "p": "prefix",
+        "r": "role",
+        "s": "surname"
+      },
+      "single": false
+    },
+    "29": {
+      "description": "Monographic Corporative Author",
+      "tag": "v029",
+      "field_name": "serial_corporative_authors",
+      "subfields": {
+        "_": "name",
+        "d": "division"
+      },
+      "single": false
+    },
+    "30": {
+      "description": "Journal title",
+      "tag": "v030",
+      "field_name": "journal_title",
+      "subfields": {
+        "_": "text",
+        "l": "language"
+      },
+      "single": true
+    },
+    "31": {
+      "description": "Volume",
+      "tag": "v031",
+      "field_name": "volume",
+      "subfields": {},
+      "single": true
+    },
+    "32": {
+      "description": "Issue",
+      "tag": "v032",
+      "field_name": "issue",
+      "subfields": {
+        "n": "number",
+        "s": "suppl"
+      },
+      "single": true
+    },
+    "33": {
+      "description": "Issue title",
+      "tag": "v033",
+      "field_name": "issue_title",
+      "subfields": {},
+      "single": true
+    },
+    "34": {
+      "description": "Issue part",
+      "tag": "v034",
+      "field_name": "issue_part",
+      "subfields": {},
+      "single": true
+    },
+    "35": {
+      "description": "ISSN",
+      "tag": "v035",
+      "field_name": "issn",
+      "subfields": {},
+      "single": true
+    },
+    "37": {
+      "description": "Ext Link",
+      "tag": "v037",
+      "field_name": "ext_link",
+      "subfields": {},
+      "single": true
+    },
+    "44": {
+      "description": "Thesis Date",
+      "tag": "v044",
+      "field_name": "thesis_date",
+      "subfields": {},
+      "single": true
+    },
+    "45": {
+      "description": "Thesis Date Iso",
+      "tag": "v045",
+      "field_name": "thesis_date_iso",
+      "subfields": {},
+      "single": true
+    },
+    "46": {
+      "description": "Thesis Location",
+      "tag": "v046",
+      "field_name": "thesis_location",
+      "subfields": {
+        "_": "city",
+        "e": "state"
+      },
+      "single": true
+    },
+    "47": {
+      "description": "Thesis Country",
+      "tag": "v047",
+      "field_name": "thesis_country",
+      "subfields": {},
+      "single": true
+    },
+    "50": {
+      "description": "Thesis Organization",
+      "tag": "v050",
+      "field_name": "thesis_organization",
+      "subfields": {
+        "_": "name",
+        "d": "division"
+      },
+      "single": true
+    },
+    "51": {
+      "description": "Thesis Degree",
+      "tag": "v051",
+      "field_name": "thesis_degree",
+      "subfields": {},
+      "single": true
+    },
+    "514": {
+      "description": "",
+      "tag": "v514",
+      "field_name": "pages",
+      "subfields": {
+        "e": "elocation",
+        "f": "first",
+        "l": "last",
+        "r": "range"
+      },
+      "single": false
+    },
+    "52": {
+      "description": "Conference Organization",
+      "tag": "v052",
+      "field_name": "conference_organization",
+      "subfields": {
+        "_": "name",
+        "d": "division"
+      },
+      "single": true
+    },
+    "53": {
+      "description": "Conference",
+      "tag": "v053",
+      "field_name": "conferences",
+      "subfields": {
+        "_": "name",
+        "n": "number"
+      },
+      "single": false
+    },
+    "54": {
+      "description": "Conference Date",
+      "tag": "v054",
+      "field_name": "conference_date",
+      "subfields": {},
+      "single": true
+    },
+    "55": {
+      "description": "Conference Date Iso",
+      "tag": "v055",
+      "field_name": "conference_date_iso",
+      "subfields": {},
+      "single": true
+    },
+    "56": {
+      "description": "Conference Location",
+      "tag": "v056",
+      "field_name": "conference_location",
+      "subfields": {
+        "_": "city",
+        "e": "state"
+      },
+      "single": true
+    },
+    "57": {
+      "description": "Conference Country",
+      "tag": "v057",
+      "field_name": "conference_country",
+      "subfields": {},
+      "single": true
+    },
+    "58": {
+      "description": "Project Sponsor",
+      "tag": "v058",
+      "field_name": "project_sponsor",
+      "subfields": {
+        "_": "name",
+        "d": "division"
+      },
+      "single": true
+    },
+    "59": {
+      "description": "Project Name",
+      "tag": "v059",
+      "field_name": "project_name",
+      "subfields": {},
+      "single": true
+    },
+    "60": {
+      "description": "Project Number",
+      "tag": "v060",
+      "field_name": "project_number",
+      "subfields": {},
+      "single": true
+    },
+    "61": {
+      "description": "Notes",
+      "tag": "v061",
+      "field_name": "notes",
+      "subfields": {},
+      "single": false
+    },
+    "62": {
+      "description": "Publisher Name",
+      "tag": "v062",
+      "field_name": "publisher_name",
+      "subfields": {},
+      "single": true
+    },
+    "63": {
+      "description": "Edition",
+      "tag": "v063",
+      "field_name": "edition",
+      "subfields": {},
+      "single": true
+    },
+    "64": {
+      "description": "Year",
+      "tag": "v064",
+      "field_name": "year",
+      "subfields": {},
+      "single": true
+    },
+    "65": {
+      "description": "Publication Date Iso",
+      "tag": "v065",
+      "field_name": "publication_date_iso",
+      "subfields": {},
+      "single": true
+    },
+    "66": {
+      "description": "Publisher Location",
+      "tag": "v066",
+      "field_name": "publisher_location",
+      "subfields": {
+        "_": "city",
+        "e": "state"
+      },
+      "single": true
+    },
+    "67": {
+      "description": "Publisher Country",
+      "tag": "v067",
+      "field_name": "publisher_country",
+      "subfields": {},
+      "single": true
+    },
+    "69": {
+      "description": "ISBN",
+      "tag": "v069",
+      "field_name": "isbn",
+      "subfields": {},
+      "single": true
+    },
+    "701": {
+      "description": "Index number",
+      "tag": "v701",
+      "field_name": "index_number",
+      "subfields": {},
+      "single": true
+    },
+    "704": {
+      "description": "Paragraph text",
+      "tag": "v704",
+      "field_name": "paragraph_text",
+      "subfields": {
+        "_": ""
+      },
+      "single": true
+    },
+    "71": {
+      "description": "Publication Type",
+      "tag": "v071",
+      "field_name": "publication_type",
+      "subfields": {},
+      "single": true
+    },
+    "810": {
+      "description": "Etal",
+      "tag": "v810",
+      "field_name": "etal",
+      "subfields": {},
+      "single": true
+    },
+    "95": {
+      "description": "Version",
+      "tag": "v095",
+      "field_name": "version",
+      "subfields": {},
+      "single": true
+    }
+  }
+}

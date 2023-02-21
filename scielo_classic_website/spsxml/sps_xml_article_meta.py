@@ -484,7 +484,7 @@ class XMLArticleMetaKeywordsPipe(plumber.Pipe):
 
             for item in keywords:
                 kwd = ET.Element('kwd')
-                kwd.text = item['kwd']
+                kwd.text = item
                 kwdgroup.append(kwd)
             articlemeta.append(kwdgroup)
 

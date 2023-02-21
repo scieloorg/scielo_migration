@@ -3,13 +3,14 @@ import glob
 import logging
 
 from scielo_classic_website.utils.files_utils import create_zip_file
+from scielo_classic_website.htmlbody.html_body import HTMLFile
 
 
 def _get_classic_website_rel_path(file_path):
-    if 'htdocs' in file_path:
-        return file_path[file_path.find("htdocs"):]
-    if 'base' in file_path:
-        return file_path[file_path.find("base"):]
+    for folder in ("bases", "htdocs", ):
+        if folder in file_path:
+            path = file_path[file_path.find(folder)+len(folder):]
+            return path
 
 
 class IssueFiles:
@@ -76,7 +77,9 @@ class IssueFiles:
                     {"type": "html",
                      "key": name, "path": path, "name": basename,
                      "relative_path": _get_classic_website_rel_path(path),
-                     "lang": lang, "part": label}
+                     "lang": lang, "part": label,
+                     "replacements": HTMLFile(path).asset_path_fixes,
+                     }
                 )
             self._bases_translation_files = files
         return self._bases_translation_files
@@ -114,7 +117,7 @@ class IssueFiles:
                     name = name[3:]
                 else:
                     # main pdf
-                    lang = "main"
+                    lang = None
                 files.append(
                     {"type": "pdf",
                      "key": name, "path": path, "name": basename,
@@ -225,7 +228,7 @@ class ArtigoDBPath:
     def get_db_from_serial_base_xml_dir(self):
         items = []
         _serial_path = os.path.join(
-            self.classic_website.serial_path,
+            self.classic_website_paths.serial_path,
             self.journal_acron, self.issue_folder, "base_xml", "id")
 
         if os.path.isdir(_serial_path):
@@ -238,7 +241,7 @@ class ArtigoDBPath:
     def get_db_from_serial_base_dir(self):
         items = []
         _serial_path = os.path.join(
-            self.classic_website.serial_path,
+            self.classic_website_paths.serial_path,
             self.journal_acron, self.issue_folder, "base")
 
         if os.path.isdir(_serial_path):
@@ -248,7 +251,7 @@ class ArtigoDBPath:
     def get_db_from_bases_work_acron_id(self):
         items = []
         _bases_work_acron_path = os.path.join(
-            self.classic_website.bases_work_path,
+            self.classic_website_paths.bases_work_path,
             self.journal_acron,
             self.journal_acron,
         )
@@ -259,7 +262,7 @@ class ArtigoDBPath:
     def get_db_from_bases_work_acron(self):
         items = []
         _bases_work_acron_path = os.path.join(
-            self.classic_website.bases_work_path,
+            self.classic_website_paths.bases_work_path,
             self.journal_acron,
             self.journal_acron,
         )
@@ -269,14 +272,14 @@ class ArtigoDBPath:
     def get_db_from_bases_work_acron_subset(self):
         items = []
         _bases_work_acron_path = os.path.join(
-            self.classic_website.bases_work_path,
+            self.classic_website_paths.bases_work_path,
             self.journal_acron,
             self.journal_acron,
         )
         try:
             items.append(
                 controller.isis_cmd.get_documents_by_issue_folder(
-                    self.classic_website.cisis_path,
+                    self.classic_website_paths.cisis_path,
                     _bases_work_acron_path,
                     self.issue_folder)
             )

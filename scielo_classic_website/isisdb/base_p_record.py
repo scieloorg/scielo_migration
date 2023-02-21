@@ -7,7 +7,6 @@ ATTRIBUTES = (
     'paragraph_text',
     'record_type',
     'reference_index',
-
 )
 
 

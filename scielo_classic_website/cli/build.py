@@ -151,12 +151,11 @@ def _attribute_builder(attribute_name, tag, subfields, single, comment=""):
         f"""    def {attribute_name}(self):""",
         f"""{comment}""",
         f"""        if not hasattr(self, '_{attribute_name}'):""",
-        f"""            self._{attribute_name} = (""",
-        f"""                self.get_field_content(""",
+        f"""            self._{attribute_name} =  self.get_field_content(""",
         f"""                    '{tag}',""",
         f"""                    {subfields},""",
         f"""                    {single}""",
-        f"""                ))""",
+        f"""                )""",
         f"""        return self._{attribute_name}""",
     ))
 

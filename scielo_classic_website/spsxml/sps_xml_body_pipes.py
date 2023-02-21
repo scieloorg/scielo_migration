@@ -1,3 +1,4 @@
+import logging
 from io import StringIO
 
 import plumber
@@ -5,9 +6,10 @@ from lxml import etree as ET
 
 
 def convert_html_to_xml(document):
-    yield self.convert_html_to_xml_step_1(document)
-    yield self.convert_html_to_xml_step_2(document)
-    yield self.convert_html_to_xml_step_3(document)
+    document.xml_body_and_back = []
+    document.xml_body_and_back.append(convert_html_to_xml_step_1(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_2(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_3(document))
 
 
 def convert_html_to_xml_step_1(document):
@@ -144,7 +146,7 @@ class StartPipe(plumber.Pipe):
 
     def transform(self, data):
         document = data
-        xml = ET.fromstring(document.xml_body)
+        xml = ET.fromstring(document.xml_body_and_back[-1])
         return data, xml
 
 
@@ -153,7 +155,9 @@ class SetupPipe(plumber.Pipe):
     def precond(data):
 
         raw = data
-        if not raw.get_record("p"):
+        logging.info(type(raw))
+        logging.info(type(raw.main_html_paragraphs))
+        if not raw.main_html_paragraphs["before references"]:
             raise plumber.UnmetPrecondition()
 
     @plumber.precondition(precond)
@@ -176,7 +180,6 @@ class EndPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        set_step_value(xml)
         data = ET.tostring(
             xml,
             encoding="utf-8",
@@ -190,15 +193,17 @@ class MainHTMLPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        body = xml.find("body")
-        for item in raw.main_html_body_paragraphs['before references'] or []:
+        body = xml.find(".//body")
+        for item in raw.main_html_paragraphs['before references'] or []:
             # TODO keys: text, index, reference_index, part
             p = ET.Element("p")
             p.text = ET.CDATA(item['text'])
             body.append(p)
 
+        print("body/p %i" % len(body.findall("p")))
+
         references = ET.Element("ref-list")
-        for i, item in enumerate(raw.main_html_body_paragraphs['references'] or []):
+        for i, item in enumerate(raw.main_html_paragraphs['references'] or []):
             # TODO keys: text, index, reference_index, part
             ref = ET.Element("ref")
             try:
@@ -213,7 +218,7 @@ class MainHTMLPipe(plumber.Pipe):
 
         back = xml.find(".//back")
         back.append(references)
-        for item in raw.main_html_body_paragraphs['after references'] or []:
+        for item in raw.main_html_paragraphs['after references'] or []:
             # TODO keys: text, index, reference_index, part
 
             # (ack | app-group | bio | fn-group | glossary | notes | sec)
@@ -221,6 +226,8 @@ class MainHTMLPipe(plumber.Pipe):
             sec = ET.Element("sec")
             sec.text = ET.CDATA(item['text'])
             back.append(sec)
+
+        print("back/sec %i" % len(back.findall("sec")))
 
         return data
 
@@ -253,25 +260,29 @@ class TranslatedHTMLPipe(plumber.Pipe):
 
 def html_body_tree(html_text):
     # html_text = "<html><head><title>test<body><h1>page title</h3>"
-    parser = ET.HTMLParser()
-    h = ET.parse(StringIO(html_text), parser)
-    return h.find(".//body")
+    try:
+        parser = ET.HTMLParser()
+        h = ET.parse(StringIO(html_text), parser)
+        return h.getroot().find(".//body")
+    except AttributeError:
+        logging.info("html_body_tree: %s" % html_text)
+        return None
 
 
 def remove_CDATA(old):
     new = html_body_tree(old.text)
-    new.tag = old.tag
-    for name, value in old.attrb.items():
-        new.set(name, value)
-    parent = old.getparent()
-    parent.replace(old, new)
+    if new:
+        new.tag = old.tag
+        for name, value in old.attrib.items():
+            new.set(name, value)
+        parent = old.getparent()
+        parent.replace(old, new)
 
 
 class RemoveCDATAPipe(plumber.Pipe):
 
     def transform(self, data):
-        raw = data
-        xml = ET.fromstring(raw.converted_html_body)
+        raw, xml = data
         for item in xml.findall(".//*"):
             if not item.getchildren() and item.text:
                 remove_CDATA(item)
@@ -286,9 +297,9 @@ class RemoveCommentPipe(plumber.Pipe):
             parent = comment.getparent()
             if parent is not None:
                 # isso evita remover comment.tail
-                comment.addnext(etree.Element("REMOVE_COMMENT"))
+                comment.addnext(ET.Element("REMOVE_COMMENT"))
                 parent.remove(comment)
-        etree.strip_tags(xml, "REMOVE_COMMENT")
+        ET.strip_tags(xml, "REMOVE_COMMENT")
         return data
 
 
@@ -297,7 +308,7 @@ class RemoveTagsPipe(plumber.Pipe):
 
     def transform(self, data):
         raw, xml = data
-        etree.strip_tags(xml, self.TAGS)
+        ET.strip_tags(xml, self.TAGS)
         return data
 
 
@@ -318,7 +329,7 @@ class RenameElementsPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        for old, new in from_to:
+        for old, new in self.from_to:
             xpath = f".//{old}"
             for node in xml.findall(xpath):
                 node.tag = new
@@ -403,7 +414,7 @@ class AHrefPipe(plumber.Pipe):
 
     def _create_ext_link(self, node, extlinktype="uri"):
         node.tag = "ext-link"
-        href = node.get("href").strip()
+        href = (node.get("href") or '').strip()
         node.attrib.clear()
         node.set("ext-link-type", extlinktype)
         node.set("{http://www.w3.org/1999/xlink}href", href)
@@ -416,7 +427,7 @@ class AHrefPipe(plumber.Pipe):
         node.tag = "email"
         node.attrib.clear()
 
-        href = node.get("href").strip()
+        href = (node.get("href") or '').strip()
         texts = href.replace('mailto:', '')
         for text in texts.split():
             if "@" in text:
@@ -446,7 +457,7 @@ class AHrefPipe(plumber.Pipe):
         if not href:
             return
 
-        if "mailto" in href or "@" in node.text:
+        if ("mailto" in href) or (node.text and "@" in node.text):
             return self._create_email(node)
 
         if href[0] == "#":

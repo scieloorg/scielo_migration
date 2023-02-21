@@ -55,11 +55,14 @@ class RawRecord:
             else:
                 yield self.fix_function(_item)
 
-
     def get_field_content(self, tag, subfields, single):
         items = []
         for item in self.get_items(tag, subfields):
-            if isinstance(item, dict) and len(subfields) == 1 and subfields.get("_") is not None:
+            ignore_subfields = (
+                (len(subfields) == 1 and subfields.get("_") is not None) or
+                len(subfields) == 0
+            )
+            if isinstance(item, dict) and ignore_subfields:
                 data = list(item.values())
                 items.append(data[0])
             else:

@@ -1,4 +1,8 @@
+import logging
 import warnings
+
+from scielo_classic_website.isisdb.c_record import ReferenceRecord
+from scielo_classic_website.models.reference import Reference
 
 
 def warn_future_deprecation(old, new, details=''):
@@ -32,20 +36,27 @@ def format_location(city_and_state, country):
 
 class ReferenceXyloseAdapter:
 
-    def __init__(self, fix_function, record=None, reference_record=None):
-        if record:
-            self._reference_record = ReferenceRecord(_record, fix_function)
-        elif reference_record:
-            self._reference_record = reference_record
-            self._reference_record.fix_function = fix_function
+    def __init__(self, reference_record):
+        """
+        Parameters
+        ----------
+        reference_record : ReferenceRecord
+        """
+        self._reference_record = reference_record
+        self._reference = Reference(reference_record)
 
     def __getattr__(self, name):
         # desta forma Reference não precisa herdar de ReferenceRecord
         # fica menos acoplado
+        logging.info("getting attribute %s %s" % (type(self._reference), name))
+        if hasattr(self._reference, name):
+            return getattr(self._reference, name)
+        logging.info("getting attribute %s %s" % (type(self._reference_record), name))
         if hasattr(self._reference_record, name):
             return getattr(self._reference_record, name)
+        logging.info("getting attribute %s %s" % (type(self), name))
         raise AttributeError(
-            f"xylose_adapters.Reference has no attribute {name}")
+            f"ReferenceXyloseAdapter has no attribute {name}")
 
     @property
     def conference_name(self):

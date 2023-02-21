@@ -1,0 +1,32 @@
+Issue,,,,,,__init__,  init  ,  Init  
+Issue,,,,,,bibliographic_legends,bibliographic legends,Bibliographic Legends
+Issue,,,,,,journal,journal,Journal
+Issue,880,,,,,publisher_id,publisher id,Publisher Id
+Issue,992,,,,,collection_acronym,collection acronym,Collection Acronym
+Issue,690,,,,,scielo_domain,scielo domain,Scielo Domain
+Issue,200,,,,,is_marked_up,is marked up,Is Marked Up
+Issue,36,,,,,order,order,Order
+Issue,4,,,,,assets_code,assets code,Assets Code
+Issue,31,,,,,type,type,Type
+Issue,,,,,,label,label,Label
+Issue,31,,,,,volume,volume,Volume
+Issue,32,,,,,number,number,Number
+Issue,43,,,,,_start_end_months, start end months, Start End Months
+Issue,,,,,,start_month,start month,Start Month
+Issue,,,,,,end_month,end month,End Month
+Issue,131,,,,,supplement_volume,supplement volume,Supplement Volume
+Issue,132,,,,,supplement_number,supplement number,Supplement Number
+Issue,,,,,,is_ahead_of_print,is ahead of print,Is Ahead Of Print
+Issue,,,,,,url,url,Url
+Issue,65,,,,,publication_date,publication date,Publication Date
+Issue,91,,,,,processing_date,processing date,Processing Date
+Issue,41,,,,,is_press_release,is press release,Is Press Release
+Issue,33,,,,,titles,titles,Titles
+Issue,122,,,,,total_documents,total documents,Total Documents
+Issue,85,,,,,controlled_vocabulary,controlled vocabulary,Controlled Vocabulary
+Issue,117,,,,,editorial_standard,editorial standard,Editorial Standard
+Issue,541,,,,,permissions,permissions,Permissions
+Issue,91,,,,,processing_date,processing date,Processing Date
+Issue,,,,,,update_date,update date,Update Date
+Issue,93,,,,,creation_date,creation date,Creation Date
+Issue,49,,,,,sections,sections,Sections

@@ -63,5 +63,3 @@ class Issue:
         for item in self.sections:
             if item['code'] == code:
                 yield item
-
-

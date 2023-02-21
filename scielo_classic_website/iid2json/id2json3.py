@@ -40,9 +40,16 @@ def get_id_function(db_type):
 
 
 def pids_and_their_records(id_file_path, db_type):
+    logging.info("pids_and_their_records %s %s" % (id_file_path, db_type))
+    if not id_file_path:
+        return []
     id_function = get_id_function(db_type)
+
     rows = _get_id_file_rows(id_file_path)
+    logging.info("pids_and_their_records rows=%s" % rows)
+
     records = _join_id_file_rows_and_return_records(rows)
+    logging.info("pids_and_their_records records=%s" % records)
     return _get_id_and_json_records(records, id_function)
 
 
@@ -184,10 +191,12 @@ def _get_id_file_rows(id_file_path):
     -------
     list of strings
     """
-    with open(id_file_path, "r", encoding="iso-8859-1") as fp:
-        for item in fp:
-            yield item.strip()
-
+    try:
+        with open(id_file_path, "r", encoding="iso-8859-1") as fp:
+            for item in fp.readlines():
+                yield item.strip()
+    except FileNotFoundError:
+        return []
 
 # ok
 def _join_id_file_rows_and_return_records(id_file_rows):
@@ -204,7 +213,7 @@ def _join_id_file_rows_and_return_records(id_file_rows):
     list of strings
     """
     record_rows = []
-    for row in id_file_rows:
+    for row in id_file_rows or []:
         if row.startswith("!ID "):
             if len(record_rows):
                 # junta linhas que formam uma string
