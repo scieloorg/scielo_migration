@@ -1,24 +1,26 @@
 import logging
 
-from scielo_classic_website.isisdb.issue_record import IssueRecord
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.h_record import DocumentRecord
 from scielo_classic_website.isisdb.p_record import ParagraphRecord
+from scielo_classic_website.isisdb.c_record import ReferenceRecord
 from scielo_classic_website.models.journal import Journal
 from scielo_classic_website.models.issue import Issue
-from scielo_classic_website.models.html_body import (
+from scielo_classic_website.models.reference import Reference
+from scielo_classic_website.htmlbody.html_body import (
     BodyFromISIS,
     BodyFromHTMLFile,
 )
+from scielo_classic_website.spsxml.sps_xml_pipes import get_xml_rsps
+from scielo_classic_website.spsxml import sps_xml_body_pipes
 
 
 RECORD = dict(
-    i=IssueRecord,
     o=DocumentRecord,
     h=DocumentRecord,
     f=DocumentRecord,
     l=MetaRecord,
-    c=DocumentRecord,
+    c=ReferenceRecord,
     p=ParagraphRecord,
 )
 
@@ -40,6 +42,16 @@ def _get_value(data, tag):
 
 class Document:
     def __init__(self, data, _id=None):
+        """
+        Parameters
+        ----------
+            data : dict
+                keys:
+                    article
+                    title
+                    issue
+                    fulltexts (list of dict: uri, uri_text, lang, )
+        """
         self.data = {}
         try:
             self.data['article'] = data['article']
@@ -47,28 +59,63 @@ class Document:
             self.data['article'] = data
         self.document_records = DocumentRecords(self.data['article'], _id)
         self._h_record = self.document_records.article_meta
-        self.body_from_isis = BodyFromISIS(
-            self.document_records.get_record("p")
-        )
+
+        self.main_html_paragraphs = BodyFromISIS(
+            self.document_records.get_record("p")).parts
+        logging.info([(k, len(v)) for k, v in self.main_html_paragraphs.items()])
         try:
             self._journal = Journal(data["title"])
         except KeyError:
             self._journal = None
         try:
-            self._issue = Issue(self.document_records.get_record("i") or data["issue"])
+            self._issue = Issue(data["issue"])
         except KeyError:
             self._issue = None
+        self.xml_from_html = None
 
     def __getattr__(self, name):
         # desta forma Document não precisa herdar de DocumentRecord
         # fica menos acoplado
+
         if hasattr(self._h_record, name):
             return getattr(self._h_record, name)
-        raise AttributeError(f"Document.{name} does not exist")
+        raise AttributeError(f"{type(self._h_record)}.{name} does not exist")
 
     @property
-    def pid(self):
-        return f"{self.journal.scielo_issn}{self.issue.order}{self.order.zfill(5)}"
+    def translated_html_by_lang(self):
+        """
+        {
+            "en": {
+                "before references": html,
+                "after references": html,
+            },
+            "es": {
+                "before references": html,
+                "after references": html,
+            }
+        }
+        """
+        return self._translated_html_by_lang
+
+    def add_translated_html(self, lang, before_references, after_references):
+        """
+        {
+            "en": {
+                "before references": html,
+                "after references": html,
+            },
+            "es": {
+                "before references": html,
+                "after references": html,
+            }
+        }
+        """
+        if not hasattr(self, '_translated_html_by_lang') or not self._translated_html_by_lang:
+            self._translated_html_by_lang = {}
+        self._translated_html_by_lang[lang] = {
+            "before references": before_references,
+            "after references": after_references,
+        }
 
     @property
     def journal(self):
@@ -114,6 +161,51 @@ class Document:
     def elocation(self):
         return self.page.get("elocation")
 
+    def get_section(self, lang):
+        if not hasattr(self, '_sections') or not self._sections:
+            self._sections = {}
+            logging.info("issue %s" % type(self.issue))
+            logging.info("self.section_code %s" % self.section_code)
+
+            for item in self.issue.get_sections(self.section_code):
+                logging.info("lang %s" % item)
+                self._sections[item['language']] = item
+
+        logging.info("get_section...")
+        logging.info("self._sections %s " % self._sections)
+        try:
+            return self._sections[lang]['text']
+        except KeyError:
+            return None
+
+    def get_article_title(self, lang):
+        if not hasattr(self, '_article_titles') or not self._article_titles:
+            self._article_titles = {}
+            for item in self.translated_titles:
+                self._article_titles[item['language']] = item
+        try:
+            return self._article_titles[lang]['text']
+        except KeyError:
+            return None
+
+    def get_abstract(self, lang):
+        if not hasattr(self, '_abstracts') or not self._abstracts:
+            self._abstracts = {}
+            for item in self.translated_abstracts:
+                self._abstracts[item['language']] = item
+        try:
+            return self._abstracts[lang]['text']
+        except KeyError:
+            return None
+
+    def get_keywords_group(self, lang):
+        if not hasattr(self, '_keywords_groups') or not self._keywords_groups:
+            self._keywords_groups = self._h_record.keywords_groups
+        try:
+            return self._keywords_groups[lang]
+        except KeyError:
+            return None
+
     @property
     def translated_htmls(self):
         _translated_htmls = (self.data.get("body") or {}).copy()
@@ -122,6 +214,14 @@ class Document:
         except KeyError:
             pass
         return _translated_htmls
+
+    @property
+    def isis_updated_date(self):
+        return self.update_date
+
+    @property
+    def isis_created_date(self):
+        return self.creation_date
 
     @property
     def permissions(self):
@@ -139,17 +239,60 @@ class Document:
             yield author
 
     @property
-    def isis_updated_date(self):
-        return self.update_date
+    def citations(self):
+        return self.document_records.get_record("c")
 
-    @property
-    def isis_created_date(self):
-        return self.creation_date
+    def generate_body_and_back_from_html(self, html_texts=None):
+        """
+        Parameters
+        ----------
+        html_texts : {
+            lang: {
+                "before references": before,
+                "after references": after,
+                }
+            }
+        """
+        if not self.main_html_paragraphs:
+            logging.info("generate_body_and_back_from_html: No main HTML found")
+            return
+        langs = {}
+        # obtém os textos html
+        html_texts = html_texts or {}
+        for lang, html_text in html_texts.items():
+            logging.info("generate_body_and_back_from_html %s" % lang)
+            self.add_translated_html(
+                lang,
+                html_text['before references'],
+                html_text['after references']
+            )
+        sps_xml_body_pipes.convert_html_to_xml(self)
+
+    def generate_full_xml(self, selected_xml_body=None):
+        """
+        Parameters
+        ----------
+        html_texts : {
+            lang: {
+                "before references": before,
+                "after references": after,
+                }
+            }
+        """
+        if not self.main_html_paragraphs:
+            return
+        self.xml_body = selected_xml_body
+        try:
+            return get_xml_rsps(self)
+        except Exception as e:
+            logging.exception(e)
+            raise e
 
 
 class DocumentRecords:
     def __init__(self, records, _id=None):
         self._id = _id
+        self._records = None
         self.records = records
 
     @property
@@ -158,22 +301,16 @@ class DocumentRecords:
 
     @records.setter
     def records(self, _records):
-        if not hasattr(self, '_records'):
-            self._records = {}
+        self._records = {}
         for _record in _records:
-            logging.info("Read ISIS record")
             meta_record = MetaRecord(_record)
             rec_type = meta_record.rec_type
-            logging.info("rec_type={}".format(rec_type))
             try:
                 record = RECORD[rec_type](_record)
                 self._records[rec_type] = self._records.get(rec_type) or []
                 self._records[rec_type].append(record)
-            except KeyError as e:
-                logging.info("DocumentRecords.records")
-                logging.info(rec_type)
-                logging.info(_record)
-                logging.exception(e)
+            except KeyError:
+                pass
 
     def get_record(self, rec_type):
         return self._records.get(rec_type)
@@ -184,3 +321,7 @@ class DocumentRecords:
             return self._records.get("f")[0]
         except TypeError:
             return None
+        except Exception as e:
+            logging.info(self._records.keys())
+            logging.exception(e)
+            raise e

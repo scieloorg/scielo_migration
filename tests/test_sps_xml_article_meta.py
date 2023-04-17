@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from lxml import etree
 
-from scielo_migration.spsxml.sps_xml_article_meta import (
+from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLArticleMetaAffiliationPipe,
     XMLArticleMetaPublicationDatesPipe,
     XMLArticleMetaIssueInfoPipe,
@@ -18,7 +18,7 @@ from scielo_migration.spsxml.sps_xml_article_meta import (
     # XMLArticleMetaCitationsPipe,
     # XMLSubArticlePipe,
 )
-from scielo_migration.isisdb.models import Document
+from scielo_classic_website.models.document import Document
 
 
 def tostring(node):

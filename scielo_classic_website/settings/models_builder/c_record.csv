@@ -1,0 +1,94 @@
+record,tag,field_name,single,subfield,subfield_name,description
+ref,10,analytic_person_authors,,_,anonymous,Analytic Anonymous
+ref,10,analytic_person_authors,,n,given_names,Analytic Author
+ref,10,analytic_person_authors,,p,prefix,Analytic Author
+ref,10,analytic_person_authors,,r,role,Analytic Author
+ref,10,analytic_person_authors,,s,surname,Analytic Author
+ref,11,analytic_corporative_authors,,_,name,Analytic Corporative Author
+ref,11,analytic_corporative_authors,,d,division,Analytic Corporative Author
+ref,109,access_date,,,,Access date
+ref,110,access_date_iso,,,,Access date_iso
+ref,118,label,,,,Label
+ref,12,article_title,,_,text,Article Title
+ref,12,chapter_title,,_,text,Chapter Title
+ref,12,article_title,,l,language,Article Title
+ref,12,chapter_title,,l,language,Chapter Title
+ref,14,pages_range,,_,range,
+ref,14,pages_range,,e,elocation,
+ref,22,tome,,,,
+ref,150,patent,,_,country,Patent
+ref,150,patent,,a,id,Patent
+ref,150,patent,,b,date,Patent
+ref,150,patent,,c,date_iso,Patent
+ref,150,patent,,d,organization,Patent
+ref,16,monographic_person_authors,,_,anonymous,Monographic Anonymous
+ref,16,monographic_person_authors,,n,given_names,Monographic Author
+ref,16,monographic_person_authors,,p,prefix,Monographic Author
+ref,16,monographic_person_authors,,r,role,Monographic Author
+ref,16,monographic_person_authors,,s,surname,Monographic Author
+ref,17,monographic_corporative_authors,,_,name,Monographic Corporative Author
+ref,17,monographic_corporative_authors,,d,division,Monographic Corporative Author
+ref,18,monographic_title,,_,text,Monographic Title
+ref,18,monographic_title,,l,language,Monographic Title
+ref,20,size,,_,size,Size
+ref,20,size,,u,unit,Size
+ref,237,doi,,,,Doi
+ref,238,pmid,,,,Pmid
+ref,239,pmcid,,,,Pmcid
+ref,25,coltitle,,,,Collection title
+ref,26,colvolid,,,,Collection volume
+ref,28,serial_person_authors,,_,anonymous,Monographic Anonymous
+ref,28,serial_person_authors,,n,given_names,Monographic Author
+ref,28,serial_person_authors,,p,prefix,Monographic Author
+ref,28,serial_person_authors,,r,role,Monographic Author
+ref,28,serial_person_authors,,s,surname,Monographic Author
+ref,29,serial_corporative_authors,,_,name,Monographic Corporative Author
+ref,29,serial_corporative_authors,,d,division,Monographic Corporative Author
+ref,30,journal_title,,_,text,Journal title
+ref,30,journal_title,,l,language,Journal title
+ref,31,volume,,,,Volume
+ref,32,issue,,n,number,Issue
+ref,32,issue,,s,suppl,Issue
+ref,33,issue_title,,,,Issue title
+ref,34,issue_part,,,,Issue part
+ref,35,issn,,,,ISSN
+ref,37,ext_link,,,,Ext Link
+ref,44,thesis_date,,,,Thesis Date
+ref,45,thesis_date_iso,,,,Thesis Date Iso
+ref,46,thesis_location,,_,city,Thesis Location
+ref,46,thesis_location,,e,state,Thesis Location
+ref,47,thesis_country,,,,Thesis Country
+ref,50,thesis_organization,,_,name,Thesis Organization
+ref,50,thesis_organization,,d,division,Thesis Organization
+ref,51,thesis_degree,,,,Thesis Degree
+ref,514,pages,,e,elocation,
+ref,514,pages,,f,first,
+ref,514,pages,,l,last,
+ref,514,pages,,r,range,
+ref,52,conference_organization,,_,name,Conference Organization
+ref,52,conference_organization,,d,division,Conference Organization
+ref,53,conferences,,_,name,Conference
+ref,53,conferences,,n,number,Conference
+ref,54,conference_date,,,,Conference Date
+ref,55,conference_date_iso,,,,Conference Date Iso
+ref,56,conference_location,,_,city,Conference Location
+ref,56,conference_location,,e,state,Conference Location
+ref,57,conference_country,,,,Conference Country
+ref,58,project_sponsor,,_,name,Project Sponsor
+ref,58,project_sponsor,,d,division,Project Sponsor
+ref,59,project_name,,,,Project Name
+ref,60,project_number,,,,Project Number
+ref,61,notes,,,,Notes
+ref,62,publisher_name,,,,Publisher Name
+ref,63,edition,,,,Edition
+ref,64,year,,,,Year
+ref,65,publication_date_iso,,,,Publication Date Iso
+ref,66,publisher_location,,_,city,Publisher Location
+ref,66,publisher_location,,e,state,Publisher Location
+ref,67,publisher_country,,,,Publisher Country
+ref,69,isbn,,,,ISBN
+ref,701,index_number,,,,Index number
+ref,704,paragraph_text,,_,,Paragraph text
+ref,71,publication_type,,,,Publication Type
+ref,810,etal,,,,Etal
+ref,95,version,,,,Version

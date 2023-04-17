@@ -63,6 +63,7 @@ def check_migration_sources():
             raise exceptions.MustBeDirectoryError(f"{name} must be a directory")
 
 
+# XXX
 def get_paragraphs_id_file_path(article_pid):
     return os.path.join(
         os.path.dirname(CLASSIC_WEBSITE_BASES_PDF_PATH), "artigo", "p",

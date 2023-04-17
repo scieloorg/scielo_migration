@@ -3,6 +3,7 @@ from scielo_classic_website.iid2json import id2json3
 from scielo_classic_website.isisdb import isis_cmd
 
 
+# XXX
 def pids_and_their_records(source_file_path, db_type):
     if not source_file_path:
         return []

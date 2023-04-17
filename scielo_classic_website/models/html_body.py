@@ -13,6 +13,30 @@ class BodyFromISIS:
         self._identify_references_range()
 
     @property
+    def before_references_items(self):
+        for item in self.before_references_paragraphs:
+            # record_type_index, text, record_type, reference_index
+            data = item.data
+            data['part'] = 'before references'
+            yield data
+
+    @property
+    def reference_items(self):
+        for item in self.reference_paragraphs:
+            # record_type_index, text, record_type, reference_index
+            data = item.data
+            data['part'] = 'reference'
+            yield data
+
+    @property
+    def after_references_items(self):
+        for item in self.after_references_paragraphs:
+            # record_type_index, text, record_type, reference_index
+            data = item.data
+            data['part'] = 'after references'
+            yield data
+
+    @property
     def before_references_paragraphs(self):
         return self.p_records[:self.first_reference]
 

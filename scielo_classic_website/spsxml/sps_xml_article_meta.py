@@ -484,11 +484,7 @@ class XMLArticleMetaKeywordsPipe(plumber.Pipe):
 
             for item in keywords:
                 kwd = ET.Element('kwd')
-                try:
-                    kwd.text = ", ".join([item['text'], item['subkey']])
-                except KeyError:
-                    kwd.text = item['text']
-
+                kwd.text = item
                 kwdgroup.append(kwd)
             articlemeta.append(kwdgroup)
 
@@ -523,4 +519,114 @@ class XMLArticleMetaPermissionPipe(plumber.Pipe):
         permissions.append(dlicense)
         articlemeta.append(permissions)
 
+        return data
+
+
+class XMLArticleMetaSelfUriPipe(plumber.Pipe):
+    """Adiciona tag `self-uri` ao article-meta do artigo.
+    As tags `self-uri` disponibilizam fontes alternativas para o
+    texto completo."""
+
+    def precond(data):
+        raw, _ = data
+
+        if not raw.data.get("fulltexts"):
+            raise plumber.UnmetPrecondition()
+
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+        articlemeta = xml.find('./front/article-meta')
+
+        # data injection in Document
+        for item in raw.data.get("fulltexts", []):
+            self_uri = ET.Element("self-uri")
+            self_uri.set("{http://www.w3.org/1999/xlink}href", item['uri'])
+            self_uri.set("{http://www.w3.org/XML/1998/namespace}lang", item['lang'])
+            self_uri.text = item.get("uri_text") or ''
+            articlemeta.append(self_uri)
+
+        return data
+
+
+class XMLArticleMetaCountsPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        articlemeta = xml.find('./front/article-meta')
+
+        counts = articlemeta.find("counts")
+        if counts is None:
+            counts = ET.Element('counts')
+
+        body_node = xml.find('./body')
+
+        elems = [
+            ('fig-count',
+                len(body_node.findall(".//fig[@id]")) +
+                len(body_node.findall(".//fig-group[@id]"))),
+            ('table-count',
+                len(body_node.findall(".//table-wrap[@id]")) +
+                len(body_node.findall(".//table-wrap-group[@id]"))),
+            ('equation-count',
+                len(body_node.findall(".//disp-formula[@id]"))),
+        ]
+
+        for elem_name, count in elems:
+            count_elem = counts.find(elem_name)
+            if count_elem is None:
+                count_elem = ET.Element(elem_name)
+            count_elem.set('count', str(count))
+            counts.append(count_elem)
+
+        count_refs = ET.Element('ref-count')
+        if raw.citations:
+            count_refs.set('count', str(len(raw.citations)))
+        else:
+            count_refs.set('count', '0')
+        counts.append(count_refs)
+
+        try:
+            startpage = int(raw.start_page or 0)
+            endpage = int(raw.end_page or raw.start_page or 0)
+            if 0 < startpage <= endpage:
+                count_pages = ET.Element('page-count')
+                count_pages.set('count', str(endpage - startpage + 1))
+                counts.append(count_pages)
+        except (ValueError, TypeError):
+            pass
+
+        articlemeta.append(counts)
+
+        for subart in xml.findall("./sub-article"):
+            frontstub = subart.find("front-stub")
+            if frontstub is None:
+                subart.append(ET.Element("front-stub"))
+
+            counts = subart.find("front-stub/counts")
+            if counts is None:
+                counts = ET.Element('counts')
+
+            body_node = xml.find('./body')
+
+            elems = [
+                ('fig-count',
+                    len(body_node.findall(".//fig[@id]")) +
+                    len(body_node.findall(".//fig-group[@id]"))),
+                ('table-count',
+                    len(body_node.findall(".//table-wrap[@id]")) +
+                    len(body_node.findall(".//table-wrap-group[@id]"))),
+                ('equation-count',
+                    len(body_node.findall(".//disp-formula[@id]"))),
+            ]
+
+            for elem_name, count in elems:
+                count_elem = counts.find(elem_name)
+                if count_elem is None:
+                    count_elem = ET.Element(elem_name)
+                count_elem.set('count', str(count))
+                counts.append(count_elem)
+
+            frontstub.append(counts)
         return data
