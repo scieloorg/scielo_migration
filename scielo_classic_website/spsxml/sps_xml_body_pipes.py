@@ -114,7 +114,7 @@ def convert_html_to_xml_step_3(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_3(document):
+def convert_html_to_xml_step_4(document):
     """
     Converte o XML obtido no passo 2,
     remove o conteúdo de CDATA e converte as tags HTML nas XML correspondentes
