@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-import os, setuptools
+import os
+
+import setuptools
 
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, "README.md")) as f:

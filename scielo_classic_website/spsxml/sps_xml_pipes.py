@@ -4,31 +4,31 @@ from copy import deepcopy
 import plumber
 from lxml import etree as ET
 
+from scielo_classic_website.spsxml.sps_xml_article_meta import (
+    XMLArticleMetaAbstractsPipe,
+    XMLArticleMetaAffiliationPipe,
+    XMLArticleMetaArticleCategoriesPipe,
+    XMLArticleMetaArticleIdDOIPipe,
+    XMLArticleMetaContribGroupPipe,
+    XMLArticleMetaCountsPipe,
+    XMLArticleMetaElocationInfoPipe,
+    XMLArticleMetaHistoryPipe,
+    XMLArticleMetaIssueInfoPipe,
+    XMLArticleMetaKeywordsPipe,
+    XMLArticleMetaPagesInfoPipe,
+    XMLArticleMetaPermissionPipe,
+    XMLArticleMetaPublicationDatesPipe,
+    XMLArticleMetaSciELOArticleIdPipe,
+    XMLArticleMetaSelfUriPipe,
+    XMLArticleMetaTitleGroupPipe,
+    XMLArticleMetaTranslatedTitleGroupPipe
+)
 from scielo_classic_website.spsxml.sps_xml_attributes import (
     ARTICLE_TYPES,
-    COUNTRY_ITEMS,
-)
-from scielo_classic_website.spsxml.sps_xml_article_meta import (
-    XMLArticleMetaSciELOArticleIdPipe,
-    XMLArticleMetaArticleIdDOIPipe,
-    XMLArticleMetaArticleCategoriesPipe,
-    XMLArticleMetaTitleGroupPipe,
-    XMLArticleMetaTranslatedTitleGroupPipe,
-    XMLArticleMetaContribGroupPipe,
-    XMLArticleMetaAffiliationPipe,
-    XMLArticleMetaPublicationDatesPipe,
-    XMLArticleMetaIssueInfoPipe,
-    XMLArticleMetaElocationInfoPipe,
-    XMLArticleMetaPagesInfoPipe,
-    XMLArticleMetaHistoryPipe,
-    XMLArticleMetaPermissionPipe,
-    XMLArticleMetaSelfUriPipe,
-    XMLArticleMetaAbstractsPipe,
-    XMLArticleMetaKeywordsPipe,
-    XMLArticleMetaCountsPipe,
+    COUNTRY_ITEMS
 )
 from scielo_classic_website.spsxml.sps_xml_refs import (
-    XMLArticleMetaCitationsPipe,
+    XMLArticleMetaCitationsPipe
 )
 
 

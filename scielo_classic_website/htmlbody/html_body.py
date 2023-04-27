@@ -1,8 +1,9 @@
-import os
 import logging
+import os
+
+from lxml.html import fromstring, iterlinks, rewrite_links, tostring
 
 from scielo_classic_website.utils.files_utils import read_file
-from lxml.html import rewrite_links, iterlinks, fromstring, tostring
 
 
 class HTMLFile:

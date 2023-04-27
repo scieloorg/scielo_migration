@@ -1,12 +1,12 @@
 import logging
 import os
 
-from scielo_classic_website.models.issue_files import IssueFiles, ArtigoDBPath
 from scielo_classic_website.iid2json import id2json3
 from scielo_classic_website.isisdb.isis_cmd import ISISCommader
-from scielo_classic_website.models.journal import Journal
-from scielo_classic_website.models.issue import Issue
 from scielo_classic_website.models.document import Document
+from scielo_classic_website.models.issue import Issue
+from scielo_classic_website.models.issue_files import ArtigoDBPath, IssueFiles
+from scielo_classic_website.models.journal import Journal
 
 
 class ClassicWebsitePaths:

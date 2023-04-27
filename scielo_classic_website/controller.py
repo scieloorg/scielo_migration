@@ -1,5 +1,4 @@
 from scielo_classic_website.iid2json import id2json3
-
 from scielo_classic_website.isisdb import isis_cmd
 
 

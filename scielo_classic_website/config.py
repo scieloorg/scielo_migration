@@ -1,10 +1,7 @@
-import os
 import glob
-
+import os
 
 from scielo_classic_website import exceptions
-
-
 
 ATTRIBUTES_PATH = os.environ.get("ATTRIBUTES_PATH", 'scielo_classic_website/settings/attributes')
 

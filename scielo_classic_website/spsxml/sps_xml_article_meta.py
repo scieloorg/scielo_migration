@@ -3,7 +3,7 @@ from lxml import etree as ET
 
 from scielo_classic_website.spsxml.sps_xml_attributes import (
     CONTRIB_ROLES,
-    get_attribute_value,
+    get_attribute_value
 )
 
 

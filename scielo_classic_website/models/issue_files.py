@@ -1,9 +1,9 @@
-import os
 import glob
 import logging
+import os
 
-from scielo_classic_website.utils.files_utils import create_zip_file
 from scielo_classic_website.htmlbody.html_body import HTMLFile
+from scielo_classic_website.utils.files_utils import create_zip_file
 
 
 def _get_classic_website_rel_path(file_path):

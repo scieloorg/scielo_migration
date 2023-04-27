@@ -1,8 +1,7 @@
 import argparse
-import os
 import csv
 import json
-
+import os
 
 BUILDER_CSV_FIELD_NAMES = [
     'record',

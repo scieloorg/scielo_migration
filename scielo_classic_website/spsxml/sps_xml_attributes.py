@@ -1,11 +1,8 @@
-import os
 import csv
-
-from scielo_classic_website.config import (
-    ATTRIBUTES_PATH,
-)
+import os
 
 from scielo_classic_website.attr_values import AttrValues
+from scielo_classic_website.config import ATTRIBUTES_PATH
 
 
 def _read_csv_file(file_path):

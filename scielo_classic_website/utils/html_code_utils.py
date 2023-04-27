@@ -2,8 +2,8 @@
 Origem: https://github.com/scieloorg/xylose/blob/262126e37e55bb7df2ebc585472f260daddedce9/xylose/scielodocument.py
 
 """
-import sys
 import re
+import sys
 import unicodedata
 import warnings
 

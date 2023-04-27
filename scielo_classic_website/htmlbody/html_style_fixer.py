@@ -1,6 +1,6 @@
-from lxml import etree as ET
 from io import StringIO
 
+from lxml import etree as ET
 
 STYLES = (
     ('<u ', '<span name="style_underline" '),

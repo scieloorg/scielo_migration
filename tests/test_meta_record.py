@@ -1,4 +1,5 @@
 from unittest import TestCase
+
 from scielo_classic_website.isisdb import meta_record
 
 

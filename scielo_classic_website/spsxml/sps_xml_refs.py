@@ -1,17 +1,13 @@
-from io import StringIO
-from datetime import datetime
 import logging
+from datetime import datetime
+from io import StringIO
 
 import plumber
 from lxml import etree as ET
 
-from . import (
-    utils,
-    xylose_adapters,
-)
-from scielo_classic_website.htmlbody.html_code_utils import (
-    html_decode,
-)
+from scielo_classic_website.htmlbody.html_code_utils import html_decode
+
+from . import utils, xylose_adapters
 
 
 def parse_yyyymmdd(yyyymmdd):

@@ -1,7 +1,7 @@
 import logging
 
-from scielo_classic_website.isisdb.c_record import ReferenceRecord
 from scielo_classic_website.htmlbody import html_style_fixer
+from scielo_classic_website.isisdb.c_record import ReferenceRecord
 
 
 def html_decode(text):

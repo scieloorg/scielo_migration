@@ -1,5 +1,5 @@
-from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.journal_record import JournalRecord
+from scielo_classic_website.isisdb.meta_record import MetaRecord
 
 
 class Journal:

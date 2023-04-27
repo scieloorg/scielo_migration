@@ -1,19 +1,18 @@
 import logging
 
-from scielo_classic_website.isisdb.meta_record import MetaRecord
-from scielo_classic_website.isisdb.h_record import DocumentRecord
-from scielo_classic_website.isisdb.p_record import ParagraphRecord
-from scielo_classic_website.isisdb.c_record import ReferenceRecord
-from scielo_classic_website.models.journal import Journal
-from scielo_classic_website.models.issue import Issue
-from scielo_classic_website.models.reference import Reference
 from scielo_classic_website.htmlbody.html_body import (
-    BodyFromISIS,
     BodyFromHTMLFile,
+    BodyFromISIS
 )
-from scielo_classic_website.spsxml.sps_xml_pipes import get_xml_rsps
+from scielo_classic_website.isisdb.c_record import ReferenceRecord
+from scielo_classic_website.isisdb.h_record import DocumentRecord
+from scielo_classic_website.isisdb.meta_record import MetaRecord
+from scielo_classic_website.isisdb.p_record import ParagraphRecord
+from scielo_classic_website.models.issue import Issue
+from scielo_classic_website.models.journal import Journal
+from scielo_classic_website.models.reference import Reference
 from scielo_classic_website.spsxml import sps_xml_body_pipes
-
+from scielo_classic_website.spsxml.sps_xml_pipes import get_xml_rsps
 
 RECORD = dict(
     o=DocumentRecord,

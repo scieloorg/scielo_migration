@@ -2,23 +2,18 @@ from unittest import TestCase
 
 from lxml import etree
 
-from scielo_classic_website.spsxml.sps_xml_article_meta import (
-    XMLArticleMetaAffiliationPipe,
-    XMLArticleMetaPublicationDatesPipe,
-    XMLArticleMetaIssueInfoPipe,
-    XMLArticleMetaElocationInfoPipe,
-    XMLArticleMetaPagesInfoPipe,
-    XMLArticleMetaHistoryPipe,
-    XMLArticleMetaPermissionPipe,
-    # XMLArticleMetaSelfUriPipe,
-    XMLArticleMetaAbstractsPipe,
-    XMLArticleMetaKeywordsPipe,
-    # XMLArticleMetaCountsPipe,
-    # XMLBodyPipe,
-    # XMLArticleMetaCitationsPipe,
-    # XMLSubArticlePipe,
-)
 from scielo_classic_website.models.document import Document
+from scielo_classic_website.spsxml.sps_xml_article_meta import (  # XMLArticleMetaSelfUriPipe,; XMLArticleMetaCountsPipe,; XMLBodyPipe,; XMLArticleMetaCitationsPipe,; XMLSubArticlePipe,
+    XMLArticleMetaAbstractsPipe,
+    XMLArticleMetaAffiliationPipe,
+    XMLArticleMetaElocationInfoPipe,
+    XMLArticleMetaHistoryPipe,
+    XMLArticleMetaIssueInfoPipe,
+    XMLArticleMetaKeywordsPipe,
+    XMLArticleMetaPagesInfoPipe,
+    XMLArticleMetaPermissionPipe,
+    XMLArticleMetaPublicationDatesPipe
+)
 
 
 def tostring(node):

@@ -2,11 +2,11 @@
 Origem: https://github.com/scieloorg/xylose/blob/262126e37e55bb7df2ebc585472f260daddedce9/xylose/scielodocument.py
 
 """
-import sys
+import logging
 import re
+import sys
 import unicodedata
 import warnings
-import logging
 
 try:  # Keep compatibility with python 2.7
     from html import unescape

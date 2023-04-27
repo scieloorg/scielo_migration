@@ -1,9 +1,8 @@
 import os
 from urllib.parse import urlparse
 
-from lxml.html import rewrite_links, iterlinks, fromstring, tostring
-
 from dsm.utils.files_utils import read_file
+from lxml.html import fromstring, iterlinks, rewrite_links, tostring
 
 
 class URI_Changer:
