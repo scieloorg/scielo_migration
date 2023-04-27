@@ -6,6 +6,10 @@ from lxml import etree as ET
 
 
 def convert_html_to_xml(document):
+    '''
+    document está em scielo_classic_website.models.document.Document.
+    '''
+
     document.xml_body_and_back = []
     document.xml_body_and_back.append(convert_html_to_xml_step_1(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_2(document))
@@ -24,10 +28,10 @@ def convert_html_to_xml_step_1(document):
     document: Document
     """
     ppl = plumber.Pipeline(
-            SetupPipe(),
-            MainHTMLPipe(),
-            TranslatedHTMLPipe(),
-            EndPipe(),
+        SetupPipe(),
+        MainHTMLPipe(),
+        TranslatedHTMLPipe(),
+        EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
@@ -52,21 +56,21 @@ def convert_html_to_xml_step_2(document):
     speech | statement | verse-group)*, (sec)*, sig-block?)
     """
     ppl = plumber.Pipeline(
-            StartPipe(),
-            RemoveCDATAPipe(),
-            RemoveCommentPipe(),
-            FontSymbolPipe(),
-            RemoveTagsPipe(),
-            RenameElementsPipe(),
-            StylePipe(),
-            OlPipe(),
-            UlPipe(),
-            TagsHPipe(),
-            ASourcePipe(),
-            AHrefPipe(),
-            ANamePipe(),
-            ImgSrcPipe(),
-            EndPipe(),
+        StartPipe(),
+        RemoveCDATAPipe(),
+        RemoveCommentPipe(),
+        FontSymbolPipe(),
+        RemoveTagsPipe(),
+        RenameElementsPipe(),
+        StylePipe(),
+        OlPipe(),
+        UlPipe(),
+        TagsHPipe(),
+        ASourcePipe(),
+        AHrefPipe(),
+        ANamePipe(),
+        ImgSrcPipe(),
+        EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
@@ -91,20 +95,20 @@ def convert_html_to_xml_step_3(document):
     speech | statement | verse-group)*, (sec)*, sig-block?)
     """
     ppl = plumber.Pipeline(
-            StartPipe(),
-            RemoveCommentPipe(),
-            FontSymbolPipe(),
-            RemoveTagsPipe(),
-            RenameElementsPipe(),
-            StylePipe(),
-            OlPipe(),
-            UlPipe(),
-            TagsHPipe(),
-            ASourcePipe(),
-            AHrefPipe(),
-            ANamePipe(),
-            ImgSrcPipe(),
-            EndPipe(),
+        StartPipe(),
+        RemoveCommentPipe(),
+        FontSymbolPipe(),
+        RemoveTagsPipe(),
+        RenameElementsPipe(),
+        StylePipe(),
+        OlPipe(),
+        UlPipe(),
+        TagsHPipe(),
+        ASourcePipe(),
+        AHrefPipe(),
+        ANamePipe(),
+        ImgSrcPipe(),
+        EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
@@ -129,8 +133,8 @@ def convert_html_to_xml_step_3(document):
     speech | statement | verse-group)*, (sec)*, sig-block?)
     """
     ppl = plumber.Pipeline(
-            StartPipe(),
-            EndPipe(),
+        StartPipe(),
+        EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
@@ -184,7 +188,7 @@ class EndPipe(plumber.Pipe):
             xml,
             encoding="utf-8",
             method="xml",
-            )
+        )
         return data
 
 
