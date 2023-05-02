@@ -2,7 +2,12 @@ from unittest import TestCase
 
 from lxml import etree
 
-from scielo_classic_website.spsxml.sps_xml_body_pipes import OlPipe, TagsHPipe, UlPipe
+from scielo_classic_website.spsxml.sps_xml_body_pipes import (
+    OlPipe,
+    TagsHPipe,
+    UlPipe,
+    ASourcePipe,
+)
 
 
 def get_tree(xml_str):
@@ -76,3 +81,33 @@ class TestTagsHPipe(TestCase):
         result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
 
         self.assertEqual(expected, result)
+
+
+class TestASourcePipe(TestCase):
+    def test_transform_muda_src_para_href_em_nos_a(self):
+        xml = get_tree('<root><body><a src="foo.jpg">Imagem</a></body></root>')
+        expected = '<root><body><a href="foo.jpg">Imagem</a></body></root>'
+        data = (None, xml)
+
+        _, transformed_xml = ASourcePipe().transform(data)
+
+        expected_element = etree.fromstring(expected)
+        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
+        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+
+        self.assertEqual(expected, result)
+
+    def test_transform_nao_altera_nos_a_sem_src(self):
+        xml = get_tree('<root><body><a href="foo.jpg">Imagem</a></body></root>')
+        data = (None, xml)
+
+        _, transformed_xml = ASourcePipe().transform(data)
+
+        expected = '<root><body><a href="foo.jpg">Imagem</a></body></root>'
+        expected_element = etree.fromstring(expected)
+        expected_string = etree.tostring(expected_element, encoding="utf-8").decode(
+            "utf-8"
+        )
+        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+
+        self.assertEqual(expected_string, result)
