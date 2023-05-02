@@ -2,160 +2,153 @@
 from scielo_classic_website.isisdb.meta_record import MetaRecord
 
 ATTRIBUTES = (
-    'fulltexts',
-    'html_url',
-    'is_ahead_of_print',
-    'issue',
-    'issue_label',
-    'issue_url',
-    'journal',
-    'mixed_affiliations',
-    'pdf_url',
-    'translated_htmls',
-    'assets_code',
-    'authors',
-    'corporative_authors',
-    'article_titles',
-    'page',
-    'volume',
-    'issue_number',
-    'journal_id',
-    'illustrative_material',
-    'original_language',
-    'original_section',
-    'section',
-    'section_code',
-    'translated_section',
-    'thesis_degree',
-    'thesis_organization',
-    'project_sponsor',
-    'project_name',
-    'contract',
-    'issue_publication_date',
-    'publication_date',
-    'affiliations',
-    'article_type',
-    'document_type',
-    'abstracts',
-    'keywords',
-    'processing_date',
-    'update_date',
-    'creation_date',
-    'receive_date_iso',
-    'acceptance_date_iso',
-    'review_date_iso',
-    'data_model_version',
-    'internal_sequence_id',
-    'order',
-    'vol_suppl',
-    'num_suppl',
-    'ahead_publication_date',
-    'document_publication_date',
-    'doi',
-    'normalized_affiliations',
-    'doi_with_lang',
-    'any_issn',
-    'permissions',
-    'languages',
-    'xml_languages',
-    'scielo_domain',
-    'file_code',
-    'original_html',
-    'publisher_id',
-    'scielo_pid_v2',
-    'publisher_ahead_id',
-    'aop_pid',
-    'scielo_pid_v3',
-    'collection_acronym',
-
+    "fulltexts",
+    "html_url",
+    "is_ahead_of_print",
+    "issue",
+    "issue_label",
+    "issue_url",
+    "journal",
+    "mixed_affiliations",
+    "pdf_url",
+    "translated_htmls",
+    "assets_code",
+    "authors",
+    "corporative_authors",
+    "article_titles",
+    "page",
+    "volume",
+    "issue_number",
+    "journal_id",
+    "illustrative_material",
+    "original_language",
+    "original_section",
+    "section",
+    "section_code",
+    "translated_section",
+    "thesis_degree",
+    "thesis_organization",
+    "project_sponsor",
+    "project_name",
+    "contract",
+    "issue_publication_date",
+    "publication_date",
+    "affiliations",
+    "article_type",
+    "document_type",
+    "abstracts",
+    "keywords",
+    "processing_date",
+    "update_date",
+    "creation_date",
+    "receive_date_iso",
+    "acceptance_date_iso",
+    "review_date_iso",
+    "data_model_version",
+    "internal_sequence_id",
+    "order",
+    "vol_suppl",
+    "num_suppl",
+    "ahead_publication_date",
+    "document_publication_date",
+    "doi",
+    "normalized_affiliations",
+    "doi_with_lang",
+    "any_issn",
+    "permissions",
+    "languages",
+    "xml_languages",
+    "scielo_domain",
+    "file_code",
+    "original_html",
+    "publisher_id",
+    "scielo_pid_v2",
+    "publisher_ahead_id",
+    "aop_pid",
+    "scielo_pid_v3",
+    "collection_acronym",
 )
 
 
 def adapt_data(original):
     data = {}
-    data['fulltexts'] = original['fulltexts']
-    data['html_url'] = original['html_url']
-    data['is_ahead_of_print'] = original['is_ahead_of_print']
-    data['issue'] = original['issue']
-    data['issue_label'] = original['issue_label']
-    data['issue_url'] = original['issue_url']
-    data['journal'] = original['journal']
-    data['mixed_affiliations'] = original['mixed_affiliations']
-    data['pdf_url'] = original['pdf_url']
-    data['translated_htmls'] = original['translated_htmls']
-    data['assets_code'] = original['assets_code']
-    data['authors'] = original['authors']
-    data['corporative_authors'] = original['corporative_authors']
-    data['article_titles'] = original['article_titles']
-    data['page'] = original['page']
-    data['volume'] = original['volume']
-    data['issue_number'] = original['issue_number']
-    data['journal_id'] = original['journal_id']
-    data['illustrative_material'] = original['illustrative_material']
-    data['original_language'] = original['original_language']
-    data['original_section'] = original['original_section']
-    data['section'] = original['section']
-    data['section_code'] = original['section_code']
-    data['translated_section'] = original['translated_section']
-    data['thesis_degree'] = original['thesis_degree']
-    data['thesis_organization'] = original['thesis_organization']
-    data['project_sponsor'] = original['project_sponsor']
-    data['project_name'] = original['project_name']
-    data['contract'] = original['contract']
-    data['issue_publication_date'] = original['issue_publication_date']
-    data['publication_date'] = original['publication_date']
-    data['affiliations'] = original['affiliations']
-    data['article_type'] = original['article_type']
-    data['document_type'] = original['document_type']
-    data['abstracts'] = original['abstracts']
-    data['keywords'] = original['keywords']
-    data['processing_date'] = original['processing_date']
-    data['update_date'] = original['update_date']
-    data['creation_date'] = original['creation_date']
-    data['receive_date_iso'] = original['receive_date_iso']
-    data['acceptance_date_iso'] = original['acceptance_date_iso']
-    data['review_date_iso'] = original['review_date_iso']
-    data['data_model_version'] = original['data_model_version']
-    data['internal_sequence_id'] = original['internal_sequence_id']
-    data['order'] = original['order']
-    data['vol_suppl'] = original['vol_suppl']
-    data['num_suppl'] = original['num_suppl']
-    data['ahead_publication_date'] = original['ahead_publication_date']
-    data['document_publication_date'] = original['document_publication_date']
-    data['doi'] = original['doi']
-    data['normalized_affiliations'] = original['normalized_affiliations']
-    data['doi_with_lang'] = original['doi_with_lang']
-    data['any_issn'] = original['any_issn']
-    data['permissions'] = original['permissions']
-    data['languages'] = original['languages']
-    data['xml_languages'] = original['xml_languages']
-    data['scielo_domain'] = original['scielo_domain']
-    data['file_code'] = original['file_code']
-    data['original_html'] = original['original_html']
-    data['publisher_id'] = original['publisher_id']
-    data['scielo_pid_v2'] = original['scielo_pid_v2']
-    data['publisher_ahead_id'] = original['publisher_ahead_id']
-    data['aop_pid'] = original['aop_pid']
-    data['scielo_pid_v3'] = original['scielo_pid_v3']
-    data['collection_acronym'] = original['collection_acronym']
+    data["fulltexts"] = original["fulltexts"]
+    data["html_url"] = original["html_url"]
+    data["is_ahead_of_print"] = original["is_ahead_of_print"]
+    data["issue"] = original["issue"]
+    data["issue_label"] = original["issue_label"]
+    data["issue_url"] = original["issue_url"]
+    data["journal"] = original["journal"]
+    data["mixed_affiliations"] = original["mixed_affiliations"]
+    data["pdf_url"] = original["pdf_url"]
+    data["translated_htmls"] = original["translated_htmls"]
+    data["assets_code"] = original["assets_code"]
+    data["authors"] = original["authors"]
+    data["corporative_authors"] = original["corporative_authors"]
+    data["article_titles"] = original["article_titles"]
+    data["page"] = original["page"]
+    data["volume"] = original["volume"]
+    data["issue_number"] = original["issue_number"]
+    data["journal_id"] = original["journal_id"]
+    data["illustrative_material"] = original["illustrative_material"]
+    data["original_language"] = original["original_language"]
+    data["original_section"] = original["original_section"]
+    data["section"] = original["section"]
+    data["section_code"] = original["section_code"]
+    data["translated_section"] = original["translated_section"]
+    data["thesis_degree"] = original["thesis_degree"]
+    data["thesis_organization"] = original["thesis_organization"]
+    data["project_sponsor"] = original["project_sponsor"]
+    data["project_name"] = original["project_name"]
+    data["contract"] = original["contract"]
+    data["issue_publication_date"] = original["issue_publication_date"]
+    data["publication_date"] = original["publication_date"]
+    data["affiliations"] = original["affiliations"]
+    data["article_type"] = original["article_type"]
+    data["document_type"] = original["document_type"]
+    data["abstracts"] = original["abstracts"]
+    data["keywords"] = original["keywords"]
+    data["processing_date"] = original["processing_date"]
+    data["update_date"] = original["update_date"]
+    data["creation_date"] = original["creation_date"]
+    data["receive_date_iso"] = original["receive_date_iso"]
+    data["acceptance_date_iso"] = original["acceptance_date_iso"]
+    data["review_date_iso"] = original["review_date_iso"]
+    data["data_model_version"] = original["data_model_version"]
+    data["internal_sequence_id"] = original["internal_sequence_id"]
+    data["order"] = original["order"]
+    data["vol_suppl"] = original["vol_suppl"]
+    data["num_suppl"] = original["num_suppl"]
+    data["ahead_publication_date"] = original["ahead_publication_date"]
+    data["document_publication_date"] = original["document_publication_date"]
+    data["doi"] = original["doi"]
+    data["normalized_affiliations"] = original["normalized_affiliations"]
+    data["doi_with_lang"] = original["doi_with_lang"]
+    data["any_issn"] = original["any_issn"]
+    data["permissions"] = original["permissions"]
+    data["languages"] = original["languages"]
+    data["xml_languages"] = original["xml_languages"]
+    data["scielo_domain"] = original["scielo_domain"]
+    data["file_code"] = original["file_code"]
+    data["original_html"] = original["original_html"]
+    data["publisher_id"] = original["publisher_id"]
+    data["scielo_pid_v2"] = original["scielo_pid_v2"]
+    data["publisher_ahead_id"] = original["publisher_ahead_id"]
+    data["aop_pid"] = original["aop_pid"]
+    data["scielo_pid_v3"] = original["scielo_pid_v3"]
+    data["collection_acronym"] = original["collection_acronym"]
     return data
 
 
 # generated by ModelBuilder
 class BaseDocumentRecord(MetaRecord):
-
-    def __init__(
-            self, record, multi_val_tags=None,
-            data_dictionary=None):
-        super().__init__(
-            record, multi_val_tags, data_dictionary)
+    def __init__(self, record, multi_val_tags=None, data_dictionary=None):
+        super().__init__(record, multi_val_tags, data_dictionary)
 
     # generated by ModelBuilder
     @property
     def attributes(self):
-        return dict(
-            [(k, getattr(self, k)) for k in ATTRIBUTES]
-        )
+        return dict([(k, getattr(self, k)) for k in ATTRIBUTES])
 
     # generated by ModelBuilder
     @property
@@ -263,7 +256,20 @@ class BaseDocumentRecord(MetaRecord):
         Author
         v010 {'1': 'xref', 'k': 'orcid', 'l': 'lattes', 'n': 'given_names', 'p': 'prefix', 'r': 'role', 's': 'surname'}
         """
-        return self.get_field_content("v010", subfields={'1': 'xref', 'k': 'orcid', 'l': 'lattes', 'n': 'given_names', 'p': 'prefix', 'r': 'role', 's': 'surname'}, single=False, simple=False)
+        return self.get_field_content(
+            "v010",
+            subfields={
+                "1": "xref",
+                "k": "orcid",
+                "l": "lattes",
+                "n": "given_names",
+                "p": "prefix",
+                "r": "role",
+                "s": "surname",
+            },
+            single=False,
+            simple=False,
+        )
 
     # generated by ModelBuilder
     @property
@@ -281,7 +287,12 @@ class BaseDocumentRecord(MetaRecord):
         Article Titles
         v012 {'s': 'subtitle', '_': 'text', 'l': 'language'}
         """
-        return self.get_field_content("v012", subfields={'s': 'subtitle', '_': 'text', 'l': 'language'}, single=False, simple=False)
+        return self.get_field_content(
+            "v012",
+            subfields={"s": "subtitle", "_": "text", "l": "language"},
+            single=False,
+            simple=False,
+        )
 
     # generated by ModelBuilder
     @property
@@ -290,7 +301,12 @@ class BaseDocumentRecord(MetaRecord):
         Page
         v014 {'e': 'elocation', 'f': 'start', 'l': 'end', 's': 'sequence'}
         """
-        return self.get_field_content("v014", subfields={'e': 'elocation', 'f': 'start', 'l': 'end', 's': 'sequence'}, single=True, simple=False)
+        return self.get_field_content(
+            "v014",
+            subfields={"e": "elocation", "f": "start", "l": "end", "s": "sequence"},
+            single=True,
+            simple=False,
+        )
 
     # generated by ModelBuilder
     @property
@@ -443,7 +459,24 @@ class BaseDocumentRecord(MetaRecord):
         Affiliations
         v070 {'d': 'div1', '1': 'div1', '2': 'div2', '3': 'div3', 'o': 'orgname', '_': 'orgname', 'c': 'city', 'e': 'email', 'i': 'id', 'p': 'country', 's': 'state'}
         """
-        return self.get_field_content("v070", subfields={'d': 'div1', '1': 'div1', '2': 'div2', '3': 'div3', 'o': 'orgname', '_': 'orgname', 'c': 'city', 'e': 'email', 'i': 'id', 'p': 'country', 's': 'state'}, single=False, simple=False)
+        return self.get_field_content(
+            "v070",
+            subfields={
+                "d": "div1",
+                "1": "div1",
+                "2": "div2",
+                "3": "div3",
+                "o": "orgname",
+                "_": "orgname",
+                "c": "city",
+                "e": "email",
+                "i": "id",
+                "p": "country",
+                "s": "state",
+            },
+            single=False,
+            simple=False,
+        )
 
     # generated by ModelBuilder
     @property
@@ -470,7 +503,12 @@ class BaseDocumentRecord(MetaRecord):
         Abstracts
         v083 {'_': 'text', 'a': 'text', 'l': 'language'}
         """
-        return self.get_field_content("v083", subfields={'_': 'text', 'a': 'text', 'l': 'language'}, single=False, simple=False)
+        return self.get_field_content(
+            "v083",
+            subfields={"_": "text", "a": "text", "l": "language"},
+            single=False,
+            simple=False,
+        )
 
     # generated by ModelBuilder
     @property
@@ -479,7 +517,12 @@ class BaseDocumentRecord(MetaRecord):
         Keywords
         v085 {'k': 'text', 's': 'subkey', 'l': 'language'}
         """
-        return self.get_field_content("v085", subfields={'k': 'text', 's': 'subkey', 'l': 'language'}, single=False, simple=False)
+        return self.get_field_content(
+            "v085",
+            subfields={"k": "text", "s": "subkey", "l": "language"},
+            single=False,
+            simple=False,
+        )
 
     # generated by ModelBuilder
     @property
@@ -614,7 +657,9 @@ class BaseDocumentRecord(MetaRecord):
         Normalized Affiliations
         v240 {'i': 'id', 'p': 'country'}
         """
-        return self.get_field_content("v240", subfields={'i': 'id', 'p': 'country'}, single=False, simple=False)
+        return self.get_field_content(
+            "v240", subfields={"i": "id", "p": "country"}, single=False, simple=False
+        )
 
     # generated by ModelBuilder
     @property
@@ -623,7 +668,9 @@ class BaseDocumentRecord(MetaRecord):
         DOI with language
         v337 {'d': 'doi', 'l': 'language'}
         """
-        return self.get_field_content("v337", subfields={'d': 'doi', 'l': 'language'}, single=False, simple=False)
+        return self.get_field_content(
+            "v337", subfields={"d": "doi", "l": "language"}, single=False, simple=False
+        )
 
     # generated by ModelBuilder
     @property
@@ -632,7 +679,9 @@ class BaseDocumentRecord(MetaRecord):
         Any Issn
         v435 {'_': 'value', 't': 'type'}
         """
-        return self.get_field_content("v435", subfields={'_': 'value', 't': 'type'}, single=False, simple=False)
+        return self.get_field_content(
+            "v435", subfields={"_": "value", "t": "type"}, single=False, simple=False
+        )
 
     # generated by ModelBuilder
     @property
@@ -741,4 +790,3 @@ class BaseDocumentRecord(MetaRecord):
         v992
         """
         return self.get_field_content("v992", subfields={}, single=True, simple=True)
-

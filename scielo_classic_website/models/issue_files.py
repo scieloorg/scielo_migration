@@ -7,14 +7,16 @@ from scielo_classic_website.utils.files_utils import create_zip_file
 
 
 def _get_classic_website_rel_path(file_path):
-    for folder in ("bases", "htdocs", ):
+    for folder in (
+        "bases",
+        "htdocs",
+    ):
         if folder in file_path:
-            path = file_path[file_path.find(folder)+len(folder):]
+            path = file_path[file_path.find(folder) + len(folder) :]
             return path
 
 
 class IssueFiles:
-
     def __init__(self, acron, issue_folder, classic_website_paths):
         self.acron = acron
         self.issue_folder = issue_folder
@@ -57,11 +59,12 @@ class IssueFiles:
         }
         """
         if self._bases_translation_files is None:
-
             paths = glob.glob(
                 os.path.join(
                     self._classic_website_paths.bases_translation_path,
-                    self._subdir_acron_issue, "*")
+                    self._subdir_acron_issue,
+                    "*",
+                )
             )
             files = []
             for path in paths:
@@ -74,12 +77,16 @@ class IssueFiles:
                     name = name[1:]
                     label = "after"
                 files.append(
-                    {"type": "html",
-                     "key": name, "path": path, "name": basename,
-                     "relative_path": _get_classic_website_rel_path(path),
-                     "lang": lang, "part": label,
-                     "replacements": HTMLFile(path).asset_path_fixes,
-                     }
+                    {
+                        "type": "html",
+                        "key": name,
+                        "path": path,
+                        "name": basename,
+                        "relative_path": _get_classic_website_rel_path(path),
+                        "lang": lang,
+                        "part": label,
+                        "replacements": HTMLFile(path).asset_path_fixes,
+                    }
                 )
             self._bases_translation_files = files
         return self._bases_translation_files
@@ -101,11 +108,12 @@ class IssueFiles:
             }
         """
         if self._bases_pdf_files is None:
-
             paths = glob.glob(
                 os.path.join(
                     self._classic_website_paths.bases_pdf_path,
-                    self._subdir_acron_issue, "*")
+                    self._subdir_acron_issue,
+                    "*",
+                )
             )
             files = []
             for path in paths:
@@ -119,10 +127,14 @@ class IssueFiles:
                     # main pdf
                     lang = None
                 files.append(
-                    {"type": "pdf",
-                     "key": name, "path": path, "name": basename,
-                     "relative_path": _get_classic_website_rel_path(path),
-                     "lang": lang}
+                    {
+                        "type": "pdf",
+                        "key": name,
+                        "path": path,
+                        "name": basename,
+                        "relative_path": _get_classic_website_rel_path(path),
+                        "lang": lang,
+                    }
                 )
             self._bases_pdf_files = files
         return self._bases_pdf_files
@@ -151,26 +163,30 @@ class IssueFiles:
                 os.path.join(
                     self._classic_website_paths.htdocs_img_revistas_path,
                     self._subdir_acron_issue,
-                    "*"
+                    "*",
                 )
             )
             files = []
             for path in paths:
                 if os.path.isfile(path):
-                    files.append({
-                        "type": "asset",
-                        "path": path,
-                        "relative_path": _get_classic_website_rel_path(path),
-                        "name": os.path.basename(path)
-                    })
+                    files.append(
+                        {
+                            "type": "asset",
+                            "path": path,
+                            "relative_path": _get_classic_website_rel_path(path),
+                            "name": os.path.basename(path),
+                        }
+                    )
                 elif os.path.isdir(path):
                     for item in glob.glob(os.path.join(path, "*")):
-                        files.append({
-                            "type": "asset",
-                            "path": item,
-                            "relative_path": _get_classic_website_rel_path(item),
-                            "name": os.path.basename(item)
-                        })
+                        files.append(
+                            {
+                                "type": "asset",
+                                "path": item,
+                                "relative_path": _get_classic_website_rel_path(item),
+                                "name": os.path.basename(item),
+                            }
+                        )
             self._htdocs_img_revistas_files = files
         return self._htdocs_img_revistas_files
 
@@ -181,7 +197,7 @@ class IssueFiles:
                 os.path.join(
                     self._classic_website_paths.bases_xml_path,
                     self._subdir_acron_issue,
-                    "*.xml"
+                    "*.xml",
                 )
             )
             files = []
@@ -189,17 +205,19 @@ class IssueFiles:
                 basename = os.path.basename(path)
                 name, ext = os.path.splitext(basename)
                 files.append(
-                    {"type": "xml",
-                     "key": name, "path": path, "name": basename,
-                     "relative_path": _get_classic_website_rel_path(path),
-                     }
+                    {
+                        "type": "xml",
+                        "key": name,
+                        "path": path,
+                        "name": basename,
+                        "relative_path": _get_classic_website_rel_path(path),
+                    }
                 )
             self._bases_xml_files = files
         return self._bases_xml_files
 
 
 class ArtigoDBPath:
-
     def __init__(self, classic_website_paths, journal_acron, issue_folder):
         self.classic_website_paths = classic_website_paths
         self.journal_acron = journal_acron
@@ -229,12 +247,16 @@ class ArtigoDBPath:
         items = []
         _serial_path = os.path.join(
             self.classic_website_paths.serial_path,
-            self.journal_acron, self.issue_folder, "base_xml", "id")
+            self.journal_acron,
+            self.issue_folder,
+            "base_xml",
+            "id",
+        )
 
         if os.path.isdir(_serial_path):
             items.append(os.path.join(_serial_path, "i.id"))
             for item in os.listdir(_serial_path):
-                if item != 'i.id' and item.endswith(".id"):
+                if item != "i.id" and item.endswith(".id"):
                     items.append(os.path.join(_serial_path, item))
         return items
 
@@ -242,7 +264,10 @@ class ArtigoDBPath:
         items = []
         _serial_path = os.path.join(
             self.classic_website_paths.serial_path,
-            self.journal_acron, self.issue_folder, "base")
+            self.journal_acron,
+            self.issue_folder,
+            "base",
+        )
 
         if os.path.isdir(_serial_path):
             items.append(os.path.join(_serial_path, self.issue_folder))
@@ -281,7 +306,8 @@ class ArtigoDBPath:
                 controller.isis_cmd.get_documents_by_issue_folder(
                     self.classic_website_paths.cisis_path,
                     _bases_work_acron_path,
-                    self.issue_folder)
+                    self.issue_folder,
+                )
             )
         except Exception as e:
             logging.exception(e)

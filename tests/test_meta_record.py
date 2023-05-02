@@ -4,15 +4,19 @@ from scielo_classic_website.isisdb import meta_record
 
 
 class TestMetaRecord(TestCase):
-
     def setUp(self):
         record = {
             "v003": [{"_": "bla", "l": "en"}],
             "v004": [{"_": "v49n3"}],
             "v005": [{"_": "xxxx"}, {"_": "xxyz"}],
             "v010": [
-                {"1": "aff1 aff2", "k": "0000-0002-3193-6659",
-                 "n": "Yardany", "r": "ND", "s": "RAMOS-PASTRANA"},
+                {
+                    "1": "aff1 aff2",
+                    "k": "0000-0002-3193-6659",
+                    "n": "Yardany",
+                    "r": "ND",
+                    "s": "RAMOS-PASTRANA",
+                },
                 {"1": "aff2", "n": "Marta", "r": "ND", "s": "WOLFF"},
             ],
             "v882": [{"v": "49", "n": "3"}],
@@ -27,9 +31,7 @@ class TestMetaRecord(TestCase):
         self.assertEqual(expected, result)
 
     def test_get_occ(self):
-        expected = {
-            "surname": "Lopes", "given-names": "M", "o": "xxx", "_": "bla"
-        }
+        expected = {"surname": "Lopes", "given-names": "M", "o": "xxx", "_": "bla"}
         subfields = {
             "s": "surname",
             "n": "given-names",
@@ -41,8 +43,13 @@ class TestMetaRecord(TestCase):
 
     def test_get_field_content_returns_v010(self):
         expected = [
-            {"1": "aff1 aff2", "k": "0000-0002-3193-6659",
-             "n": "Yardany", "r": "ND", "s": "RAMOS-PASTRANA"},
+            {
+                "1": "aff1 aff2",
+                "k": "0000-0002-3193-6659",
+                "n": "Yardany",
+                "r": "ND",
+                "s": "RAMOS-PASTRANA",
+            },
             {"1": "aff2", "n": "Marta", "r": "ND", "s": "WOLFF"},
         ]
         result = self.meta_record.get_field_content("v010")
@@ -51,8 +58,13 @@ class TestMetaRecord(TestCase):
     def test_get_named_field_returns_authors(self):
         expected = {
             "authors": [
-                {"1": "aff1 aff2", "k": "0000-0002-3193-6659",
-                 "n": "Yardany", "r": "ND", "s": "RAMOS-PASTRANA"},
+                {
+                    "1": "aff1 aff2",
+                    "k": "0000-0002-3193-6659",
+                    "n": "Yardany",
+                    "r": "ND",
+                    "s": "RAMOS-PASTRANA",
+                },
                 {"1": "aff2", "n": "Marta", "r": "ND", "s": "WOLFF"},
             ]
         }
@@ -62,11 +74,19 @@ class TestMetaRecord(TestCase):
     def test_get_named_field_returns_authors_and_renamed_subfields(self):
         expected = {
             "authors": [
-                {"aff_rid": "aff1 aff2", "orcid": "0000-0002-3193-6659",
-                 "given-names": "Yardany", "role": "ND",
-                 "surname": "RAMOS-PASTRANA"},
-                {"aff_rid": "aff2", "given-names": "Marta", "role": "ND",
-                 "surname": "WOLFF"},
+                {
+                    "aff_rid": "aff1 aff2",
+                    "orcid": "0000-0002-3193-6659",
+                    "given-names": "Yardany",
+                    "role": "ND",
+                    "surname": "RAMOS-PASTRANA",
+                },
+                {
+                    "aff_rid": "aff2",
+                    "given-names": "Marta",
+                    "role": "ND",
+                    "surname": "WOLFF",
+                },
             ]
         }
         subfields = {
@@ -76,44 +96,37 @@ class TestMetaRecord(TestCase):
             "k": "orcid",
             "1": "aff_rid",
         }
-        result = self.meta_record.get_named_field(
-            "v010", "authors", subfields)
+        result = self.meta_record.get_named_field("v010", "authors", subfields)
         self.assertEqual(expected, result)
 
     def test_get_named_field_returns_v882_with_single(self):
         expected = {"v882": {"v": "49", "n": "3"}}
-        result = self.meta_record.get_named_field(
-            "v882", single=True)
+        result = self.meta_record.get_named_field("v882", single=True)
         self.assertEqual(expected, result)
 
     def test_get_named_field_returns_v882_with_single_as_False(self):
         expected = {"v882": [{"v": "49", "n": "3"}]}
-        result = self.meta_record.get_named_field(
-            "v882", single=False)
+        result = self.meta_record.get_named_field("v882", single=False)
         self.assertEqual(expected, result)
 
     def test_get_named_field_returns_v004_with_simple_as_True(self):
         expected = {"v004": ["v49n3"]}
-        result = self.meta_record.get_named_field(
-            "v004", simple=True)
+        result = self.meta_record.get_named_field("v004", simple=True)
         self.assertEqual(expected, result)
 
     def test_get_named_field_returns_v004_with_simple_as_False(self):
         expected = {"v004": [{"_": "v49n3"}]}
-        result = self.meta_record.get_named_field(
-            "v004", simple=False)
+        result = self.meta_record.get_named_field("v004", simple=False)
         self.assertEqual(expected, result)
 
     def test_get_named_field_returns_v004_with_simple_as_True_and_single_as_True(self):
         expected = {"v004": "v49n3"}
-        result = self.meta_record.get_named_field(
-            "v004", single=True, simple=True)
+        result = self.meta_record.get_named_field("v004", single=True, simple=True)
         self.assertEqual(expected, result)
 
     def test_get_named_field_returns_v005_with_simple_as_True(self):
         expected = {"v005": ["xxxx", "xxyz"]}
-        result = self.meta_record.get_named_field(
-            "v005", simple=True)
+        result = self.meta_record.get_named_field("v005", simple=True)
         self.assertEqual(expected, result)
 
     def test_get_record_subset_as_dict(self):
@@ -169,8 +182,13 @@ class TestMetaRecord(TestCase):
         expected = {
             "resumo": [{"texto": "bla", "idioma": "en"}],
             "autores": [
-                {"1": "aff1 aff2", "k": "0000-0002-3193-6659",
-                 "nome": "Yardany", "r": "ND", "s": "RAMOS-PASTRANA"},
+                {
+                    "1": "aff1 aff2",
+                    "k": "0000-0002-3193-6659",
+                    "nome": "Yardany",
+                    "r": "ND",
+                    "s": "RAMOS-PASTRANA",
+                },
                 {"1": "aff2", "nome": "Marta", "r": "ND", "s": "WOLFF"},
             ],
             "codigos": ["xxxx", "xxyz"],
@@ -201,15 +219,19 @@ class TestMetaRecord(TestCase):
                 "subfields": {"n": "nome"},
                 "is_multi_val": True,
             },
-
         }
         expected = {
             "v003": [{"_": "bla", "l": "en"}],
             "v004": [{"_": "v49n3"}],
             "v005": [{"_": "xxxx"}, {"_": "xxyz"}],
             "autores": [
-                {"1": "aff1 aff2", "k": "0000-0002-3193-6659",
-                 "nome": "Yardany", "r": "ND", "s": "RAMOS-PASTRANA"},
+                {
+                    "1": "aff1 aff2",
+                    "k": "0000-0002-3193-6659",
+                    "nome": "Yardany",
+                    "r": "ND",
+                    "s": "RAMOS-PASTRANA",
+                },
                 {"1": "aff2", "nome": "Marta", "r": "ND", "s": "WOLFF"},
             ],
             "v882": [{"v": "49", "n": "3"}],
@@ -238,7 +260,10 @@ class TestMetaRecord(TestCase):
             "v010": {
                 "field_name": "authors",
                 "subfields": {
-                    "n": "name", "s": "surname", "1": "affs", "k": "orcid",
+                    "n": "name",
+                    "s": "surname",
+                    "1": "affs",
+                    "k": "orcid",
                 },
                 "is_multi_val": True,
             }
@@ -248,8 +273,13 @@ class TestMetaRecord(TestCase):
             "v004": [{"_": "v49n3"}],
             "v005": [{"_": "xxxx"}, {"_": "xxyz"}],
             "authors": [
-                {"affs": "aff1 aff2", "orcid": "0000-0002-3193-6659",
-                 "name": "Yardany", "r": "ND", "surname": "RAMOS-PASTRANA"},
+                {
+                    "affs": "aff1 aff2",
+                    "orcid": "0000-0002-3193-6659",
+                    "name": "Yardany",
+                    "r": "ND",
+                    "surname": "RAMOS-PASTRANA",
+                },
                 {"affs": "aff2", "name": "Marta", "r": "ND", "surname": "WOLFF"},
             ],
             "v882": [{"v": "49", "n": "3"}],

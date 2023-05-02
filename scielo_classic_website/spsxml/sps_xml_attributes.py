@@ -6,17 +6,14 @@ from scielo_classic_website.config import ATTRIBUTES_PATH
 
 
 def _read_csv_file(file_path):
-    with open(file_path, newline='') as csvfile:
+    with open(file_path, newline="") as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             yield row
 
 
 def _get_dict(items):
-    return {
-        item["from"]: item["to"]
-        for item in items
-    }
+    return {item["from"]: item["to"] for item in items}
 
 
 def _load_values(filename):
@@ -35,11 +32,11 @@ class Country:
         self._indexed_by_code = {}
         self._indexed_by_name = {}
         for item in items:
-            self._indexed_by_code[item['alpha_2_code']] = item
-            self._indexed_by_code[item['alpha_3_code']] = item
-            self._indexed_by_name[item['short_name_en']] = item
-            self._indexed_by_name[item['short_name_pt']] = item
-            self._indexed_by_name[item['short_name_es']] = item
+            self._indexed_by_code[item["alpha_2_code"]] = item
+            self._indexed_by_code[item["alpha_3_code"]] = item
+            self._indexed_by_name[item["short_name_en"]] = item
+            self._indexed_by_name[item["short_name_pt"]] = item
+            self._indexed_by_name[item["short_name_es"]] = item
 
     def name(self, code, lang=None):
         try:
@@ -55,22 +52,20 @@ class Country:
                 return name
 
     def get(self, key):
-        country = (
-            self._indexed_by_code.get(key) or self._indexed_by_name.get(key)
-        )
+        country = self._indexed_by_code.get(key) or self._indexed_by_name.get(key)
         if country:
             for k in ("short_name_en", "short_name_pt", "short_name_es"):
                 name = country[k]
                 if name:
-                    country['name'] = name
+                    country["name"] = name
                     break
-            country['code'] = country['alpha_2_code']
+            country["code"] = country["alpha_2_code"]
             return country
 
 
-ARTICLE_TYPES = _load_values('isis2sps_article_types.csv')
+ARTICLE_TYPES = _load_values("isis2sps_article_types.csv")
 
-CONTRIB_ROLES = AttrValues(_read_csv_file(_get_file_path('contrib_roles.csv')))
+CONTRIB_ROLES = AttrValues(_read_csv_file(_get_file_path("contrib_roles.csv")))
 
 file_path = _get_file_path("country.csv")
 COUNTRY_ITEMS = Country(_read_csv_file(file_path))

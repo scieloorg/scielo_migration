@@ -50,16 +50,20 @@ class Issue:
 
     @property
     def issue_label(self):
-        pr = self.is_press_release or ''
+        pr = self.is_press_release or ""
         if self.number in ("ahead", "review"):
             return self.publication_year + "n" + self.number + pr
-        return "".join([
-            k + v
-            for k, v in zip(("v", "n", "s", ""), (self.volume, self.number, self.suppl, pr))
-            if v
-            ])
+        return "".join(
+            [
+                k + v
+                for k, v in zip(
+                    ("v", "n", "s", ""), (self.volume, self.number, self.suppl, pr)
+                )
+                if v
+            ]
+        )
 
     def get_sections(self, code):
         for item in self.sections:
-            if item['code'] == code:
+            if item["code"] == code:
                 yield item

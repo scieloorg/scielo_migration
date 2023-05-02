@@ -8,7 +8,7 @@ from scielo_classic_website.utils.files_utils import (
     create_temp_file,
     date_now_as_folder_name,
     read_file,
-    write_file
+    write_file,
 )
 
 
@@ -20,7 +20,8 @@ def get_document_isis_db(pid):
 
     if not os.path.isfile(BASES_ARTIGO_PATH + ".mst"):
         raise FileNotFoundError(
-            f"Unable to get document isis database. {BASES_ARTIGO_PATH}.mst not found")
+            f"Unable to get document isis database. {BASES_ARTIGO_PATH}.mst not found"
+        )
 
     name = date_now_as_folder_name()
     finished_file_path = create_temp_file(f"{name}_finished.out")
@@ -29,13 +30,11 @@ def get_document_isis_db(pid):
     cisis_path = config.get_cisis_path()
     cmds = []
     cmds.append(
-        f'''{cisis_path}/mx {BASES_ARTIGO_PATH} btell=0 '''
-        f'''"bool=IV={pid}$" '''
-        f'''append={output_file_path} now -all'''
+        f"""{cisis_path}/mx {BASES_ARTIGO_PATH} btell=0 """
+        f""""bool=IV={pid}$" """
+        f"""append={output_file_path} now -all"""
     )
-    cmds.append(
-        f"echo finished > {finished_file_path}"
-    )
+    cmds.append(f"echo finished > {finished_file_path}")
     os.system(";".join(cmds))
     while "finished" not in read_file(finished_file_path):
         pass
@@ -73,9 +72,7 @@ def create_id_file(db_file_path, id_file_path=None):
     # check if the utilitary i2id exists
     i2id_cmd = os.path.join(cisis_path, "i2id")
     if not os.path.isfile(i2id_cmd):
-        raise exceptions.MissingI2IdCommandPathEnvVarError(
-            f"Not found: {i2id_cmd}"
-        )
+        raise exceptions.MissingI2IdCommandPathEnvVarError(f"Not found: {i2id_cmd}")
 
     # check if the isis database exists
     if not os.path.isfile(db_file_path + ".mst"):
@@ -154,13 +151,13 @@ def get_document_pids(from_date=None, to_date=None):
     name = date_now_as_folder_name()
     finished_file_path = create_temp_file(f"{name}_finished.out")
     output_file_path = create_temp_file(f"{name}_output.csv")
-    from_date = from_date or '0'*8
-    to_date = to_date or '9'*8
+    from_date = from_date or "0" * 8
+    to_date = to_date or "9" * 8
     cmd = (
-        f'''{config.get_cisis_path()}/ifkeys {BASES_ARTIGO_PATH} '''
-        f'''from=OAITS={from_date} to=OAITS={to_date} > '''
-        f'''{output_file_path};'''
-        f'''echo finished> {finished_file_path}'''
+        f"""{config.get_cisis_path()}/ifkeys {BASES_ARTIGO_PATH} """
+        f"""from=OAITS={from_date} to=OAITS={to_date} > """
+        f"""{output_file_path};"""
+        f"""echo finished> {finished_file_path}"""
     )
     os.system(cmd)
     while "finished" not in read_file(finished_file_path):
@@ -194,12 +191,14 @@ def get_documents_by_issue_folder(cisis_path, bases_work_acron_file_path, issue_
     """
     if not os.path.isfile(bases_work_acron_file_path + ".mst"):
         raise FileNotFoundError(
-            f"Unable to get {issue_folder} documents. {bases_work_acron_file_path}.mst not found")
+            f"Unable to get {issue_folder} documents. {bases_work_acron_file_path}.mst not found"
+        )
 
     mx = os.path.join(cisis_path, "mx")
     if not os.path.isfile(mx):
         raise FileNotFoundError(
-            f"Unable to get {issue_folder} documents. {mx} not found")
+            f"Unable to get {issue_folder} documents. {mx} not found"
+        )
 
     name = date_now_as_folder_name()
     finished_file_path = create_temp_file(f"{name}_{issue_folder}_finished.out")
@@ -207,13 +206,11 @@ def get_documents_by_issue_folder(cisis_path, bases_work_acron_file_path, issue_
 
     cmds = []
     cmds.append(
-        f'''{mx} {bases_work_acron_file_path} btell=0 '''
-        f'''"bool={issue_folder}" '''
-        f'''append={output_file_path} now -all'''
+        f"""{mx} {bases_work_acron_file_path} btell=0 """
+        f""""bool={issue_folder}" """
+        f"""append={output_file_path} now -all"""
     )
-    cmds.append(
-        f"echo finished > {finished_file_path}"
-    )
+    cmds.append(f"echo finished > {finished_file_path}")
     os.system(";".join(cmds))
     while "finished" not in read_file(finished_file_path):
         pass
@@ -221,7 +218,6 @@ def get_documents_by_issue_folder(cisis_path, bases_work_acron_file_path, issue_
 
 
 class ISISCommader:
-
     def __init__(self, paths):
         self.paths = paths
 
@@ -294,9 +290,7 @@ class ISISCommader:
         # check if the utilitary i2id exists
         i2id_cmd = os.path.join(cisis_path, "i2id")
         if not os.path.isfile(i2id_cmd):
-            raise exceptions.MissingI2IdCommandPathEnvVarError(
-                f"Not found: {i2id_cmd}"
-            )
+            raise exceptions.MissingI2IdCommandPathEnvVarError(f"Not found: {i2id_cmd}")
 
         # check if the isis database exists
         if not os.path.isfile(db_file_path + ".mst"):

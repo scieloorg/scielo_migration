@@ -4,7 +4,6 @@ from scielo_classic_website.attr_values import AttrValues
 
 
 class TestAttrValues(TestCase):
-
     def test_isis_value(self):
         data = [
             {"isis": "oa", "sps": "research-article"},
