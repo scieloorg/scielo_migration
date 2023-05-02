@@ -7,6 +7,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     TagsHPipe,
     UlPipe,
     ASourcePipe,
+    ANamePipe,
 )
 
 
@@ -105,9 +106,28 @@ class TestASourcePipe(TestCase):
 
         expected = '<root><body><a href="foo.jpg">Imagem</a></body></root>'
         expected_element = etree.fromstring(expected)
-        expected_string = etree.tostring(expected_element, encoding="utf-8").decode(
+        expected = etree.tostring(expected_element, encoding="utf-8").decode(
             "utf-8"
         )
         result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
 
-        self.assertEqual(expected_string, result)
+        self.assertEqual(expected, result)
+
+
+class TestAHrefPipe(TestCase):
+    ...
+
+
+class TestANamePipe(TestCase):
+    def test_transform_substitui_nos_a_por_divs_com_id(self):
+        xml = get_tree('<root><body><a name="secao1">Seção 1</a></body></root>')
+        expected = '<root><body><div id="secao1">Seção 1</div></body></root>'
+        data = (None, xml)
+
+        _, transformed_xml = ANamePipe().transform(data)
+
+        expected_element = etree.fromstring(expected)
+        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
+        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+
+        self.assertEqual(expected, result)
