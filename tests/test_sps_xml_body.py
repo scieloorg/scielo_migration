@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from lxml import etree
 
-from scielo_classic_website.spsxml.sps_xml_body_pipes import OlPipe
+from scielo_classic_website.spsxml.sps_xml_body_pipes import OlPipe, UlPipe
 
 
 def get_tree(xml_str):
@@ -26,4 +26,24 @@ class TestOlPipe(TestCase):
         _raw, _xml = OlPipe().transform(data)
         result = etree.tostring(_xml, encoding="utf-8").decode("utf-8")
         self.assertEqual(1, len(_xml.xpath(".//list[@list-type='order']")))
+        self.assertEqual(expected, result)
+
+
+class TestUlPipe(TestCase):
+    def test_ul_pipe(self):
+        raw = None
+        xml = get_tree("<root><body><ul>Um</ul></body></root>")
+        expected = (
+            "<root>"
+            "<body>"
+            '<list list-type="bullet">'
+            "Um"
+            "</list>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+        _raw, _xml = UlPipe().transform(data)
+        result = etree.tostring(_xml, encoding="utf-8").decode("utf-8")
+        self.assertEqual(1, len(_xml.xpath(".//list[@list-type='bullet']")))
         self.assertEqual(expected, result)
