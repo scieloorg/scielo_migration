@@ -8,6 +8,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     UlPipe,
     ASourcePipe,
     ANamePipe,
+    ImgSrcPipe,
 )
 
 
@@ -106,9 +107,7 @@ class TestASourcePipe(TestCase):
 
         expected = '<root><body><a href="foo.jpg">Imagem</a></body></root>'
         expected_element = etree.fromstring(expected)
-        expected = etree.tostring(expected_element, encoding="utf-8").decode(
-            "utf-8"
-        )
+        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
         result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
 
         self.assertEqual(expected, result)
@@ -125,6 +124,35 @@ class TestANamePipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ANamePipe().transform(data)
+
+        expected_element = etree.fromstring(expected)
+        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
+        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+
+        self.assertEqual(expected, result)
+
+
+class TestImgSrcPipe(TestCase):
+    def test_transform_substitui_tags_img_por_grafico_com_href(self):
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<img src="foo.jpg"></img>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<graphic xlink:href="foo.jpg"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (None, xml)
+
+        _, transformed_xml = ImgSrcPipe().transform(data)
 
         expected_element = etree.fromstring(expected)
         expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
