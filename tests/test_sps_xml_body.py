@@ -19,6 +19,10 @@ def get_tree(xml_str):
     return etree.fromstring(xml_str)
 
 
+def tree_tostring_decode(_str):
+    return etree.tostring(_str, encoding="utf-8").decode("utf-8")
+
+
 class TestRemoveTagsPipe(TestCase):
     def setUp(self):
         self.xml = get_tree(
@@ -43,8 +47,8 @@ class TestRemoveTagsPipe(TestCase):
         _, transformed_xml = RemoveTagsPipe().transform(data)
 
         expected_element = etree.fromstring(expected)
-        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
-        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
 
@@ -58,8 +62,8 @@ class TestRemoveCDATAPipe(TestCase):
         _, transformed_xml = RemoveCDATAPipe().transform(data)
 
         expected_element = get_tree(expected)
-        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
-        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
 
@@ -75,8 +79,8 @@ class TestFontSymbolPipe(TestCase):
         _, transformed_xml = FontSymbolPipe().transform(data)
 
         expected_element = get_tree(expected)
-        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
-        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
 
@@ -144,8 +148,8 @@ class TestTagsHPipe(TestCase):
 
         _, transformed_xml = TagsHPipe().transform(data)
 
-        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
-        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
 
@@ -159,8 +163,8 @@ class TestASourcePipe(TestCase):
         _, transformed_xml = ASourcePipe().transform(data)
 
         expected_element = get_tree(expected)
-        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
-        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
 
@@ -172,8 +176,8 @@ class TestASourcePipe(TestCase):
 
         expected = '<root><body><a href="foo.jpg">Imagem</a></body></root>'
         expected_element = get_tree(expected)
-        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
-        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
 
@@ -191,8 +195,8 @@ class TestANamePipe(TestCase):
         _, transformed_xml = ANamePipe().transform(data)
 
         expected_element = get_tree(expected)
-        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
-        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
 
@@ -220,7 +224,7 @@ class TestImgSrcPipe(TestCase):
         _, transformed_xml = ImgSrcPipe().transform(data)
 
         expected_element = get_tree(expected)
-        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
-        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
