@@ -10,6 +10,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     OlPipe,
     RemoveCDATAPipe,
     RemoveTagsPipe,
+    RenameElementsPipe,
     TagsHPipe,
     UlPipe,
 )
@@ -62,6 +63,67 @@ class TestRemoveCDATAPipe(TestCase):
         _, transformed_xml = RemoveCDATAPipe().transform(data)
 
         expected_element = get_tree(expected)
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestRenameElementsPipe(TestCase):
+    def test_transform_rename_elements(self):
+        xml = get_tree(
+            (
+                "<root>"
+                "<div>Um</div>"
+                "<dir>"
+                "<li>Item 1</li>"
+                "<li>Item 2</li>"
+                "</dir>"
+                "<dl>"
+                "<dt>Termo 1</dt>"
+                "<dd>Definição 1</dd>"
+                "<dt>Termo 2</dt>"
+                "<dd>Definição 2</dd>"
+                "</dl>"
+                "<br></br>"
+                "<blockquote>Quote</blockquote>"
+                "</root>"
+            )
+        )
+        expected = (
+            "<root>"
+            "<sec>Um</sec>"
+            "<ul>"
+            "<list-item>Item 1</list-item>"
+            "<list-item>Item 2</list-item>"
+            "</ul>"
+            "<def-list>"
+            "<dt>Termo 1</dt>"
+            "<def-item>Definição 1</def-item>"
+            "<dt>Termo 2</dt>"
+            "<def-item>Definição 2</def-item>"
+            "</def-list>"
+            "<break/>"
+            "<disp-quote>Quote</disp-quote>"
+            "</root>"
+        )
+        data = (None, xml)
+
+        _, transformed_xml = RenameElementsPipe().transform(data)
+
+        expected_element = etree.fromstring(expected)
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform_rename_elements_empty_xml(self):
+        expected = "<root/>"
+        data = (None, etree.fromstring("<root/>"))
+
+        _, transformed_xml = RenameElementsPipe().transform(data)
+
+        expected_element = etree.fromstring(expected)
         expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
 
