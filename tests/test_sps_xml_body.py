@@ -24,6 +24,21 @@ def tree_tostring_decode(_str):
     return etree.tostring(_str, encoding="utf-8").decode("utf-8")
 
 
+class TestRemoveCDATAPipe(TestCase):
+    def test_transform_remove_CDATA(self):
+        xml = get_tree("<root><![CDATA[Exemplo CDATA.]]></root>")
+        expected = "<root>Exemplo CDATA.</root>"
+        data = (None, xml)
+
+        _, transformed_xml = RemoveCDATAPipe().transform(data)
+
+        expected_element = get_tree(expected)
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
 class TestRemoveTagsPipe(TestCase):
     def setUp(self):
         self.xml = get_tree(
@@ -48,21 +63,6 @@ class TestRemoveTagsPipe(TestCase):
         _, transformed_xml = RemoveTagsPipe().transform(data)
 
         expected_element = etree.fromstring(expected)
-        expected = tree_tostring_decode(expected_element)
-        result = tree_tostring_decode(transformed_xml)
-
-        self.assertEqual(expected, result)
-
-
-class TestRemoveCDATAPipe(TestCase):
-    def test_transform_remove_CDATA(self):
-        xml = get_tree("<root><![CDATA[Exemplo CDATA.]]></root>")
-        expected = "<root>Exemplo CDATA.</root>"
-        data = (None, xml)
-
-        _, transformed_xml = RemoveCDATAPipe().transform(data)
-
-        expected_element = get_tree(expected)
         expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
 
