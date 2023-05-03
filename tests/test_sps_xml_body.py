@@ -3,17 +3,33 @@ from unittest import TestCase
 from lxml import etree
 
 from scielo_classic_website.spsxml.sps_xml_body_pipes import (
+    ANamePipe,
+    ASourcePipe,
+    ImgSrcPipe,
     OlPipe,
+    RemoveCDATAPipe,
     TagsHPipe,
     UlPipe,
-    ASourcePipe,
-    ANamePipe,
-    ImgSrcPipe,
 )
 
 
 def get_tree(xml_str):
     return etree.fromstring(xml_str)
+
+
+class TestRemoveCDATAPipe(TestCase):
+    def test_transform_remove_CDATA(self):
+        xml = get_tree('<root><![CDATA[Exemplo CDATA.]]></root>')
+        expected = '<root>Exemplo CDATA.</root>'
+        data = (None, xml)
+
+        _, transformed_xml = RemoveCDATAPipe().transform(data)
+
+        expected_element = get_tree(expected)
+        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
+        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+
+        self.assertEqual(expected, result)
 
 
 class TestOlPipe(TestCase):
@@ -74,7 +90,7 @@ class TestTagsHPipe(TestCase):
         )
 
         # Cria objeto etree a partir de content.
-        expected_element = etree.fromstring(content)
+        expected_element = get_tree(content)
         data = (None, xml)
 
         _, transformed_xml = TagsHPipe().transform(data)
@@ -93,7 +109,7 @@ class TestASourcePipe(TestCase):
 
         _, transformed_xml = ASourcePipe().transform(data)
 
-        expected_element = etree.fromstring(expected)
+        expected_element = get_tree(expected)
         expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
         result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
 
@@ -106,7 +122,7 @@ class TestASourcePipe(TestCase):
         _, transformed_xml = ASourcePipe().transform(data)
 
         expected = '<root><body><a href="foo.jpg">Imagem</a></body></root>'
-        expected_element = etree.fromstring(expected)
+        expected_element = get_tree(expected)
         expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
         result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
 
@@ -125,7 +141,7 @@ class TestANamePipe(TestCase):
 
         _, transformed_xml = ANamePipe().transform(data)
 
-        expected_element = etree.fromstring(expected)
+        expected_element = get_tree(expected)
         expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
         result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
 
@@ -154,7 +170,7 @@ class TestImgSrcPipe(TestCase):
 
         _, transformed_xml = ImgSrcPipe().transform(data)
 
-        expected_element = etree.fromstring(expected)
+        expected_element = get_tree(expected)
         expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
         result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
 
