@@ -1,8 +1,8 @@
-import os
-import shutil
 import logging
-import tempfile
+import os
 import re
+import shutil
+import tempfile
 from datetime import datetime
 from zipfile import ZipFile
 
@@ -93,7 +93,7 @@ def create_zip_file(files, zip_name, zip_folder=None):
     zip_folder = zip_folder or tempfile.mkdtemp()
 
     zip_path = os.path.join(zip_folder, zip_name)
-    with ZipFile(zip_path, 'w') as myzip:
+    with ZipFile(zip_path, "w") as myzip:
         for f in files:
             myzip.write(f, os.path.basename(f))
     return zip_path
@@ -112,10 +112,10 @@ def date_now_as_folder_name():
     return datetime.utcnow().isoformat().replace(":", "")
 
 
-def create_temp_file(filename, content=None, mode='w'):
+def create_temp_file(filename, content=None, mode="w"):
     file_path = tempfile.mkdtemp()
     file_path = os.path.join(file_path, filename)
-    write_file(file_path, content or '', mode)
+    write_file(file_path, content or "", mode)
     return file_path
 
 
@@ -161,16 +161,16 @@ def get_file_role(file_path, prefix, pdf_langs):
     """
     file, ext = os.path.splitext(file_path)
 
-    if ext == '.xml':
-        return 'xml'
-    elif ext == '.pdf':
+    if ext == ".xml":
+        return "xml"
+    elif ext == ".pdf":
         if file == prefix:
-            return 'renditions'
+            return "renditions"
 
         for lang in pdf_langs:
-            if file == f'{prefix}-{lang}':
-                return 'renditions'
-    return 'assets'
+            if file == f"{prefix}-{lang}":
+                return "renditions"
+    return "assets"
 
 
 def extract_issn_from_zip_uri(zip_uri):
@@ -187,6 +187,6 @@ def extract_issn_from_zip_uri(zip_uri):
     str
         ISSN
     """
-    match = re.search(r'.*/ingress/packages/(\d{4}-\d{4})/.*.zip', zip_uri)
+    match = re.search(r".*/ingress/packages/(\d{4}-\d{4})/.*.zip", zip_uri)
     if match:
         return match.group(1)

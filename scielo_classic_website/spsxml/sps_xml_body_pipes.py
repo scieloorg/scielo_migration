@@ -6,6 +6,10 @@ from lxml import etree as ET
 
 
 def convert_html_to_xml(document):
+    """
+    document está em scielo_classic_website.models.document.Document.
+    """
+
     document.xml_body_and_back = []
     document.xml_body_and_back.append(convert_html_to_xml_step_1(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_2(document))
@@ -24,10 +28,10 @@ def convert_html_to_xml_step_1(document):
     document: Document
     """
     ppl = plumber.Pipeline(
-            SetupPipe(),
-            MainHTMLPipe(),
-            TranslatedHTMLPipe(),
-            EndPipe(),
+        SetupPipe(),
+        MainHTMLPipe(),
+        TranslatedHTMLPipe(),
+        EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
@@ -52,21 +56,21 @@ def convert_html_to_xml_step_2(document):
     speech | statement | verse-group)*, (sec)*, sig-block?)
     """
     ppl = plumber.Pipeline(
-            StartPipe(),
-            RemoveCDATAPipe(),
-            RemoveCommentPipe(),
-            FontSymbolPipe(),
-            RemoveTagsPipe(),
-            RenameElementsPipe(),
-            StylePipe(),
-            OlPipe(),
-            UlPipe(),
-            TagsHPipe(),
-            ASourcePipe(),
-            AHrefPipe(),
-            ANamePipe(),
-            ImgSrcPipe(),
-            EndPipe(),
+        StartPipe(),
+        RemoveCDATAPipe(),
+        RemoveCommentPipe(),
+        FontSymbolPipe(),
+        RemoveTagsPipe(),
+        RenameElementsPipe(),
+        StylePipe(),
+        OlPipe(),
+        UlPipe(),
+        TagsHPipe(),
+        ASourcePipe(),
+        AHrefPipe(),
+        ANamePipe(),
+        ImgSrcPipe(),
+        EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
@@ -91,26 +95,26 @@ def convert_html_to_xml_step_3(document):
     speech | statement | verse-group)*, (sec)*, sig-block?)
     """
     ppl = plumber.Pipeline(
-            StartPipe(),
-            RemoveCommentPipe(),
-            FontSymbolPipe(),
-            RemoveTagsPipe(),
-            RenameElementsPipe(),
-            StylePipe(),
-            OlPipe(),
-            UlPipe(),
-            TagsHPipe(),
-            ASourcePipe(),
-            AHrefPipe(),
-            ANamePipe(),
-            ImgSrcPipe(),
-            EndPipe(),
+        StartPipe(),
+        RemoveCommentPipe(),
+        FontSymbolPipe(),
+        RemoveTagsPipe(),
+        RenameElementsPipe(),
+        StylePipe(),
+        OlPipe(),
+        UlPipe(),
+        TagsHPipe(),
+        ASourcePipe(),
+        AHrefPipe(),
+        ANamePipe(),
+        ImgSrcPipe(),
+        EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_3(document):
+def convert_html_to_xml_step_4(document):
     """
     Converte o XML obtido no passo 2,
     remove o conteúdo de CDATA e converte as tags HTML nas XML correspondentes
@@ -129,8 +133,8 @@ def convert_html_to_xml_step_3(document):
     speech | statement | verse-group)*, (sec)*, sig-block?)
     """
     ppl = plumber.Pipeline(
-            StartPipe(),
-            EndPipe(),
+        StartPipe(),
+        EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
@@ -158,9 +162,7 @@ class StartPipe(plumber.Pipe):
 
 
 class SetupPipe(plumber.Pipe):
-
     def precond(data):
-
         raw = data
         logging.info(type(raw))
         logging.info(type(raw.main_html_paragraphs))
@@ -169,15 +171,14 @@ class SetupPipe(plumber.Pipe):
 
     @plumber.precondition(precond)
     def transform(self, data):
-
         nsmap = {
-            'xml': 'http://www.w3.org/XML/1998/namespace',
-            'xlink': 'http://www.w3.org/1999/xlink'
+            "xml": "http://www.w3.org/XML/1998/namespace",
+            "xlink": "http://www.w3.org/1999/xlink",
         }
 
-        xml = ET.Element('article', nsmap=nsmap)
-        body = ET.Element('body')
-        back = ET.Element('back')
+        xml = ET.Element("article", nsmap=nsmap)
+        body = ET.Element("body")
+        back = ET.Element("back")
         xml.append(body)
         xml.append(back)
         return data, xml
@@ -191,7 +192,7 @@ class EndPipe(plumber.Pipe):
             xml,
             encoding="utf-8",
             method="xml",
-            )
+        )
         return data
 
 
@@ -217,7 +218,7 @@ class MainHTMLPipe(plumber.Pipe):
         body = xml.find(".//body")
 
         # trata do bloco anterior às referências
-        for item in raw.main_html_paragraphs['before references'] or []:
+        for item in raw.main_html_paragraphs["before references"] or []:
             # item.keys() = (text, index, reference_index, part)
             # cria o elemento `p` com conteúdo de `item['text']`,
             # envolvido por CDATA e adiciona em body
@@ -226,17 +227,17 @@ class MainHTMLPipe(plumber.Pipe):
             # acusará erro de má formação do XML. O conteúdo do CDATA será
             # tratado em uma etapa futura
             p = ET.Element("p")
-            p.text = ET.CDATA(item['text'])
+            p.text = ET.CDATA(item["text"])
             body.append(p)
 
         # trata do bloco das referências
         references = ET.Element("ref-list")
-        for i, item in enumerate(raw.main_html_paragraphs['references'] or []):
+        for i, item in enumerate(raw.main_html_paragraphs["references"] or []):
             # item.keys() = (text, index, reference_index, part)
             # cria o elemento `ref` com conteúdo de `item['text']`,
             ref = ET.Element("ref")
             try:
-                ref_index = item['reference_index']
+                ref_index = item["reference_index"]
             except KeyError:
                 ref_index = i + 1
             # cria o atributo ref/@id
@@ -244,12 +245,12 @@ class MainHTMLPipe(plumber.Pipe):
 
             # cria o elemento mixed-citation que contém o texto da referência
             # bibliográfica mantendo as pontuação
-            mixed_citation = ET.Element('mixed-citation')
+            mixed_citation = ET.Element("mixed-citation")
 
             # O CDATA evita que o seu conteúdo seja "parseado" e, assim não
             # acusará erro de má formação do XML. O conteúdo do CDATA será
             # tratado em uma etapa futura
-            mixed_citation.text = ET.CDATA(item['text'])
+            mixed_citation.text = ET.CDATA(item["text"])
 
             # adiciona o elemento que contém o texto da referência
             # bibliográfica ao elemento `ref`
@@ -261,7 +262,7 @@ class MainHTMLPipe(plumber.Pipe):
         # busca o elemento `back`
         back = xml.find(".//back")
         back.append(references)
-        for item in raw.main_html_paragraphs['after references'] or []:
+        for item in raw.main_html_paragraphs["after references"] or []:
             # item.keys() = (text, index, reference_index, part)
 
             # elementos aceitos em `back`
@@ -271,7 +272,7 @@ class MainHTMLPipe(plumber.Pipe):
             # cria o elemento `sec` para cada item do bloco de 'after references'
             # com conteúdo de `item['text']`
             sec = ET.Element("sec")
-            sec.text = ET.CDATA(item['text'])
+            sec.text = ET.CDATA(item["text"])
 
             # adiciona ao elemento `back`
             back.append(sec)
@@ -300,32 +301,33 @@ class TranslatedHTMLPipe(plumber.Pipe):
         back = xml.find(".//back")
         for lang, texts in raw.translated_html_by_lang.items():
             sub_article = ET.Element("sub-article")
-            sub_article.set('article-type', "translation")
-            sub_article.set('{http://www.w3.org/XML/1998/namespace}lang', lang)
+            sub_article.set("article-type", "translation")
+            sub_article.set("{http://www.w3.org/XML/1998/namespace}lang", lang)
             back.append(sub_article)
 
-            body = ET.Element('body')
+            body = ET.Element("body")
 
             # O CDATA evita que o seu conteúdo seja "parseado" e, assim não
             # acusará erro de má formação do XML. O conteúdo do CDATA será
             # tratado em uma etapa futura
 
             # texts['before references'] é str
-            body.text = ET.CDATA(texts['before references'])
+            body.text = ET.CDATA(texts["before references"])
             sub_article.append(body)
 
-            if texts['after references']:
-                back = ET.Element('back')
+            if texts["after references"]:
+                back = ET.Element("back")
 
                 # O CDATA evita que o seu conteúdo seja "parseado" e, assim não
                 # acusará erro de má formação do XML. O conteúdo do CDATA será
                 # tratado em uma etapa futura
 
                 # texts['after references'] é str
-                back.text = ET.CDATA(texts['after references'])
+                back.text = ET.CDATA(texts["after references"])
                 sub_article.append(back)
 
         return data
+
 
 ##############################################################################
 
@@ -352,7 +354,6 @@ def remove_CDATA(old):
 
 
 class RemoveCDATAPipe(plumber.Pipe):
-
     def transform(self, data):
         raw, xml = data
         for item in xml.findall(".//*"):
@@ -362,6 +363,11 @@ class RemoveCDATAPipe(plumber.Pipe):
 
 
 class RemoveCommentPipe(plumber.Pipe):
+    """
+    Remove comentário de HTML.
+    <!-- comentario -->
+    """
+
     def transform(self, data):
         raw, xml = data
         comments = xml.xpath("//comment()")
@@ -387,14 +393,15 @@ class RemoveTagsPipe(plumber.Pipe):
 ##############################################################################
 # Rename
 
+
 class RenameElementsPipe(plumber.Pipe):
     from_to = (
-        ('div', 'sec'),
-        ('dir', 'ul'),
-        ('dl', 'def-list'),
-        ('dd', 'def-item'),
-        ('li', 'list-item'),
-        ('br', 'break'),
+        ("div", "sec"),
+        ("dir", "ul"),
+        ("dl", "def-list"),
+        ("dd", "def-item"),
+        ("li", "list-item"),
+        ("br", "break"),
         ("blockquote", "disp-quote"),
     )
 
@@ -409,17 +416,15 @@ class RenameElementsPipe(plumber.Pipe):
 
 
 class FontSymbolPipe(plumber.Pipe):
-
     def transform(self, data):
         raw, xml = data
         xpath = f".//font[@face='symbol']"
         for node in xml.xpath(xpath):
-            node.tag = 'font-face-symbol'
+            node.tag = "font-face-symbol"
         return data
 
 
 class StylePipe(plumber.Pipe):
-
     def transform(self, data):
         raw, xml = data
         for style in ("bold", "italic", "sup", "sub", "underline"):
@@ -482,25 +487,24 @@ class ASourcePipe(plumber.Pipe):
 
 ##############################################################################
 
-class AHrefPipe(plumber.Pipe):
 
+class AHrefPipe(plumber.Pipe):
     def _create_ext_link(self, node, extlinktype="uri"):
         node.tag = "ext-link"
-        href = (node.get("href") or '').strip()
+        href = (node.get("href") or "").strip()
         node.attrib.clear()
         node.set("ext-link-type", extlinktype)
         node.set("{http://www.w3.org/1999/xlink}href", href)
 
     def _create_email(self, node):
-
         email_from_href = None
         email_from_node_text = None
 
         node.tag = "email"
         node.attrib.clear()
 
-        href = (node.get("href") or '').strip()
-        texts = href.replace('mailto:', '')
+        href = (node.get("href") or "").strip()
+        texts = href.replace("mailto:", "")
         for text in texts.split():
             if "@" in text:
                 email_from_href = text
@@ -518,12 +522,11 @@ class AHrefPipe(plumber.Pipe):
         node.set("rid", node.attrib.pop("href")[1:])
 
     def parser_node(self, node):
-
         href = node.get("href") or ""
         if href.count('"') == 2:
             node.set("href", href.replace('"', ""))
 
-        node.set('href', (node.get('href') or '').strip())
+        node.set("href", (node.get("href") or "").strip())
         href = node.get("href")
 
         if not href:
@@ -535,7 +538,7 @@ class AHrefPipe(plumber.Pipe):
         if href[0] == "#":
             return self._create_internal_link(node)
 
-        if href[0] in ["#", "."] or "/img/revistas/" in href or '..' in href:
+        if href[0] in ["#", "."] or "/img/revistas/" in href or ".." in href:
             return self._create_internal_link(node)
 
         if ":" in href:
@@ -555,10 +558,9 @@ class AHrefPipe(plumber.Pipe):
 
 
 class ANamePipe(plumber.Pipe):
-
     def parser_node(self, node):
         node.tag = "div"
-        node.set("id", node.attrib.pop('name'))
+        node.set("id", node.attrib.pop("name"))
 
     def transform(self, data):
         raw, xml = data
@@ -567,10 +569,9 @@ class ANamePipe(plumber.Pipe):
 
 
 class ImgSrcPipe(plumber.Pipe):
-
     def parser_node(self, node):
         node.tag = "graphic"
-        href = node.attrib.pop('src')
+        href = node.attrib.pop("src")
         node.attrib.clear()
         node.set("{http://www.w3.org/1999/xlink}href", href)
 

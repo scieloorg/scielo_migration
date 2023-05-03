@@ -1,10 +1,10 @@
-from scielo_classic_website import controller, config
+from scielo_classic_website import config, controller
+from scielo_classic_website.models.document import Document
+from scielo_classic_website.models.issue import Issue
 from scielo_classic_website.models.issue_files import IssueFiles
 
 # Para Journal, Issue, Document devem ficar disponíveis neste módulo
 from scielo_classic_website.models.journal import Journal
-from scielo_classic_website.models.issue import Issue
-from scielo_classic_website.models.document import Document
 
 
 def get_document_pids(from_date, to_date):

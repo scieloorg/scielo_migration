@@ -62,7 +62,7 @@ def _get_value(data, tag):
     if len(tag) < 4:
         tag = "v" + tag[1:].zfill(3)
     try:
-        return data[tag][0]['_']
+        return data[tag][0]["_"]
     except (KeyError, IndexError):
         return None
 
@@ -73,7 +73,7 @@ def _get_items(data, tag):
     """
     # data['v880'][0]['_']
     try:
-        return [item['_'] for item in data[tag]]
+        return [item["_"] for item in data[tag]]
     except KeyError:
         return None
 
@@ -100,7 +100,7 @@ def _parse_field_content(content):
     for i, item in enumerate(items):
         s, v = item
         if s == "":
-            items[i-1][1] += v
+            items[i - 1][1] += v
             items[i][1] = ""
 
     d = {}
@@ -111,9 +111,9 @@ def _parse_field_content(content):
 
 
 def _parse_field(data):
-    second_excl_char_pos = data[1:].find("!")+1
+    second_excl_char_pos = data[1:].find("!") + 1
     tag = data[1:second_excl_char_pos]
-    subfields = _parse_field_content(data[second_excl_char_pos+1:])
+    subfields = _parse_field_content(data[second_excl_char_pos + 1 :])
     return (tag, subfields)
 
 
@@ -130,37 +130,37 @@ def _build_record(record):
 
 
 def journal_id(data):
-    return _get_value(data, 'v400')
+    return _get_value(data, "v400")
 
 
 def issue_id(data):
     try:
         return "".join(
-                [
-                    _get_value(data, 'v035'),
-                    _get_value(data, 'v036')[:4],
-                    _get_value(data, 'v036')[4:].zfill(4),
-                ]
-            )
+            [
+                _get_value(data, "v035"),
+                _get_value(data, "v036")[:4],
+                _get_value(data, "v036")[4:].zfill(4),
+            ]
+        )
     except:
-        print('issue_id')
+        print("issue_id")
         print(data)
         raise
 
 
 def article_id(data):
-    record_type = _get_value(data, 'v706')
+    record_type = _get_value(data, "v706")
     if not record_type:
         return
     if record_type == "i":
         return issue_id(data)
     try:
         try:
-            return _get_value(data, 'v880')[:23]
+            return _get_value(data, "v880")[:23]
         except (TypeError, IndexError, KeyError):
             # bases em serial não tem o campo v880 inserido no GeraPadrao
             # pode-se agrupar os registros pelo v702 (path do XML ou HTML)
-            return _get_value(data, 'v702')
+            return _get_value(data, "v702")
     except Exception as e:
         logging.exception(e)
         raise
@@ -170,11 +170,7 @@ def _get_fields_and_their_content(content):
     if not content:
         return
     rows = content.splitlines()
-    return [
-        _parse_field(row)
-        for row in rows
-        if row
-    ]
+    return [_parse_field(row) for row in rows if row]
 
 
 # ok
@@ -197,6 +193,7 @@ def _get_id_file_rows(id_file_path):
                 yield item.strip()
     except FileNotFoundError:
         return []
+
 
 # ok
 def _join_id_file_rows_and_return_records(id_file_rows):

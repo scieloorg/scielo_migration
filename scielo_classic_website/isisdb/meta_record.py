@@ -19,11 +19,12 @@ def _get_tag_content(record, tag):
 
 
 class MetaRecord:
-
-    def __init__(self, record,
-                 multi_val_tags=None,
-                 data_dictionary=None,
-                 ):
+    def __init__(
+        self,
+        record,
+        multi_val_tags=None,
+        data_dictionary=None,
+    ):
         self._record = record
         self._multi_val_tags = multi_val_tags or []
         self._data_dictionary = data_dictionary or {}
@@ -53,8 +54,7 @@ class MetaRecord:
         except KeyError:
             return
 
-    def get_field_content(self, tag, subfields=None,
-                          single=False, simple=False):
+    def get_field_content(self, tag, subfields=None, single=False, simple=False):
         """
         Retorna o conteúdo do campo `tag`. Usa `subfields` para traduzir
         os subcampos do ISIS em nomes mais expressivos
@@ -127,10 +127,7 @@ class MetaRecord:
                 return []
 
         # dict and multiple
-        return [
-            self._get_occ(occ, subfields or {})
-            for occ in tag_content
-        ]
+        return [self._get_occ(occ, subfields or {}) for occ in tag_content]
 
     def _get_occ(self, occ, subfields):
         """
@@ -171,8 +168,9 @@ class MetaRecord:
             for subf_char, subf_value in occ.items()
         }
 
-    def get_named_field(self, tag, field_name=None, subfields=None,
-                        single=False, simple=False):
+    def get_named_field(
+        self, tag, field_name=None, subfields=None, single=False, simple=False
+    ):
         """
         Retorna o conteúdo do campo `tag` em formato `dict`
 
@@ -210,9 +208,7 @@ class MetaRecord:
             ```
         """
         return {
-            field_name or tag:
-            self.get_field_content(
-                tag, subfields, single, simple)
+            field_name or tag: self.get_field_content(tag, subfields, single, simple)
         }
 
     def get_record_subset_as_dict(self, data_dict):
@@ -249,7 +245,11 @@ class MetaRecord:
             simple = not subfields
             record.update(
                 self.get_named_field(
-                    tag, field_name, subfields, single, simple,
+                    tag,
+                    field_name,
+                    subfields,
+                    single,
+                    simple,
                 )
             )
         return record
@@ -294,7 +294,11 @@ class MetaRecord:
                 simple = not subfields
             record.update(
                 self.get_named_field(
-                    tag, field_name, subfields, single, simple,
+                    tag,
+                    field_name,
+                    subfields,
+                    single,
+                    simple,
                 )
             )
         return record

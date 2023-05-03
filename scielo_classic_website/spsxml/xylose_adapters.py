@@ -5,24 +5,23 @@ from scielo_classic_website.isisdb.c_record import ReferenceRecord
 from scielo_classic_website.models.reference import Reference
 
 
-def warn_future_deprecation(old, new, details=''):
-    msg = '"{}" will be deprecated in future version. '.format(old) + \
-        'Use "{}" instead. {}'.format(new, details)
+def warn_future_deprecation(old, new, details=""):
+    msg = '"{}" will be deprecated in future version. '.format(
+        old
+    ) + 'Use "{}" instead. {}'.format(new, details)
     warnings.warn(msg, PendingDeprecationWarning)
 
 
 def format_institution(institution, sep=", "):
     org = [
         institution.get("name"),
-        institution.get('division'),
+        institution.get("division"),
     ]
     return sep.join([item for item in org if item])
 
 
 def format_institutions(institutions, sep=" | "):
-    return sep.join(
-        [format_institution(inst) for inst in organizations]
-    )
+    return sep.join([format_institution(inst) for inst in organizations])
 
 
 def format_location(city_and_state, country):
@@ -35,7 +34,6 @@ def format_location(city_and_state, country):
 
 
 class ReferenceXyloseAdapter:
-
     def __init__(self, reference_record):
         """
         Parameters
@@ -55,8 +53,7 @@ class ReferenceXyloseAdapter:
         if hasattr(self._reference_record, name):
             return getattr(self._reference_record, name)
         logging.info("getting attribute %s %s" % (type(self), name))
-        raise AttributeError(
-            f"ReferenceXyloseAdapter has no attribute {name}")
+        raise AttributeError(f"ReferenceXyloseAdapter has no attribute {name}")
 
     @property
     def conference_name(self):
@@ -71,7 +68,7 @@ class ReferenceXyloseAdapter:
             except KeyError:
                 continue
 
-        return '; '.join(titles)
+        return "; ".join(titles)
 
     # def title(self):
     #     """
@@ -90,9 +87,8 @@ class ReferenceXyloseAdapter:
         If it is a conference citation, this method retrieves the conference sponsor, if it exists.
         The conference sponsor is presented like it is in the citation. (v52)
         """
-        if self.publication_type == 'confproc':
-            return format_institution(
-                self._reference_record.conference_organization)
+        if self.publication_type == "confproc":
+            return format_institution(self._reference_record.conference_organization)
 
     @property
     def conference_location(self):
@@ -131,21 +127,13 @@ class ReferenceXyloseAdapter:
         care about the citation type (article, book, thesis, conference, etc).
         """
         institutions = []
-        institutions.extend(
-            self._reference_record.analytic_corporative_authors or []
-        )
+        institutions.extend(self._reference_record.analytic_corporative_authors or [])
         institutions.extend(
             self._reference_record.monographic_corporative_authors or []
         )
-        institutions.extend(
-            self._reference_record.serial_corporative_authors or []
-        )
-        institutions.extend(
-            self._reference_record.thesis_organization or []
-        )
-        institutions.extend(
-            self._reference_record.conference_organization or []
-        )
+        institutions.extend(self._reference_record.serial_corporative_authors or [])
+        institutions.extend(self._reference_record.thesis_organization or [])
+        institutions.extend(self._reference_record.conference_organization or [])
         for inst in institutions:
             yield format_institution(inst)
 
@@ -252,9 +240,9 @@ class ReferenceXyloseAdapter:
         """
         authors = {}
         if self.analytic_authors_group:
-            authors['analytic'] = self.analytic_authors_group
+            authors["analytic"] = self.analytic_authors_group
         if self.monographic_authors_group:
-            authors['monographic'] = self.monographic_authors_group
+            authors["monographic"] = self.monographic_authors_group
         if len(authors) > 0:
             return authors
 
@@ -268,13 +256,13 @@ class ReferenceXyloseAdapter:
         and (analytic and monographic)
         """
         warn_future_deprecation(
-            'authors',
-            'author_groups',
+            "authors",
+            "author_groups",
             'The attribute "author_groups" returns all the authors '
-            '(person and institution) '
-            'identified by their type (analytic or monographic). '
+            "(person and institution) "
+            "identified by their type (analytic or monographic). "
             'The attribute "authors" returns only person authors and do not '
-            'differs analytic from monographic'
+            "differs analytic from monographic",
         )
         return (self.analytic_authors or []) + (self.monographic_authors or [])
 
@@ -285,15 +273,13 @@ class ReferenceXyloseAdapter:
         IT REPLACES analytic_authors which returns only person authors
         """
         analytic = {
-            'person': list(
-                self._reference_record.analytic_person_authors),
-            'institution': list(
-                self._reference_record.analytic_corporative_authors),
+            "person": list(self._reference_record.analytic_person_authors),
+            "institution": list(self._reference_record.analytic_corporative_authors),
         }
-        if not analytic['person']:
-            analytic.pop('person')
-        if not analytic['institution']:
-            analytic.pop('institution')
+        if not analytic["person"]:
+            analytic.pop("person")
+        if not analytic["institution"]:
+            analytic.pop("institution")
         if len(analytic) > 0:
             return analytic
 
@@ -312,15 +298,13 @@ class ReferenceXyloseAdapter:
         IT REPLACES monographic_authors
         """
         monographic = {
-            'person': list(
-                self._reference_record.monographic_person_authors),
-            'institution': list(
-                self._reference_record.monographic_corporative_authors),
+            "person": list(self._reference_record.monographic_person_authors),
+            "institution": list(self._reference_record.monographic_corporative_authors),
         }
-        if not monographic['person']:
-            monographic.pop('person')
-        if not monographic['institution']:
-            monographic.pop('institution')
+        if not monographic["person"]:
+            monographic.pop("person")
+        if not monographic["institution"]:
+            monographic.pop("institution")
         if len(monographic) > 0:
             return monographic
 
@@ -335,13 +319,13 @@ class ReferenceXyloseAdapter:
         use monographic_authors_group instead.
         """
         warn_future_deprecation(
-            'monographic_authors',
-            'monographic_person_authors or monographic_authors_group',
+            "monographic_authors",
+            "monographic_person_authors or monographic_authors_group",
             'The attribute "monographic_authors" returns only person authors. '
-            'To retrieve all the monographic authors (person and institution),'
-            ' use monographic_authors_group. '
-            'To retrieve only the monographic person authors,'
-            ' use monographic_person_authors. '
+            "To retrieve all the monographic authors (person and institution),"
+            " use monographic_authors_group. "
+            "To retrieve only the monographic person authors,"
+            " use monographic_person_authors. ",
         )
         return list(self._reference_record.monographic_person_authors)
 
@@ -354,16 +338,18 @@ class ReferenceXyloseAdapter:
         :returns: (analytic or monographic, person or institution, author data)
         IT REPLACES first_author
         """
-        types = [('analytic', 'person'),
-                 ('analytic', 'institution'),
-                 ('monographic', 'person'),
-                 ('monographic', 'institution'),
-                 ]
-        authors = [self.analytic_person_authors,
-                   self.analytic_institution_authors,
-                   self.monographic_person_authors,
-                   self.monographic_institution_authors,
-                   ]
+        types = [
+            ("analytic", "person"),
+            ("analytic", "institution"),
+            ("monographic", "person"),
+            ("monographic", "institution"),
+        ]
+        authors = [
+            self.analytic_person_authors,
+            self.analytic_institution_authors,
+            self.monographic_person_authors,
+            self.monographic_institution_authors,
+        ]
         for a, a_type in zip(authors, types):
             if a is not None:
                 return a_type[0], a_type[1], a[0]
@@ -377,11 +363,11 @@ class ReferenceXyloseAdapter:
         IT WILL BE DEPRECATED. Use first_author_info instead.
         """
         warn_future_deprecation(
-            'first_author',
-            'first_author_info',
+            "first_author",
+            "first_author_info",
             'The attribute "first_author" returns only a person author. '
             'The attribute "first_author_info" returns info of the '
-            'first author independing if it is person or institution. '
+            "first author independing if it is person or institution. ",
         )
         try:
             return self.authors[0]

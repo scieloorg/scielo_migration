@@ -1,12 +1,11 @@
-import os
 import glob
-
+import os
 
 from scielo_classic_website import exceptions
 
-
-
-ATTRIBUTES_PATH = os.environ.get("ATTRIBUTES_PATH", 'scielo_classic_website/settings/attributes')
+ATTRIBUTES_PATH = os.environ.get(
+    "ATTRIBUTES_PATH", "scielo_classic_website/settings/attributes"
+)
 
 # /var/www/scielo/proc/cisis
 CLASSIC_WEBSITE_CISIS_PATH = os.environ.get("CLASSIC_WEBSITE_CISIS_PATH")
@@ -14,15 +13,21 @@ CLASSIC_WEBSITE_CISIS_PATH = os.environ.get("CLASSIC_WEBSITE_CISIS_PATH")
 CLASSIC_WEBSITE_BASES_WORK_PATH = os.environ.get("CLASSIC_WEBSITE_BASES_WORK_PATH")
 CLASSIC_WEBSITE_BASES_XML_PATH = os.environ.get("CLASSIC_WEBSITE_BASES_XML_PATH")
 CLASSIC_WEBSITE_BASES_PDF_PATH = os.environ.get("CLASSIC_WEBSITE_BASES_PDF_PATH")
-CLASSIC_WEBSITE_BASES_TRANSLATION_PATH = os.environ.get("CLASSIC_WEBSITE_BASES_TRANSLATION_PATH")
-CLASSIC_WEBSITE_HTDOCS_IMG_REVISTAS_PATH = os.environ.get("CLASSIC_WEBSITE_HTDOCS_IMG_REVISTAS_PATH")
+CLASSIC_WEBSITE_BASES_TRANSLATION_PATH = os.environ.get(
+    "CLASSIC_WEBSITE_BASES_TRANSLATION_PATH"
+)
+CLASSIC_WEBSITE_HTDOCS_IMG_REVISTAS_PATH = os.environ.get(
+    "CLASSIC_WEBSITE_HTDOCS_IMG_REVISTAS_PATH"
+)
 CLASSIC_WEBSITE_BASES_PATH = os.environ.get("CLASSIC_WEBSITE_BASES_PATH")
 
 
 CLASSIC_WEBSITE_MIGRATION_CELERY_BROKER_URL = os.environ.get(
-    "CLASSIC_WEBSITE_MIGRATION_CELERY_BROKER_URL", 'amqp://guest@0.0.0.0:5672//')
+    "CLASSIC_WEBSITE_MIGRATION_CELERY_BROKER_URL", "amqp://guest@0.0.0.0:5672//"
+)
 CLASSIC_WEBSITE_MIGRATION_CELERY_RESULT_BACKEND_URL = os.environ.get(
-    "CLASSIC_WEBSITE_MIGRATION_CELERY_RESULT_BACKEND_URL", 'rpc://')
+    "CLASSIC_WEBSITE_MIGRATION_CELERY_RESULT_BACKEND_URL", "rpc://"
+)
 
 
 def get_cisis_path():
@@ -66,9 +71,13 @@ def check_migration_sources():
 # XXX
 def get_paragraphs_id_file_path(article_pid):
     return os.path.join(
-        os.path.dirname(CLASSIC_WEBSITE_BASES_PDF_PATH), "artigo", "p",
-        article_pid[1:10], article_pid[10:14],
-        article_pid[14:18], article_pid[-5:] + ".id",
+        os.path.dirname(CLASSIC_WEBSITE_BASES_PDF_PATH),
+        "artigo",
+        "p",
+        article_pid[1:10],
+        article_pid[10:14],
+        article_pid[14:18],
+        article_pid[-5:] + ".id",
     )
 
 

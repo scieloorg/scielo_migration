@@ -19,4 +19,3 @@ def fix_windows_path(path):
     new_path = new_path.replace("\v", "/v")
     new_path = new_path.replace("\a", "/a")
     return new_path
-

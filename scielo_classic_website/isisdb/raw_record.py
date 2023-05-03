@@ -19,7 +19,6 @@ def _get_tag_content(record, tag):
 
 
 class RawRecord:
-
     def __init__(self, record):
         self._record = record
         self._fix_function = lambda x: x
@@ -59,9 +58,8 @@ class RawRecord:
         items = []
         for item in self.get_items(tag, subfields):
             ignore_subfields = (
-                (len(subfields) == 1 and subfields.get("_") is not None) or
-                len(subfields) == 0
-            )
+                len(subfields) == 1 and subfields.get("_") is not None
+            ) or len(subfields) == 0
             if isinstance(item, dict) and ignore_subfields:
                 data = list(item.values())
                 items.append(data[0])

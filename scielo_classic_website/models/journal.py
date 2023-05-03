@@ -1,5 +1,5 @@
-from scielo_classic_website.isisdb.meta_record import MetaRecord
 from scielo_classic_website.isisdb.journal_record import JournalRecord
+from scielo_classic_website.isisdb.meta_record import MetaRecord
 
 
 class Journal:
@@ -11,8 +11,7 @@ class Journal:
         # fica menos acoplado
         if hasattr(self.journal_record, name):
             return getattr(self.journal_record, name)
-        raise AttributeError(
-            f"classic_website.Journal has no attribute {name}")
+        raise AttributeError(f"classic_website.Journal has no attribute {name}")
 
     @property
     def record(self):
@@ -30,9 +29,7 @@ class Journal:
         return sep.join(self.raw_publisher_names)
 
     def get_publisher_loc(self, sep=", "):
-        loc = [item
-               for item in [self.publisher_city, self.publisher_state]
-               if item]
+        loc = [item for item in [self.publisher_city, self.publisher_state] if item]
         return sep.join(loc)
 
     @property
@@ -87,11 +84,10 @@ class Journal:
 
     @property
     def unpublish_reason(self):
-        _hist = sorted([
-            (item.get("date"), item.get("status"))
-            for item in self.status_history
-        ])
-        return _hist[-1][1] if _hist[-1][1] != 'C' else None
+        _hist = sorted(
+            [(item.get("date"), item.get("status")) for item in self.status_history]
+        )
+        return _hist[-1][1] if _hist[-1][1] != "C" else None
 
     @property
     def attributes(self):

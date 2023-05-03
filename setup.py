@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-import os, setuptools
+import os
+
+import setuptools
 
 here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, "README.md")) as f:
     README = f.read()
 
-requires = [
-]
+requires = []
 
 tests_require = [
-    'tests',
+    "tests",
 ]
 
 setuptools.setup(
@@ -27,8 +28,7 @@ setuptools.setup(
     include_package_data=True,
     extras_require={"testing": tests_require},
     install_requires=requires,
-    dependency_links=[
-    ],
+    dependency_links=[],
     python_requires=">=3.6",
     test_suite="tests",
     classifiers=[

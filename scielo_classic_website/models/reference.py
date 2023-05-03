@@ -1,7 +1,7 @@
 import logging
 
-from scielo_classic_website.isisdb.c_record import ReferenceRecord
 from scielo_classic_website.htmlbody import html_style_fixer
+from scielo_classic_website.isisdb.c_record import ReferenceRecord
 
 
 def html_decode(text):
@@ -19,8 +19,7 @@ class Reference:
         # fica menos acoplado
         if hasattr(self._reference_record, name):
             return getattr(self._reference_record, name)
-        raise AttributeError(
-            f"classic_website.Reference has no attribute {name}")
+        raise AttributeError(f"classic_website.Reference has no attribute {name}")
 
     @property
     def record(self):
@@ -35,22 +34,22 @@ class Reference:
             return self._reference_record.publication_type
 
         if self.reference_record.patent:
-            return 'patent'
+            return "patent"
 
         if self.reference_record.conference:
-            return 'confproc'
+            return "confproc"
 
         if self._reference_record.thesis_degree:
-            return 'thesis'
+            return "thesis"
 
         if self._reference_record.monographic_title:
-            return 'book'
+            return "book"
 
         if self._reference_record.article_title:
-            return 'journal'
+            return "journal"
 
         if self._reference_record.ext_link:
-            return 'webpage'
+            return "webpage"
 
     def _get_pages(self):
         self._elocation = None
@@ -65,8 +64,8 @@ class Reference:
         self._elocation = self._elocation or pages_range.get("elocation")
         self._pages_range = pages_range.get("range")
         if self._pages_range:
-            self._start_page = self._pages_range.split('-')[0]
-            self._end_page = self._pages_range.split('-')[-1]
+            self._start_page = self._pages_range.split("-")[0]
+            self._end_page = self._pages_range.split("-")[-1]
         else:
             self._start_page = None
             self._end_page = None
@@ -77,7 +76,7 @@ class Reference:
         This method retrieves the start page of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        if not hasattr(self, '_start_page'):
+        if not hasattr(self, "_start_page"):
             self._get_pages()
         return self._start_page
 
@@ -87,7 +86,7 @@ class Reference:
         This method retrieves the end page of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        if not hasattr(self, '_end_page'):
+        if not hasattr(self, "_end_page"):
             self._get_pages()
         return self._end_page
 
@@ -97,7 +96,7 @@ class Reference:
         This method retrieves the e-location of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        if not hasattr(self, '_elocation'):
+        if not hasattr(self, "_elocation"):
             self._get_pages()
         return self._elocation
 
@@ -108,7 +107,7 @@ class Reference:
         separeted by hipen.
         This method deals with the legacy fields (514 and 14).
         """
-        if not hasattr(self, '_pages_range'):
+        if not hasattr(self, "_pages_range"):
             self._get_pages()
         return self._pages_range
 
@@ -120,9 +119,9 @@ class Reference:
         Book: Alice's Adventures in Wonderland
         """
         return (
-            self.journal_title or
-            self._reference_record.monographic_title and
-            self._reference_record.monographic_title.get("text")
+            self.journal_title
+            or self._reference_record.monographic_title
+            and self._reference_record.monographic_title.get("text")
         )
 
     @property
@@ -133,16 +132,19 @@ class Reference:
         Book: Alice's Adventures in Wonderland
         """
         return (
-            self._reference_record.journal_title and
-            self._reference_record.journal_title.get("text"))
+            self._reference_record.journal_title
+            and self._reference_record.journal_title.get("text")
+        )
 
     @property
     def article_title(self):
         """
         If it is an article citation, this method retrieves the article title, if it exists.
         """
-        return (self._reference_record.article_title and
-            self._reference_record.article_title.get('text'))
+        return (
+            self._reference_record.article_title
+            and self._reference_record.article_title.get("text")
+        )
 
     @property
     def chapter_title(self):
@@ -150,7 +152,7 @@ class Reference:
         If it is an book citation, this method retrieves the chapter title, if it exists.
         """
         if self.publication_type == "book":
-            return self._reference_record.article_title.get('text')
+            return self._reference_record.article_title.get("text")
 
     @property
     def data_title(self):
@@ -158,7 +160,7 @@ class Reference:
         If it is an data citation, this method retrieves the data title, if it exists.
         """
         if self.publication_type == "data":
-            return self._reference_record.article_title.get('text')
+            return self._reference_record.article_title.get("text")
 
     @property
     def date(self):
@@ -167,13 +169,13 @@ class Reference:
         reference type
         Se é desejável obter a data de publicação, usar: self.publication_date
         """
-        if self.publication_type == 'confproc':
+        if self.publication_type == "confproc":
             return self._reference_record.conference_date_iso
-        if self.publication_type == 'thesis':
+        if self.publication_type == "thesis":
             return self._reference_record.thesis_date_iso
-        if self.publication_type == 'webpage':
+        if self.publication_type == "webpage":
             return self._reference_record.access_date_iso
-        if self.publication_type == 'patent':
+        if self.publication_type == "patent":
             return self.patent_application_date_iso
         return self._reference_record.conference_date_iso
 
@@ -185,11 +187,11 @@ class Reference:
         incorreta
         """
         return (
-            self._reference_record.publication_date_iso or
-            self._reference_record.conference_date_iso or
-            self._reference_record.thesis_date_iso or
-            self.patent_application_date_iso or
-            self._reference_record.access_date_iso
+            self._reference_record.publication_date_iso
+            or self._reference_record.conference_date_iso
+            or self._reference_record.thesis_date_iso
+            or self.patent_application_date_iso
+            or self._reference_record.access_date_iso
         )
 
     @property
@@ -203,7 +205,7 @@ class Reference:
     @property
     def patent_country(self):
         country = self._reference_record.patent.get("country")
-        return country if country != 'nd' else None
+        return country if country != "nd" else None
 
     @property
     def patent_organization(self):

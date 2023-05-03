@@ -1,2 +1,3 @@
 lxml
 picles.plumber==0.11
+black==23.3.0

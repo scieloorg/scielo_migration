@@ -2,7 +2,6 @@ from scielo_classic_website.isisdb.c_record import ReferenceRecord
 
 
 class Reference(object):
-
     def __init__(self, _record):
         self._record = _record
 

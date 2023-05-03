@@ -1,6 +1,21 @@
 # scielo_migration
 
-# Models Builder 
+## Instalação
+
+Após clonar o projeto e entrar na pasta, digite:
+
+```
+# Crie uma virtualenv
+python -m venv .venv
+
+# Ative
+source .venv/bin/activate
+
+# Instale os pacotes
+pip install -r requirements.txt
+```
+
+# Models Builder
 
 ## CSV input format
 ```
