@@ -11,6 +11,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     RemoveCDATAPipe,
     RemoveTagsPipe,
     RenameElementsPipe,
+    StylePipe,
     TagsHPipe,
     UlPipe,
 )
@@ -139,6 +140,43 @@ class TestFontSymbolPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = FontSymbolPipe().transform(data)
+
+        expected_element = get_tree(expected)
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestStylePipe(TestCase):
+    def test_transform_style(self):
+        xml = get_tree(
+            (
+                "<root>"
+                "<body>"
+                "<p><span name='style_bold'>bold text</span></p>"
+                "<p><span name='style_italic'>italic text</span></p>"
+                "<p><span name='style_sup'>sup text</span></p>"
+                "<p><span name='style_sub'>sub text</span></p>"
+                "<p><span name='style_underline'>underline text</span></p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            "<root>"
+            "<body>"
+            "<p><bold name='style_bold'>bold text</bold></p>"
+            "<p><italic name='style_italic'>italic text</italic></p>"
+            "<p><sup name='style_sup'>sup text</sup></p>"
+            "<p><sub name='style_sub'>sub text</sub></p>"
+            "<p><underline name='style_underline'>underline text</underline></p>"
+            "</body>"
+            "</root>"
+        )
+        data = (None, xml)
+
+        _, transformed_xml = StylePipe().transform(data)
 
         expected_element = get_tree(expected)
         expected = tree_tostring_decode(expected_element)
