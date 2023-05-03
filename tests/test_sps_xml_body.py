@@ -5,10 +5,11 @@ from lxml import etree
 from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     ANamePipe,
     ASourcePipe,
+    FontSymbolPipe,
     ImgSrcPipe,
     OlPipe,
     RemoveCDATAPipe,
-    FontSymbolPipe,
+    RemoveTagsPipe,
     TagsHPipe,
     UlPipe,
 )
@@ -18,10 +19,40 @@ def get_tree(xml_str):
     return etree.fromstring(xml_str)
 
 
+class TestRemoveTagsPipe(TestCase):
+    def setUp(self):
+        self.xml = get_tree(
+            (
+                "<root>"
+                "<body>"
+                "<p><span>Texto</span></p>"
+                "<center>Texto centralizado</center>"
+                "<s>Sublinhado</s>"
+                "<lixo>Lixo</lixo>"
+                "</body>"
+                "</root>"
+            )
+        )
+
+    def test_transform_remove_tags(self):
+        expected = (
+            "<root><body><p>Texto</p>Texto centralizadoSublinhadoLixo</body></root>"
+        )
+        data = (None, self.xml)
+
+        _, transformed_xml = RemoveTagsPipe().transform(data)
+
+        expected_element = etree.fromstring(expected)
+        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
+        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+
+        self.assertEqual(expected, result)
+
+
 class TestRemoveCDATAPipe(TestCase):
     def test_transform_remove_CDATA(self):
-        xml = get_tree('<root><![CDATA[Exemplo CDATA.]]></root>')
-        expected = '<root>Exemplo CDATA.</root>'
+        xml = get_tree("<root><![CDATA[Exemplo CDATA.]]></root>")
+        expected = "<root>Exemplo CDATA.</root>"
         data = (None, xml)
 
         _, transformed_xml = RemoveCDATAPipe().transform(data)
@@ -36,7 +67,9 @@ class TestRemoveCDATAPipe(TestCase):
 class TestFontSymbolPipe(TestCase):
     def test_transform_font_symbol_pipe(self):
         xml = get_tree('<root><font face="symbol">simbolo</font></root>')
-        expected = '<root><font-face-symbol face="symbol">simbolo</font-face-symbol></root>'
+        expected = (
+            '<root><font-face-symbol face="symbol">simbolo</font-face-symbol></root>'
+        )
         data = (None, xml)
 
         _, transformed_xml = FontSymbolPipe().transform(data)
