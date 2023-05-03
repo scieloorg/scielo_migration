@@ -8,6 +8,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     ImgSrcPipe,
     OlPipe,
     RemoveCDATAPipe,
+    FontSymbolPipe,
     TagsHPipe,
     UlPipe,
 )
@@ -24,6 +25,21 @@ class TestRemoveCDATAPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = RemoveCDATAPipe().transform(data)
+
+        expected_element = get_tree(expected)
+        expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
+        result = etree.tostring(transformed_xml, encoding="utf-8").decode("utf-8")
+
+        self.assertEqual(expected, result)
+
+
+class TestFontSymbolPipe(TestCase):
+    def test_transform_font_symbol_pipe(self):
+        xml = get_tree('<root><font face="symbol">simbolo</font></root>')
+        expected = '<root><font-face-symbol face="symbol">simbolo</font-face-symbol></root>'
+        data = (None, xml)
+
+        _, transformed_xml = FontSymbolPipe().transform(data)
 
         expected_element = get_tree(expected)
         expected = etree.tostring(expected_element, encoding="utf-8").decode("utf-8")
