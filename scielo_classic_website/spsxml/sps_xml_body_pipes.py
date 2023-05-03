@@ -363,6 +363,11 @@ class RemoveCDATAPipe(plumber.Pipe):
 
 
 class RemoveCommentPipe(plumber.Pipe):
+    """
+    Remove comentário de HTML.
+    <!-- comentario -->
+    """
+
     def transform(self, data):
         raw, xml = data
         comments = xml.xpath("//comment()")

@@ -3,12 +3,14 @@ from unittest import TestCase
 from lxml import etree
 
 from scielo_classic_website.spsxml.sps_xml_body_pipes import (
+    AHrefPipe,
     ANamePipe,
     ASourcePipe,
     FontSymbolPipe,
     ImgSrcPipe,
     OlPipe,
     RemoveCDATAPipe,
+    RemoveCommentPipe,
     RemoveTagsPipe,
     RenameElementsPipe,
     StylePipe,
@@ -32,6 +34,21 @@ class TestRemoveCDATAPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = RemoveCDATAPipe().transform(data)
+
+        expected_element = get_tree(expected)
+        expected = tree_tostring_decode(expected_element)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestRemoveCommentPipe(TestCase):
+    def test_transform_remove_comment(self):
+        xml = get_tree("<root><body><!-- comentario --><p>Um</p></body></root>")
+        expected = "<root><body><p>Um</p></body></root>"
+        data = (None, xml)
+
+        _, transformed_xml = RemoveCommentPipe().transform(data)
 
         expected_element = get_tree(expected)
         expected = tree_tostring_decode(expected_element)
@@ -280,10 +297,6 @@ class TestASourcePipe(TestCase):
         result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
-
-
-class TestAHrefPipe(TestCase):
-    ...
 
 
 class TestANamePipe(TestCase):
