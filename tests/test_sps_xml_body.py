@@ -123,9 +123,7 @@ class TestMainHTMLPipe(TestCase):
         data = (raw, xml)
 
         _, transformed_xml = MainHTMLPipe().transform(data)
-
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -136,11 +134,7 @@ class TestRemoveCDATAPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = RemoveCDATAPipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -151,11 +145,7 @@ class TestRemoveCommentPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = RemoveCommentPipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -181,11 +171,7 @@ class TestRemoveTagsPipe(TestCase):
         data = (None, self.xml)
 
         _, transformed_xml = RemoveTagsPipe().transform(data)
-
-        expected_element = etree.fromstring(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -230,11 +216,7 @@ class TestRenameElementsPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = RenameElementsPipe().transform(data)
-
-        expected_element = etree.fromstring(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
     def test_transform_rename_elements_empty_xml(self):
@@ -242,11 +224,7 @@ class TestRenameElementsPipe(TestCase):
         data = (None, etree.fromstring("<root/>"))
 
         _, transformed_xml = RenameElementsPipe().transform(data)
-
-        expected_element = etree.fromstring(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -259,11 +237,7 @@ class TestFontSymbolPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = FontSymbolPipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -285,22 +259,18 @@ class TestStylePipe(TestCase):
         expected = (
             "<root>"
             "<body>"
-            "<p><bold name='style_bold'>bold text</bold></p>"
-            "<p><italic name='style_italic'>italic text</italic></p>"
-            "<p><sup name='style_sup'>sup text</sup></p>"
-            "<p><sub name='style_sub'>sub text</sub></p>"
-            "<p><underline name='style_underline'>underline text</underline></p>"
+            '<p><bold name="style_bold">bold text</bold></p>'
+            '<p><italic name="style_italic">italic text</italic></p>'
+            '<p><sup name="style_sup">sup text</sup></p>'
+            '<p><sub name="style_sub">sub text</sub></p>'
+            '<p><underline name="style_underline">underline text</underline></p>'
             "</body>"
             "</root>"
         )
         data = (None, xml)
 
         _, transformed_xml = StylePipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -318,8 +288,10 @@ class TestOlPipe(TestCase):
             "</root>"
         )
         data = (raw, xml)
+
         _raw, _xml = OlPipe().transform(data)
-        result = etree.tostring(_xml, encoding="utf-8").decode("utf-8")
+        result = tree_tostring_decode(_xml)
+
         self.assertEqual(1, len(_xml.xpath(".//list[@list-type='order']")))
         self.assertEqual(expected, result)
 
@@ -340,7 +312,7 @@ class TestUlPipe(TestCase):
         data = (raw, xml)
 
         _, _xml = UlPipe().transform(data)
-        result = etree.tostring(_xml, encoding="utf-8").decode("utf-8")
+        result = tree_tostring_decode(_xml)
 
         self.assertEqual(1, len(_xml.xpath(".//list[@list-type='bullet']")))
         self.assertEqual(expected, result)
@@ -351,7 +323,7 @@ class TestTagsHPipe(TestCase):
         xml = get_tree(
             "<root><body><h1>Título 1</h1><h2>Título 2</h2><h3>Título 3</h3></body></root>"
         )
-        content = (
+        expected = (
             "<root>"
             "<body>"
             '<title content-type="h1">Título 1</title>'
@@ -361,15 +333,10 @@ class TestTagsHPipe(TestCase):
             "</root>"
         )
 
-        # Cria objeto etree a partir de content.
-        expected_element = get_tree(content)
         data = (None, xml)
 
         _, transformed_xml = TagsHPipe().transform(data)
-
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -380,11 +347,7 @@ class TestASourcePipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ASourcePipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
     def test_transform_nao_altera_nos_a_sem_src(self):
@@ -394,8 +357,6 @@ class TestASourcePipe(TestCase):
         _, transformed_xml = ASourcePipe().transform(data)
 
         expected = '<root><body><a href="foo.jpg">Imagem</a></body></root>'
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
@@ -408,11 +369,7 @@ class TestANamePipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ANamePipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -437,9 +394,5 @@ class TestImgSrcPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ImgSrcPipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
