@@ -8,6 +8,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     ASourcePipe,
     FontSymbolPipe,
     ImgSrcPipe,
+    MainHTMLPipe,
     OlPipe,
     RemoveCDATAPipe,
     RemoveCommentPipe,
@@ -25,6 +26,107 @@ def get_tree(xml_str):
 
 def tree_tostring_decode(_str):
     return etree.tostring(_str, encoding="utf-8").decode("utf-8")
+
+
+class MockDocument:
+    def __init__(self):
+        self.main_html_paragraphs = {
+            "before references": [
+                {
+                    "text": "<DIV ALIGN=right><B>Saskia Sassen*</B></DIV>",
+                    "index": "1",
+                    "reference_index": "",
+                    "part": "before references",
+                },
+                {
+                    "text": "<DIV ALIGN=right><B>Saskia Sassen*</B></DIV>",
+                    "index": "2",
+                    "reference_index": "",
+                    "part": "before references",
+                },
+            ],
+            "references": [
+                {
+                    "text": '<!-- ref --><P><B>Abu-Lughod, Janet Lippman</B> (1995): "Comparing Chicago, New York y Los Angeles: testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.) World Cities in a Worldsystem. Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;',
+                    "index": "1",
+                    "reference_index": "1",
+                    "part": "references",
+                },
+                {
+                    "text": "<!-- ref --><P><B>Abu-Lughod, Janet Lippman</B> (1995)</P>",
+                    "index": "2",
+                    "reference_index": "2",
+                    "part": "references",
+                },
+            ],
+            "after references": [
+                {
+                    "text": "<p>Depois das referencias 1</p>",
+                    "index": "",
+                    "reference_index": "",
+                    "part": "after references",
+                },
+                {
+                    "text": "<p>Depois das referencias 2</p>",
+                    "index": "",
+                    "reference_index": "",
+                    "part": "after references",
+                },
+            ],
+        }
+
+
+class TestMainHTMLPipe(TestCase):
+    def test_transform(self):
+        raw = MockDocument()
+        expected = (
+            "<article>"
+            "<body>"
+            "<p>"
+            "<![CDATA[<DIV ALIGN=right>"
+            "<B>Saskia Sassen*</B>"
+            "</DIV>]]>"
+            "</p>"
+            "<p>"
+            "<![CDATA[<DIV ALIGN=right>"
+            "<B>Saskia Sassen*</B>"
+            "</DIV>]]>"
+            "</p>"
+            "</body>"
+            "<back>"
+            "<ref-list>"
+            '<ref id="B1">'
+            "<mixed-citation>"
+            "<![CDATA[<!-- ref -->"
+            "<P>"
+            '<B>Abu-Lughod, Janet Lippman</B> (1995): "Comparing Chicago, New York y Los Angeles: testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.) World Cities in a Worldsystem. Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;]]>'
+            "</mixed-citation>"
+            "</ref>"
+            '<ref id="B2">'
+            "<mixed-citation>"
+            "<![CDATA[<!-- ref -->"
+            "<P>"
+            "<B>Abu-Lughod, Janet Lippman</B> (1995)</P>]]>"
+            "</mixed-citation>"
+            "</ref>"
+            "</ref-list>"
+            "<sec>"
+            "<![CDATA[<p>Depois das referencias 1</p>]]>"
+            "</sec>"
+            "<sec>"
+            "<![CDATA[<p>Depois das referencias 2</p>]]>"
+            "</sec>"
+            "</back>"
+            "</article>"
+        )
+        xml = get_tree("<article><body></body><back></back></article>")
+        data = (raw, xml)
+
+        _, transformed_xml = MainHTMLPipe().transform(data)
+
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
 
 
 class TestRemoveCDATAPipe(TestCase):
