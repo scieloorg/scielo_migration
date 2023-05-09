@@ -7,6 +7,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     ANamePipe,
     ASourcePipe,
     FontSymbolPipe,
+    TranslatedHTMLPipe,
     ImgSrcPipe,
     MainHTMLPipe,
     OlPipe,
@@ -17,6 +18,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     StylePipe,
     TagsHPipe,
     UlPipe,
+    EndPipe,
 )
 
 
@@ -28,7 +30,7 @@ def tree_tostring_decode(_str):
     return etree.tostring(_str, encoding="utf-8").decode("utf-8")
 
 
-class MockDocument:
+class MockMainDocument:
     def __init__(self):
         self.main_html_paragraphs = {
             "before references": [
@@ -47,7 +49,13 @@ class MockDocument:
             ],
             "references": [
                 {
-                    "text": '<!-- ref --><P><B>Abu-Lughod, Janet Lippman</B> (1995): "Comparing Chicago, New York y Los Angeles: testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.) World Cities in a Worldsystem. Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;',
+                    "text": (
+                        '<!-- ref --><P><B>Abu-Lughod, Janet Lippman</B> (1995):'
+                        ' "Comparing Chicago, New York y Los Angeles:'
+                        ' testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.)'
+                        ' World Cities in a Worldsystem.'
+                        ' Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;'
+                    ),
                     "index": "1",
                     "reference_index": "1",
                     "part": "references",
@@ -78,7 +86,7 @@ class MockDocument:
 
 class TestMainHTMLPipe(TestCase):
     def test_transform(self):
-        raw = MockDocument()
+        raw = MockMainDocument()
         expected = (
             "<article>"
             "<body>"
@@ -99,7 +107,11 @@ class TestMainHTMLPipe(TestCase):
             "<mixed-citation>"
             "<![CDATA[<!-- ref -->"
             "<P>"
-            '<B>Abu-Lughod, Janet Lippman</B> (1995): "Comparing Chicago, New York y Los Angeles: testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.) World Cities in a Worldsystem. Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;]]>'
+            '<B>Abu-Lughod, Janet Lippman</B> (1995):'
+            ' "Comparing Chicago, New York y Los Angeles:'
+            ' testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.)'
+            ' World Cities in a Worldsystem.'
+            ' Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;]]>'
             "</mixed-citation>"
             "</ref>"
             '<ref id="B2">'
@@ -124,6 +136,68 @@ class TestMainHTMLPipe(TestCase):
 
         _, transformed_xml = MainHTMLPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class MockTranslatedDocument:
+    def __init__(self):
+        self.translated_html_by_lang = {
+            "pt": {
+                "before references": "<DIV ALIGN=right><B>Saskia Sassen*</B></DIV>",
+                "after references": "<p>Depois das referencias 1</p>",
+            },
+            "en": {
+                "before references": "<DIV ALIGN=right><B>Saskia Sassen*</B></DIV>",
+                "after references": "<p>After Reference</p>",
+            },
+        }
+
+
+class TestTranslatedHTMLPipe(TestCase):
+    def test_transform(self):
+        raw = MockTranslatedDocument()
+        expected = (
+            '<article>'
+            '<body/>'
+            '<back>'
+            '<sub-article article-type="translation" xml:lang="pt">'
+            '<body><![CDATA[<DIV ALIGN=right>'
+            '<B>Saskia Sassen*</B>'
+            '</DIV>]]>'
+            '</body>'
+            '<back>'
+            '<![CDATA[<p>Depois das referencias 1</p>]]>'
+            '<sub-article article-type="translation" xml:lang="en">'
+            '<body>'
+            '<![CDATA[<DIV ALIGN=right>'
+            '<B>Saskia Sassen*</B>'
+            '</DIV>]]>'
+            '</body>'
+            '<back>'
+            '<![CDATA[<p>After Reference</p>]]>'
+            '</back>'
+            '</sub-article>'
+            '</back>'
+            '</sub-article>'
+            '</back>'
+            '</article>'
+        )
+        xml = get_tree("<article><body></body><back></back></article>")
+        data = (raw, xml)
+
+        _, transformed_xml = TranslatedHTMLPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestEndPipe(TestCase):
+    def test_transform_remove_CDATA(self):
+        xml = get_tree("<root><body>Texto</body></root>")
+        expected = b"<root><body>Texto</body></root>"
+        data = (None, xml)
+
+        result = EndPipe().transform(data)
         self.assertEqual(expected, result)
 
 
