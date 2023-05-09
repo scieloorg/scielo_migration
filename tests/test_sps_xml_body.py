@@ -6,8 +6,8 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     AHrefPipe,
     ANamePipe,
     ASourcePipe,
+    EndPipe,
     FontSymbolPipe,
-    TranslatedHTMLPipe,
     ImgSrcPipe,
     MainHTMLPipe,
     OlPipe,
@@ -17,8 +17,8 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     RenameElementsPipe,
     StylePipe,
     TagsHPipe,
+    TranslatedHTMLPipe,
     UlPipe,
-    EndPipe,
 )
 
 
@@ -50,11 +50,11 @@ class MockMainDocument:
             "references": [
                 {
                     "text": (
-                        '<!-- ref --><P><B>Abu-Lughod, Janet Lippman</B> (1995):'
+                        "<!-- ref --><P><B>Abu-Lughod, Janet Lippman</B> (1995):"
                         ' "Comparing Chicago, New York y Los Angeles:'
                         ' testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.)'
-                        ' World Cities in a Worldsystem.'
-                        ' Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;'
+                        " World Cities in a Worldsystem."
+                        " Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;"
                     ),
                     "index": "1",
                     "reference_index": "1",
@@ -107,11 +107,11 @@ class TestMainHTMLPipe(TestCase):
             "<mixed-citation>"
             "<![CDATA[<!-- ref -->"
             "<P>"
-            '<B>Abu-Lughod, Janet Lippman</B> (1995):'
+            "<B>Abu-Lughod, Janet Lippman</B> (1995):"
             ' "Comparing Chicago, New York y Los Angeles:'
             ' testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.)'
-            ' World Cities in a Worldsystem.'
-            ' Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;]]>'
+            " World Cities in a Worldsystem."
+            " Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;]]>"
             "</mixed-citation>"
             "</ref>"
             '<ref id="B2">'
@@ -157,30 +157,30 @@ class TestTranslatedHTMLPipe(TestCase):
     def test_transform(self):
         raw = MockTranslatedDocument()
         expected = (
-            '<article>'
-            '<body/>'
-            '<back>'
+            "<article>"
+            "<body/>"
+            "<back>"
             '<sub-article article-type="translation" xml:lang="pt">'
-            '<body><![CDATA[<DIV ALIGN=right>'
-            '<B>Saskia Sassen*</B>'
-            '</DIV>]]>'
-            '</body>'
-            '<back>'
-            '<![CDATA[<p>Depois das referencias 1</p>]]>'
+            "<body><![CDATA[<DIV ALIGN=right>"
+            "<B>Saskia Sassen*</B>"
+            "</DIV>]]>"
+            "</body>"
+            "<back>"
+            "<![CDATA[<p>Depois das referencias 1</p>]]>"
             '<sub-article article-type="translation" xml:lang="en">'
-            '<body>'
-            '<![CDATA[<DIV ALIGN=right>'
-            '<B>Saskia Sassen*</B>'
-            '</DIV>]]>'
-            '</body>'
-            '<back>'
-            '<![CDATA[<p>After Reference</p>]]>'
-            '</back>'
-            '</sub-article>'
-            '</back>'
-            '</sub-article>'
-            '</back>'
-            '</article>'
+            "<body>"
+            "<![CDATA[<DIV ALIGN=right>"
+            "<B>Saskia Sassen*</B>"
+            "</DIV>]]>"
+            "</body>"
+            "<back>"
+            "<![CDATA[<p>After Reference</p>]]>"
+            "</back>"
+            "</sub-article>"
+            "</back>"
+            "</sub-article>"
+            "</back>"
+            "</article>"
         )
         xml = get_tree("<article><body></body><back></back></article>")
         data = (raw, xml)
