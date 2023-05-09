@@ -6,8 +6,10 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     AHrefPipe,
     ANamePipe,
     ASourcePipe,
+    EndPipe,
     FontSymbolPipe,
     ImgSrcPipe,
+    MainHTMLPipe,
     OlPipe,
     RemoveCDATAPipe,
     RemoveCommentPipe,
@@ -15,6 +17,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     RenameElementsPipe,
     StylePipe,
     TagsHPipe,
+    TranslatedHTMLPipe,
     UlPipe,
 )
 
@@ -27,6 +30,177 @@ def tree_tostring_decode(_str):
     return etree.tostring(_str, encoding="utf-8").decode("utf-8")
 
 
+class MockMainDocument:
+    def __init__(self):
+        self.main_html_paragraphs = {
+            "before references": [
+                {
+                    "text": "<DIV ALIGN=right><B>Saskia Sassen*</B></DIV>",
+                    "index": "1",
+                    "reference_index": "",
+                    "part": "before references",
+                },
+                {
+                    "text": "<DIV ALIGN=right><B>Saskia Sassen*</B></DIV>",
+                    "index": "2",
+                    "reference_index": "",
+                    "part": "before references",
+                },
+            ],
+            "references": [
+                {
+                    "text": (
+                        "<!-- ref --><P><B>Abu-Lughod, Janet Lippman</B> (1995):"
+                        ' "Comparing Chicago, New York y Los Angeles:'
+                        ' testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.)'
+                        " World Cities in a Worldsystem."
+                        " Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;"
+                    ),
+                    "index": "1",
+                    "reference_index": "1",
+                    "part": "references",
+                },
+                {
+                    "text": "<!-- ref --><P><B>Abu-Lughod, Janet Lippman</B> (1995)</P>",
+                    "index": "2",
+                    "reference_index": "2",
+                    "part": "references",
+                },
+            ],
+            "after references": [
+                {
+                    "text": "<p>Depois das referencias 1</p>",
+                    "index": "",
+                    "reference_index": "",
+                    "part": "after references",
+                },
+                {
+                    "text": "<p>Depois das referencias 2</p>",
+                    "index": "",
+                    "reference_index": "",
+                    "part": "after references",
+                },
+            ],
+        }
+
+
+class TestMainHTMLPipe(TestCase):
+    def test_transform(self):
+        raw = MockMainDocument()
+        expected = (
+            "<article>"
+            "<body>"
+            "<p>"
+            "<![CDATA[<DIV ALIGN=right>"
+            "<B>Saskia Sassen*</B>"
+            "</DIV>]]>"
+            "</p>"
+            "<p>"
+            "<![CDATA[<DIV ALIGN=right>"
+            "<B>Saskia Sassen*</B>"
+            "</DIV>]]>"
+            "</p>"
+            "</body>"
+            "<back>"
+            "<ref-list>"
+            '<ref id="B1">'
+            "<mixed-citation>"
+            "<![CDATA[<!-- ref -->"
+            "<P>"
+            "<B>Abu-Lughod, Janet Lippman</B> (1995):"
+            ' "Comparing Chicago, New York y Los Angeles:'
+            ' testing some world cities hypotheses". In Paul L. Knox y Peter J. Taylor (eds.)'
+            " World Cities in a Worldsystem."
+            " Cambridge, UK: Cambridge University Press, pp.171-191.    <BR>&nbsp;]]>"
+            "</mixed-citation>"
+            "</ref>"
+            '<ref id="B2">'
+            "<mixed-citation>"
+            "<![CDATA[<!-- ref -->"
+            "<P>"
+            "<B>Abu-Lughod, Janet Lippman</B> (1995)</P>]]>"
+            "</mixed-citation>"
+            "</ref>"
+            "</ref-list>"
+            "<sec>"
+            "<![CDATA[<p>Depois das referencias 1</p>]]>"
+            "</sec>"
+            "<sec>"
+            "<![CDATA[<p>Depois das referencias 2</p>]]>"
+            "</sec>"
+            "</back>"
+            "</article>"
+        )
+        xml = get_tree("<article><body></body><back></back></article>")
+        data = (raw, xml)
+
+        _, transformed_xml = MainHTMLPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class MockTranslatedDocument:
+    def __init__(self):
+        self.translated_html_by_lang = {
+            "pt": {
+                "before references": "<DIV ALIGN=right><B>Saskia Sassen*</B></DIV>",
+                "after references": "<p>Depois das referencias 1</p>",
+            },
+            "en": {
+                "before references": "<DIV ALIGN=right><B>Saskia Sassen*</B></DIV>",
+                "after references": "<p>After Reference</p>",
+            },
+        }
+
+
+class TestTranslatedHTMLPipe(TestCase):
+    def test_transform(self):
+        raw = MockTranslatedDocument()
+        expected = (
+            "<article>"
+            "<body/>"
+            "<back>"
+            '<sub-article article-type="translation" xml:lang="pt">'
+            "<body><![CDATA[<DIV ALIGN=right>"
+            "<B>Saskia Sassen*</B>"
+            "</DIV>]]>"
+            "</body>"
+            "<back>"
+            "<![CDATA[<p>Depois das referencias 1</p>]]>"
+            '<sub-article article-type="translation" xml:lang="en">'
+            "<body>"
+            "<![CDATA[<DIV ALIGN=right>"
+            "<B>Saskia Sassen*</B>"
+            "</DIV>]]>"
+            "</body>"
+            "<back>"
+            "<![CDATA[<p>After Reference</p>]]>"
+            "</back>"
+            "</sub-article>"
+            "</back>"
+            "</sub-article>"
+            "</back>"
+            "</article>"
+        )
+        xml = get_tree("<article><body></body><back></back></article>")
+        data = (raw, xml)
+
+        _, transformed_xml = TranslatedHTMLPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestEndPipe(TestCase):
+    def test_transform_remove_CDATA(self):
+        xml = get_tree("<root><body>Texto</body></root>")
+        expected = b"<root><body>Texto</body></root>"
+        data = (None, xml)
+
+        result = EndPipe().transform(data)
+        self.assertEqual(expected, result)
+
+
 class TestRemoveCDATAPipe(TestCase):
     def test_transform_remove_CDATA(self):
         xml = get_tree("<root><![CDATA[Exemplo CDATA.]]></root>")
@@ -34,11 +208,7 @@ class TestRemoveCDATAPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = RemoveCDATAPipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -49,11 +219,7 @@ class TestRemoveCommentPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = RemoveCommentPipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -79,11 +245,7 @@ class TestRemoveTagsPipe(TestCase):
         data = (None, self.xml)
 
         _, transformed_xml = RemoveTagsPipe().transform(data)
-
-        expected_element = etree.fromstring(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -128,11 +290,7 @@ class TestRenameElementsPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = RenameElementsPipe().transform(data)
-
-        expected_element = etree.fromstring(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
     def test_transform_rename_elements_empty_xml(self):
@@ -140,11 +298,7 @@ class TestRenameElementsPipe(TestCase):
         data = (None, etree.fromstring("<root/>"))
 
         _, transformed_xml = RenameElementsPipe().transform(data)
-
-        expected_element = etree.fromstring(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -157,11 +311,7 @@ class TestFontSymbolPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = FontSymbolPipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -183,22 +333,18 @@ class TestStylePipe(TestCase):
         expected = (
             "<root>"
             "<body>"
-            "<p><bold name='style_bold'>bold text</bold></p>"
-            "<p><italic name='style_italic'>italic text</italic></p>"
-            "<p><sup name='style_sup'>sup text</sup></p>"
-            "<p><sub name='style_sub'>sub text</sub></p>"
-            "<p><underline name='style_underline'>underline text</underline></p>"
+            '<p><bold name="style_bold">bold text</bold></p>'
+            '<p><italic name="style_italic">italic text</italic></p>'
+            '<p><sup name="style_sup">sup text</sup></p>'
+            '<p><sub name="style_sub">sub text</sub></p>'
+            '<p><underline name="style_underline">underline text</underline></p>'
             "</body>"
             "</root>"
         )
         data = (None, xml)
 
         _, transformed_xml = StylePipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -216,8 +362,10 @@ class TestOlPipe(TestCase):
             "</root>"
         )
         data = (raw, xml)
+
         _raw, _xml = OlPipe().transform(data)
-        result = etree.tostring(_xml, encoding="utf-8").decode("utf-8")
+        result = tree_tostring_decode(_xml)
+
         self.assertEqual(1, len(_xml.xpath(".//list[@list-type='order']")))
         self.assertEqual(expected, result)
 
@@ -238,7 +386,7 @@ class TestUlPipe(TestCase):
         data = (raw, xml)
 
         _, _xml = UlPipe().transform(data)
-        result = etree.tostring(_xml, encoding="utf-8").decode("utf-8")
+        result = tree_tostring_decode(_xml)
 
         self.assertEqual(1, len(_xml.xpath(".//list[@list-type='bullet']")))
         self.assertEqual(expected, result)
@@ -249,7 +397,7 @@ class TestTagsHPipe(TestCase):
         xml = get_tree(
             "<root><body><h1>Título 1</h1><h2>Título 2</h2><h3>Título 3</h3></body></root>"
         )
-        content = (
+        expected = (
             "<root>"
             "<body>"
             '<title content-type="h1">Título 1</title>'
@@ -259,15 +407,10 @@ class TestTagsHPipe(TestCase):
             "</root>"
         )
 
-        # Cria objeto etree a partir de content.
-        expected_element = get_tree(content)
         data = (None, xml)
 
         _, transformed_xml = TagsHPipe().transform(data)
-
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -278,11 +421,7 @@ class TestASourcePipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ASourcePipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
     def test_transform_nao_altera_nos_a_sem_src(self):
@@ -292,8 +431,6 @@ class TestASourcePipe(TestCase):
         _, transformed_xml = ASourcePipe().transform(data)
 
         expected = '<root><body><a href="foo.jpg">Imagem</a></body></root>'
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
@@ -306,11 +443,7 @@ class TestANamePipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ANamePipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
 
 
@@ -335,9 +468,5 @@ class TestImgSrcPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ImgSrcPipe().transform(data)
-
-        expected_element = get_tree(expected)
-        expected = tree_tostring_decode(expected_element)
         result = tree_tostring_decode(transformed_xml)
-
         self.assertEqual(expected, result)
