@@ -32,25 +32,26 @@ def tree_tostring_decode(_str):
 
 
 class TestAHrefPipe(TestCase):
-
     def test_transform(self):
         xml = get_tree(
             (
-                '<root>'
+                "<root>"
                 '<a href="http://scielo.org">Example</a>'
                 '<a href="mailto:james@scielo.org">James</a>'
                 '<a href="#section1">Seção 1</a>'
                 '<a href="/img/revistas/logo.jpg">Logo</a>'
-                '</root>'
+                "</root>"
             )
         )
         expected = (
-            '<root>'
-            '<ext-link xmlns:ns0="http://www.w3.org/1999/xlink" ext-link-type="uri" ns0:href="http://scielo.org">Example</ext-link>'
-            '<email/>'
+            "<root>"
+            '<ext-link xmlns:ns0="http://www.w3.org/1999/xlink" ext-link-type="uri" ns0:href="http://scielo.org">'
+            "Example"
+            "</ext-link>"
+            "<email/>"
             '<xref rid="section1">Seção 1</xref>'
             '<xref rid="img/revistas/logo.jpg">Logo</xref>'
-            '</root>'
+            "</root>"
         )
 
         data = (None, xml)
