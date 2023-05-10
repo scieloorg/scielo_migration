@@ -5,6 +5,7 @@ from lxml import etree
 from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     AHrefPipe,
     ANamePipe,
+    XRefTypePipe,
     ASourcePipe,
     EndPipe,
     FontSymbolPipe,
@@ -468,5 +469,17 @@ class TestImgSrcPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ImgSrcPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestXRefTypePipe(TestCase):
+    def test_ol_pipe(self):
+        raw = None
+        xml = get_tree('<root><body><xref rid="t1">Table 1</xref></body></root>')
+        expected = '<root><body><xref rid="t1" ref-type="table">Table 1</xref></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = XRefTypePipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
