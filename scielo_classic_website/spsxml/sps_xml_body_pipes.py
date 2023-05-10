@@ -96,18 +96,7 @@ def convert_html_to_xml_step_3(document):
     """
     ppl = plumber.Pipeline(
         StartPipe(),
-        RemoveCommentPipe(),
-        FontSymbolPipe(),
-        RemoveTagsPipe(),
-        RenameElementsPipe(),
-        StylePipe(),
-        OlPipe(),
-        UlPipe(),
-        TagsHPipe(),
-        ASourcePipe(),
-        AHrefPipe(),
-        ANamePipe(),
-        ImgSrcPipe(),
+        XRefTypePipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
