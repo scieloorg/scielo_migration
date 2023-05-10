@@ -34,7 +34,9 @@ def tree_tostring_decode(_str):
 
 
 def pretty_print(_str):
-    return etree.tostring(get_tree(_str), encoding="utf-8", pretty_print=True).decode("utf-8")
+    return etree.tostring(get_tree(_str), encoding="utf-8", pretty_print=True).decode(
+        "utf-8"
+    )
 
 
 class IncompleteDocument:

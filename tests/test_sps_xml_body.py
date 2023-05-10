@@ -31,6 +31,35 @@ def tree_tostring_decode(_str):
     return etree.tostring(_str, encoding="utf-8").decode("utf-8")
 
 
+class TestAHrefPipe(TestCase):
+
+    def test_transform(self):
+        xml = get_tree(
+            (
+                '<root>'
+                '<a href="http://scielo.org">Example</a>'
+                '<a href="mailto:james@scielo.org">James</a>'
+                '<a href="#section1">Seção 1</a>'
+                '<a href="/img/revistas/logo.jpg">Logo</a>'
+                '</root>'
+            )
+        )
+        expected = (
+            '<root>'
+            '<ext-link xmlns:ns0="http://www.w3.org/1999/xlink" ext-link-type="uri" ns0:href="http://scielo.org">Example</ext-link>'
+            '<email/>'
+            '<xref rid="section1">Seção 1</xref>'
+            '<xref rid="img/revistas/logo.jpg">Logo</xref>'
+            '</root>'
+        )
+
+        data = (None, xml)
+
+        _, transformed_xml = AHrefPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
 class MockMainDocument:
     def __init__(self):
         self.main_html_paragraphs = {
