@@ -1,4 +1,4 @@
-'''
+"""
 Criar um script separado.
 
 img
@@ -17,10 +17,11 @@ E gravar o resultado final num arquivo externo.
 
 
 document.xml_body_and_back é a lista dos resultados
-'''
-from rich import print
-from scielo_classic_website.spsxml.sps_xml_body_pipes import convert_html_to_xml
+"""
 from lxml import etree
+from rich import print
+
+from scielo_classic_website.spsxml.sps_xml_body_pipes import convert_html_to_xml
 
 
 def get_tree(xml_str):
@@ -32,11 +33,10 @@ def tree_tostring_decode(_str):
 
 
 def pretty_print(_str):
-    return etree.tostring(get_tree(_str), encoding="utf-8", pretty_print=True).decode("utf-8")
+    return etree.tostring(get_tree(_str), encoding="utf-8", pretty_print=True).decode("utf-8")  # noqa E501
 
 
 class IncompleteDocument:
-
     def __init__(self):
         self.main_html_paragraphs = {
             "before references": [
@@ -343,7 +343,7 @@ class IncompleteDocument:
 
 def save_file(filename, result):
     # tree = etree.ElementTree(result)
-    with open(filename, 'w') as f:
+    with open(filename, "w") as f:
         f.write(pretty_print(result))
 
 
@@ -356,8 +356,8 @@ def main():
 
     for i, item in enumerate(result):
         print(pretty_print(item))
-        save_file(f'/tmp/output_{i}.xml', item)
+        save_file(f"/tmp/output_{i}.xml", item)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
