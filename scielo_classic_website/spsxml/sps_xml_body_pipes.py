@@ -579,3 +579,17 @@ class ImgSrcPipe(plumber.Pipe):
         raw, xml = data
         _process(xml, "img[@src]", self.parser_node)
         return data
+
+
+class XRefTypePipe(plumber.Pipe):
+    def parser_node(self, node):
+        _node = node.get("rid")[0]
+        if _node == "t":
+            node.set("ref-type", "table")
+        elif _node == "f":
+            node.set("ref-type", "fig")
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "xref", self.parser_node)
+        return data
