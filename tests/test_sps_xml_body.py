@@ -16,6 +16,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     RemoveTagsPipe,
     RenameElementsPipe,
     StylePipe,
+    TableWrapPipe,
     TagsHPipe,
     TranslatedHTMLPipe,
     UlPipe,
@@ -474,6 +475,17 @@ class TestANamePipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ANamePipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestTableWrapPipe(TestCase):
+    def test_transform_substitui_nos_a_por_divs_com_id(self):
+        xml = get_tree('<root><body><div id="tab01"></div></body></root>')
+        expected = '<root><body><table-wrap id="tab01"/></body></root>'
+        data = (None, xml)
+
+        _, transformed_xml = TableWrapPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
 

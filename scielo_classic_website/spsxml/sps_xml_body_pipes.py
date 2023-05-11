@@ -557,6 +557,16 @@ class ANamePipe(plumber.Pipe):
         return data
 
 
+class TableWrapPipe(plumber.Pipe):
+    def parser_node(self, node):
+        node.tag = "table-wrap"
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "div[@id]", self.parser_node)
+        return data
+
+
 class ImgSrcPipe(plumber.Pipe):
     def parser_node(self, node):
         node.tag = "graphic"
