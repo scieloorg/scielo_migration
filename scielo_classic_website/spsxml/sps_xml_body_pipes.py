@@ -560,7 +560,10 @@ class ANamePipe(plumber.Pipe):
 
 class TableWrapPipe(plumber.Pipe):
     def parser_node(self, node):
-        node.tag = "table-wrap"
+        if node.get("id").startswith("t"):
+            node.tag = "table-wrap"
+        elif node.get("id").startswith("f"):
+            node.tag = "fig"
 
     def transform(self, data):
         raw, xml = data

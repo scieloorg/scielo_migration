@@ -480,9 +480,18 @@ class TestANamePipe(TestCase):
 
 
 class TestTableWrapPipe(TestCase):
-    def test_transform_substitui_nos_a_por_divs_com_id(self):
-        xml = get_tree('<root><body><div id="tab01"></div></body></root>')
-        expected = '<root><body><table-wrap id="tab01"/></body></root>'
+    def test_transform_substitui_div_id_t_por_table_wrap(self):
+        xml = get_tree('<root><body><div id="t1"></div></body></root>')
+        expected = '<root><body><table-wrap id="t1"/></body></root>'
+        data = (None, xml)
+
+        _, transformed_xml = TableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+    def test_transform_substitui_div_id_f_por_fig(self):
+        xml = get_tree('<root><body><div id="f1"></div></body></root>')
+        expected = '<root><body><fig id="f1"/></body></root>'
         data = (None, xml)
 
         _, transformed_xml = TableWrapPipe().transform(data)
