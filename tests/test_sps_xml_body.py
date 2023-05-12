@@ -16,9 +16,11 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     RemoveTagsPipe,
     RenameElementsPipe,
     StylePipe,
+    TableWrapFigPipe,
     TagsHPipe,
     TranslatedHTMLPipe,
     UlPipe,
+    XRefTypePipe,
 )
 
 
@@ -28,6 +30,36 @@ def get_tree(xml_str):
 
 def tree_tostring_decode(_str):
     return etree.tostring(_str, encoding="utf-8").decode("utf-8")
+
+
+class TestAHrefPipe(TestCase):
+    def test_transform(self):
+        xml = get_tree(
+            (
+                "<root>"
+                '<a href="http://scielo.org">Example</a>'
+                '<a href="mailto:james@scielo.org">James</a>'
+                '<a href="#section1">Seção 1</a>'
+                '<a href="/img/revistas/logo.jpg">Logo</a>'
+                "</root>"
+            )
+        )
+        expected = (
+            "<root>"
+            '<ext-link xmlns:ns0="http://www.w3.org/1999/xlink" ext-link-type="uri" ns0:href="http://scielo.org">'
+            "Example"
+            "</ext-link>"
+            "<email/>"
+            '<xref rid="section1">Seção 1</xref>'
+            '<xref rid="img/revistas/logo.jpg">Logo</xref>'
+            "</root>"
+        )
+
+        data = (None, xml)
+
+        _, transformed_xml = AHrefPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
 
 
 class MockMainDocument:
@@ -447,6 +479,60 @@ class TestANamePipe(TestCase):
         self.assertEqual(expected, result)
 
 
+class TestTableWrapFigPipe(TestCase):
+    def setUp(self):
+        self.input_xml = (
+            "<root><body>"
+            '<div id="top"></div>'
+            '<div id="t1"></div>'
+            '<div id="t2"></div>'
+            '<div id="t3"></div>'
+            '<div id="f1"></div>'
+            '<div id="f2"></div>'
+            '<div id="f3"></div>'
+            "</body></root>"
+        )
+        self.expected = (
+            "<root><body>"
+            '<div id="top"/>'
+            '<table-wrap id="t1"/>'
+            '<table-wrap id="t2"/>'
+            '<table-wrap id="t3"/>'
+            '<fig id="f1"/>'
+            '<fig id="f2"/>'
+            '<fig id="f3"/>'
+            "</body></root>"
+        )
+        self.pipe = TableWrapFigPipe()
+
+    def test_transform(self):
+        xml = get_tree(self.input_xml)
+        data = (None, xml)
+
+        _, transformed_xml = self.pipe.transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(self.expected, result)
+
+    def test_parser_node_with_id_t(self):
+        node = etree.Element("div")
+        node.set("id", "t1")
+        self.pipe.parser_node(node)
+        self.assertEqual(node.tag, "table-wrap")
+
+    def test_parser_node_with_id_f(self):
+        node = etree.Element("div")
+        node.set("id", "f1")
+        self.pipe.parser_node(node)
+        self.assertEqual(node.tag, "fig")
+
+    def test_parser_node_with_id_top(self):
+        node = etree.Element("div")
+        node.set("id", "top")
+        self.pipe.parser_node(node)
+        self.assertEqual(node.tag, "div")
+        self.assertEqual(node.get("id"), "top")
+
+
 class TestImgSrcPipe(TestCase):
     def test_transform_substitui_tags_img_por_grafico_com_href(self):
         xml = get_tree(
@@ -468,5 +554,19 @@ class TestImgSrcPipe(TestCase):
         data = (None, xml)
 
         _, transformed_xml = ImgSrcPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestXRefTypePipe(TestCase):
+    def test_ol_pipe(self):
+        raw = None
+        xml = get_tree('<root><body><xref rid="t1">Table 1</xref></body></root>')
+        expected = (
+            '<root><body><xref rid="t1" ref-type="table">Table 1</xref></body></root>'
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = XRefTypePipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)

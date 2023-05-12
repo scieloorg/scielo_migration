@@ -96,18 +96,8 @@ def convert_html_to_xml_step_3(document):
     """
     ppl = plumber.Pipeline(
         StartPipe(),
-        RemoveCommentPipe(),
-        FontSymbolPipe(),
-        RemoveTagsPipe(),
-        RenameElementsPipe(),
-        StylePipe(),
-        OlPipe(),
-        UlPipe(),
-        TagsHPipe(),
-        ASourcePipe(),
-        AHrefPipe(),
-        ANamePipe(),
-        ImgSrcPipe(),
+        XRefTypePipe(),
+        TableWrapFigPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -568,6 +558,20 @@ class ANamePipe(plumber.Pipe):
         return data
 
 
+class TableWrapFigPipe(plumber.Pipe):
+    def parser_node(self, node):
+        attrib_id = node.get("id")
+        if attrib_id and attrib_id.startswith("t") and attrib_id != "top":
+            node.tag = "table-wrap"
+        elif attrib_id and attrib_id.startswith("f"):
+            node.tag = "fig"
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "div[@id]", self.parser_node)
+        return data
+
+
 class ImgSrcPipe(plumber.Pipe):
     def parser_node(self, node):
         node.tag = "graphic"
@@ -578,4 +582,18 @@ class ImgSrcPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
         _process(xml, "img[@src]", self.parser_node)
+        return data
+
+
+class XRefTypePipe(plumber.Pipe):
+    def parser_node(self, node):
+        rid_first_char = node.get("rid")[0]
+        if rid_first_char == "t":
+            node.set("ref-type", "table")
+        elif rid_first_char == "f":
+            node.set("ref-type", "fig")
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "xref", self.parser_node)
         return data
