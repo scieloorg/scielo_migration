@@ -16,7 +16,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     RemoveTagsPipe,
     RenameElementsPipe,
     StylePipe,
-    TableWrapPipe,
+    TableWrapFigPipe,
     TagsHPipe,
     TranslatedHTMLPipe,
     UlPipe,
@@ -479,24 +479,58 @@ class TestANamePipe(TestCase):
         self.assertEqual(expected, result)
 
 
-class TestTableWrapPipe(TestCase):
-    def test_transform_substitui_div_id_t_por_table_wrap(self):
-        xml = get_tree('<root><body><div id="t1"></div></body></root>')
-        expected = '<root><body><table-wrap id="t1"/></body></root>'
+class TestTableWrapFigPipe(TestCase):
+    def setUp(self):
+        self.input_xml = (
+            "<root><body>"
+            '<div id="top"></div>'
+            '<div id="t1"></div>'
+            '<div id="t2"></div>'
+            '<div id="t3"></div>'
+            '<div id="f1"></div>'
+            '<div id="f2"></div>'
+            '<div id="f3"></div>'
+            "</body></root>"
+        )
+        self.expected = (
+            "<root><body>"
+            '<div id="top"/>'
+            '<table-wrap id="t1"/>'
+            '<table-wrap id="t2"/>'
+            '<table-wrap id="t3"/>'
+            '<fig id="f1"/>'
+            '<fig id="f2"/>'
+            '<fig id="f3"/>'
+            "</body></root>"
+        )
+        self.pipe = TableWrapFigPipe()
+
+    def test_transform(self):
+        xml = get_tree(self.input_xml)
         data = (None, xml)
 
-        _, transformed_xml = TableWrapPipe().transform(data)
+        _, transformed_xml = self.pipe.transform(data)
         result = tree_tostring_decode(transformed_xml)
-        self.assertEqual(expected, result)
+        self.assertEqual(self.expected, result)
 
-    def test_transform_substitui_div_id_f_por_fig(self):
-        xml = get_tree('<root><body><div id="f1"></div></body></root>')
-        expected = '<root><body><fig id="f1"/></body></root>'
-        data = (None, xml)
+    def test_parser_node_with_id_t(self):
+        node = etree.Element("div")
+        node.set("id", "t1")
+        self.pipe.parser_node(node)
+        self.assertEqual(node.tag, "table-wrap")
 
-        _, transformed_xml = TableWrapPipe().transform(data)
-        result = tree_tostring_decode(transformed_xml)
-        self.assertEqual(expected, result)
+    def test_parser_node_with_id_f(self):
+        node = etree.Element("div")
+        node.set("id", "f1")
+        self.pipe.parser_node(node)
+        self.assertEqual(node.tag, "fig")
+
+    def test_parser_node_with_id_top(self):
+        node = etree.Element("div")
+        node.set("id", "top")
+        self.pipe.parser_node(node)
+        self.assertEqual(node.tag, "div")
+        self.assertEqual(node.get("id"), "top")
 
 
 class TestImgSrcPipe(TestCase):

@@ -97,7 +97,7 @@ def convert_html_to_xml_step_3(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         XRefTypePipe(),
-        TableWrapPipe(),
+        TableWrapFigPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -558,11 +558,12 @@ class ANamePipe(plumber.Pipe):
         return data
 
 
-class TableWrapPipe(plumber.Pipe):
+class TableWrapFigPipe(plumber.Pipe):
     def parser_node(self, node):
-        if node.get("id").startswith("t"):
+        attrib_id = node.get("id")
+        if attrib_id and attrib_id.startswith("t") and attrib_id != "top":
             node.tag = "table-wrap"
-        elif node.get("id").startswith("f"):
+        elif attrib_id and attrib_id.startswith("f"):
             node.tag = "fig"
 
     def transform(self, data):
@@ -586,10 +587,10 @@ class ImgSrcPipe(plumber.Pipe):
 
 class XRefTypePipe(plumber.Pipe):
     def parser_node(self, node):
-        _node = node.get("rid")[0]
-        if _node == "t":
+        rid_first_char = node.get("rid")[0]
+        if rid_first_char == "t":
             node.set("ref-type", "table")
-        elif _node == "f":
+        elif rid_first_char == "f":
             node.set("ref-type", "fig")
 
     def transform(self, data):
