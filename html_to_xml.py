@@ -1,28 +1,12 @@
 """
-Criar um script separado.
-
-img
-table
-
-references
-cada paragrafo é um item da lista
-
-https://www.scielo.cl/scielo.php?script=sci_arttext&pid=S0716-97602015000100053
-
-Procurar um mais antigo
-    procurar ciencias-biologicas
-
-Converter tudo
-E gravar o resultado final num arquivo externo.
-
-
-document.xml_body_and_back é a lista dos resultados
+Converte HTML em XML.
 """
 from lxml import etree
-from rich import print
 
 from fixtures import MAIN_HTML_PARAGRAPHS, TRANSLATED_HTML_BY_LANG
-from scielo_classic_website.spsxml.sps_xml_body_pipes import convert_html_to_xml
+from scielo_classic_website.spsxml.sps_xml_body_pipes import (
+    convert_html_to_xml
+)
 
 
 def get_tree(xml_str):
