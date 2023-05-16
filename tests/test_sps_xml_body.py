@@ -300,6 +300,8 @@ class TestRenameElementsPipe(TestCase):
                 "</dl>"
                 "<br></br>"
                 "<blockquote>Quote</blockquote>"
+                "<b>Bold</b>"
+                "<i>Italic</i>"
                 "</root>"
             )
         )
@@ -318,6 +320,8 @@ class TestRenameElementsPipe(TestCase):
             "</def-list>"
             "<break/>"
             "<disp-quote>Quote</disp-quote>"
+            "<bold>Bold</bold>"
+            "<italic>Italic</italic>"
             "</root>"
         )
         data = (None, xml)

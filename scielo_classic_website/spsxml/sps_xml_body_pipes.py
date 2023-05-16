@@ -393,6 +393,8 @@ class RenameElementsPipe(plumber.Pipe):
         ("li", "list-item"),
         ("br", "break"),
         ("blockquote", "disp-quote"),
+        ("b", "bold"),
+        ("i", "italic"),
     )
 
     def transform(self, data):
