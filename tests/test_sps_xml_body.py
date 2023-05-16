@@ -7,6 +7,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     ANamePipe,
     ASourcePipe,
     EndPipe,
+    FigPipe,
     FontSymbolPipe,
     ImgSrcPipe,
     MainHTMLPipe,
@@ -559,7 +560,7 @@ class TestImgSrcPipe(TestCase):
 
 
 class TestXRefTypePipe(TestCase):
-    def test_ol_pipe(self):
+    def test_transform(self):
         raw = None
         xml = get_tree('<root><body><xref rid="t1">Table 1</xref></body></root>')
         expected = (
@@ -568,5 +569,43 @@ class TestXRefTypePipe(TestCase):
         data = (raw, xml)
 
         _, transformed_xml = XRefTypePipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestFigPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<fig id="f1"/>'
+                "</p>"
+                '<p align="center"></p>'
+                '<p align="center">'
+                '<graphic xlink:href="/fbpe/img/bres/v48/53f01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<fig id="f1">'
+            '<graphic xlink:href="/fbpe/img/bres/v48/53f01.jpg"/>'
+            "</fig>"
+            "</p>"
+            '<p align="center"/>'
+            '<p align="center"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = FigPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
