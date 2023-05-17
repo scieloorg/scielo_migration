@@ -393,6 +393,8 @@ class RenameElementsPipe(plumber.Pipe):
         ("li", "list-item"),
         ("br", "break"),
         ("blockquote", "disp-quote"),
+        ("b", "bold"),
+        ("i", "italic"),
     )
 
     def transform(self, data):
@@ -596,4 +598,30 @@ class XRefTypePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
         _process(xml, "xref", self.parser_node)
+        return data
+
+
+class FigPipe(plumber.Pipe):
+    """
+    Envolve o elemento graphic dentro de fig.
+
+    Resultado esperado:
+
+    <fig id="f1">
+        <graphic xlink:href="f1.jpg"/>
+    </fig>
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+        for sibling in parent.itersiblings():
+            # Verifica se o elemento irmão é '<p>' e se contém o elemento '<graphic>'.
+            if sibling.tag == "p" and sibling.find("graphic") is not None:
+                graphic = sibling.find("graphic")
+                node.append(graphic)
+                break
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "fig[@id]", self.parser_node)
         return data

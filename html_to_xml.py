@@ -4,9 +4,7 @@ Converte HTML em XML.
 from lxml import etree
 
 from fixtures import MAIN_HTML_PARAGRAPHS, TRANSLATED_HTML_BY_LANG
-from scielo_classic_website.spsxml.sps_xml_body_pipes import (
-    convert_html_to_xml
-)
+from scielo_classic_website.spsxml.sps_xml_body_pipes import convert_html_to_xml
 
 
 def get_tree(xml_str):
