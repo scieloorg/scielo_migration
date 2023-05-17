@@ -613,3 +613,43 @@ class TestFigPipe(TestCase):
         _, transformed_xml = FigPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
+
+    def test_transform_com_mais_paragrafos_vazios(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<fig id="f1"/>'
+                "</p>"
+                '<p align="center"></p>'
+                '<p align="center"></p>'
+                '<p align="center"></p>'
+                '<p align="center">'
+                '<graphic xlink:href="/fbpe/img/bres/v48/53f01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<fig id="f1">'
+            '<graphic xlink:href="/fbpe/img/bres/v48/53f01.jpg"/>'
+            "</fig>"
+            "</p>"
+            '<p align="center"/>'
+            '<p align="center"/>'
+            '<p align="center"/>'
+            '<p align="center"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = FigPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)

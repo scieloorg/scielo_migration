@@ -604,13 +604,22 @@ class XRefTypePipe(plumber.Pipe):
 class FigPipe(plumber.Pipe):
     """
     Envolve o elemento graphic dentro de fig.
+
+    Resultado esperado:
+
+    <fig id="f1">
+        <graphic xlink:href="f1.jpg"/>
+    </fig>
     """
 
     def parser_node(self, node):
         parent = node.getparent()
-        p_graphic = parent.getnext().getnext()
-        graphic = p_graphic.getchildren()[0]
-        node.append(graphic)
+        for sibling in parent.itersiblings():
+            # Verifica se o elemento irmão é '<p>' e se contém o elemento '<graphic>'.
+            if sibling.tag == "p" and sibling.find("graphic") is not None:
+                graphic = sibling.find("graphic")
+                node.append(graphic)
+                break
 
     def transform(self, data):
         raw, xml = data
