@@ -625,3 +625,28 @@ class FigPipe(plumber.Pipe):
         raw, xml = data
         _process(xml, "fig[@id]", self.parser_node)
         return data
+
+
+class TableWrapPipe(plumber.Pipe):
+    """
+    Envolve o elemento graphic dentro de table-wrap.
+
+    Resultado esperado:
+
+    <table-wrap id="t1">
+        <graphic xlink:href="t1.jpg"/>
+    </table-wrap>
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+        for sibling in parent.itersiblings():
+            if sibling.tag == "p" and sibling.find("graphic") is not None:
+                graphic = sibling.find("graphic")
+                node.append(graphic)
+                break
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "table-wrap[@id]", self.parser_node)
+        return data

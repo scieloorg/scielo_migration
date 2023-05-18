@@ -18,6 +18,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     RenameElementsPipe,
     StylePipe,
     TableWrapFigPipe,
+    TableWrapPipe,
     TagsHPipe,
     TranslatedHTMLPipe,
     UlPipe,
@@ -651,5 +652,47 @@ class TestFigPipe(TestCase):
         data = (raw, xml)
 
         _, transformed_xml = FigPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestTableWrapPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<table-wrap id="t1"/>'
+                "</p>"
+                '<p align="center"> </p>'
+                '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
+                '<p align="center">'
+                '<graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            '<graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>'
+            "</table-wrap>"
+            "</p>"
+            '<p align="center"> </p>'
+            '<p align="center">'
+            "<b>Table 1 Composition and energy provide by the experimental diets</b>"
+            "</p>"
+            '<p align="center"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = TableWrapPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
