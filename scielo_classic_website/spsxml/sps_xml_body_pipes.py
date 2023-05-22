@@ -267,7 +267,7 @@ class MainHTMLPipe(plumber.Pipe):
             # adiciona ao elemento `back`
             back.append(sec)
 
-        print("back/sec %i" % len(back.findall("sec")))
+        # print("back/sec %i" % len(back.findall("sec")))
 
         return data
 
