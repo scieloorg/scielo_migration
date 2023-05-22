@@ -23,6 +23,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     TranslatedHTMLPipe,
     UlPipe,
     XRefTypePipe,
+    RemoveEmptyPTagPipe,
 )
 
 
@@ -735,4 +736,36 @@ class TestTableWrapPipe(TestCase):
 
         _, transformed_xml = TableWrapPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestRemoveEmptyPTagPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">Lorem ipsum</p>'
+                '<p align="center"> </p>'
+                '<p align="center"> </p>'
+                '<p align="center"> </p>'
+                '<p align="center">The quick brown fox jumps over the lazy dog.</p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">Lorem ipsum</p>'
+            '<p align="center">The quick brown fox jumps over the lazy dog.</p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
         self.assertEqual(expected, result)

@@ -661,3 +661,21 @@ class TableWrapPipe(plumber.Pipe):
         raw, xml = data
         _process(xml, "table-wrap[@id]", self.parser_node)
         return data
+
+
+class RemoveEmptyPTagPipe(plumber.Pipe):
+    """
+    Remove parágrafo vazio, ou que contenha somente espaços em branco.
+
+    Ex: <p> </p>
+    """
+
+    def parser_node(self, node):
+        if node.tag == 'p' and not node.text.strip() and not node.findall('*'):
+            parent = node.getparent()
+            parent.remove(node)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "p", self.parser_node)
+        return data
