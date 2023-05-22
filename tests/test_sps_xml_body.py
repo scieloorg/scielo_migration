@@ -696,3 +696,43 @@ class TestTableWrapPipe(TestCase):
         _, transformed_xml = TableWrapPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
+
+    def test_transform_with_table(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<table-wrap id="t1"/>'
+                "</p>"
+                '<p align="center"> </p>'
+                '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
+                '<p align="center">'
+                "<table><tbody><tr><td>Um</td></tr></tbody></table>"
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            '<table><tbody><tr><td>Um</td></tr></tbody></table>'
+            "</table-wrap>"
+            "</p>"
+            '<p align="center"> </p>'
+            '<p align="center">'
+            "<b>Table 1 Composition and energy provide by the experimental diets</b>"
+            "</p>"
+            '<p align="center"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = TableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)

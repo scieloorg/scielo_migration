@@ -636,15 +636,26 @@ class TableWrapPipe(plumber.Pipe):
     <table-wrap id="t1">
         <graphic xlink:href="t1.jpg"/>
     </table-wrap>
+
+    ou
+
+    <table-wrap id="t1">
+        <table/>
+    </table-wrap>
     """
 
     def parser_node(self, node):
         parent = node.getparent()
         for sibling in parent.itersiblings():
-            if sibling.tag == "p" and sibling.find("graphic") is not None:
-                graphic = sibling.find("graphic")
-                node.append(graphic)
-                break
+            if sibling.tag == "p":
+                if sibling.find("graphic") is not None:
+                    graphic = sibling.find("graphic")
+                    node.append(graphic)
+                    break
+                elif sibling.find("table") is not None:
+                    table = sibling.find("table")
+                    node.append(table)
+                    break
 
     def transform(self, data):
         raw, xml = data
