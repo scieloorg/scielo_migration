@@ -741,7 +741,8 @@ class TestTableWrapPipe(TestCase):
 
 
 class TestRemoveEmptyPTagPipe(TestCase):
-    def test_transform(self):
+    def test_transform1(self):
+        # Testa a remoção de <p></p> vazios.
         raw = None
         xml = get_tree(
             (
@@ -761,6 +762,89 @@ class TestRemoveEmptyPTagPipe(TestCase):
             "<body>"
             '<p align="center">Lorem ipsum</p>'
             '<p align="center">The quick brown fox jumps over the lazy dog.</p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform2(self):
+        # Testa se o graphic se mantem.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center"><graphic></graphic></p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center"><graphic/></p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform3(self):
+        # Testa se um texto formatado dentro de p se mantém, no caso o bold.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">Lorem ipsum</p>'
+                '<p align="center"> </p>'
+                '<p align="center"> </p>'
+                '<p align="center"> </p>'
+                '<p align="center">The quick <b>brown</b> fox jumps over the lazy dog.</p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">Lorem ipsum</p>'
+            '<p align="center">The quick <b>brown</b> fox jumps over the lazy dog.</p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform4(self):
+        # testa um p dentro de outro p.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center"><p>Inner</p></p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center"><p>Inner</p></p>'
             "</body>"
             "</root>"
         )
