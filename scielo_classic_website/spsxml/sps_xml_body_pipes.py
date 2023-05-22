@@ -671,11 +671,38 @@ class RemoveEmptyPTagPipe(plumber.Pipe):
     """
 
     def parser_node(self, node):
-        if node.tag == 'p' and not node.text.strip() and not node.findall('*'):
+        if node.tag == "p" and not node.text.strip() and not node.findall("*"):
             parent = node.getparent()
             parent.remove(node)
 
     def transform(self, data):
         raw, xml = data
         _process(xml, "p", self.parser_node)
+        return data
+
+
+class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
+    """
+    Remove parent de graphic se parent.tag == 'p'.
+
+    Antes:
+
+    <p align="center">
+      <graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>
+    </p>
+
+    Depois:
+
+    <graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+        if parent is not None and parent.tag == "p":
+            grand_parent = parent.getparent()
+            grand_parent.replace(parent, node)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "graphic", self.parser_node)
         return data

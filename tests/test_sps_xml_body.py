@@ -14,6 +14,8 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     OlPipe,
     RemoveCDATAPipe,
     RemoveCommentPipe,
+    RemoveEmptyPTagPipe,
+    RemoveParentPTagOfGraphicPipe,
     RemoveTagsPipe,
     RenameElementsPipe,
     StylePipe,
@@ -23,7 +25,6 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     TranslatedHTMLPipe,
     UlPipe,
     XRefTypePipe,
-    RemoveEmptyPTagPipe,
 )
 
 
@@ -721,7 +722,7 @@ class TestTableWrapPipe(TestCase):
             "<body>"
             '<p align="center">'
             '<table-wrap id="t1">'
-            '<table><tbody><tr><td>Um</td></tr></tbody></table>'
+            "<table><tbody><tr><td>Um</td></tr></tbody></table>"
             "</table-wrap>"
             "</p>"
             '<p align="center"> </p>'
@@ -766,6 +767,35 @@ class TestRemoveEmptyPTagPipe(TestCase):
         data = (raw, xml)
 
         _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestRemoveParentPTagOfGraphicPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveParentPTagOfGraphicPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
