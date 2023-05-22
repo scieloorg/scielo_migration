@@ -855,6 +855,32 @@ class TestRemoveEmptyPTagPipe(TestCase):
 
         self.assertEqual(expected, result)
 
+    def test_transform5(self):
+        # testa um p dentro de outro p, onde o segundo é vazio.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center"><p> </p></p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
 
 class TestRemoveParentPTagOfGraphicPipe(TestCase):
     def test_transform(self):
