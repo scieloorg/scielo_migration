@@ -10,6 +10,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     FigPipe,
     FontSymbolPipe,
     ImgSrcPipe,
+    InlineGraphicPipe,
     MainHTMLPipe,
     OlPipe,
     RemoveCDATAPipe,
@@ -906,6 +907,73 @@ class TestRemoveParentPTagOfGraphicPipe(TestCase):
         data = (raw, xml)
 
         _, transformed_xml = RemoveParentPTagOfGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestInlineGraphicPipe(TestCase):
+    def test_transform1(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><graphic/></p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><graphic/></p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform2(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><graphic id="g1" xlink:href="d1"/>: Rotational</p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><inline-graphic id="g1" xlink:href="d1"/>: Rotational</p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform3(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p>Models to approximate the bound frequencies as waves in X→M (<graphic id="g1" xlink:href="d1"/></p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p>Models to approximate the bound frequencies as waves in X→M (<inline-graphic id="g1" xlink:href="d1"/></p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform4(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><italic>y</italic> direction, <graphic id="g3" xlink:href="d3"/></p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><italic>y</italic> direction, <inline-graphic id="g3" xlink:href="d3"/></p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform5(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p>Models to approximate the bound frequencies as waves in X→M (<graphic id="g1" xlink:href="d1"/>: Rotational, <graphic id="g2" xlink:href="d2"/>: Vibrate in <italic>y</italic> direction, <graphic id="g3" xlink:href="d3"/>: Vibrate in <italic>x</italic> direction, <graphic id="g4" xlink:href="d4"/>: Vibrate mainly in <italic>y</italic> direction including a small portion of vibration in <italic>x</italic> direction, <graphic id="g5" xlink:href="d5"/>: Vibrate mainly in <italic>x</italic> direction including a small portion of vibration in <italic>y</italic> direction).</p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p>Models to approximate the bound frequencies as waves in X→M (<inline-graphic id="g1" xlink:href="d1"/>: Rotational, <inline-graphic id="g2" xlink:href="d2"/>: Vibrate in <italic>y</italic> direction, <inline-graphic id="g3" xlink:href="d3"/>: Vibrate in <italic>x</italic> direction, <inline-graphic id="g4" xlink:href="d4"/>: Vibrate mainly in <italic>y</italic> direction including a small portion of vibration in <italic>x</italic> direction, <inline-graphic id="g5" xlink:href="d5"/>: Vibrate mainly in <italic>x</italic> direction including a small portion of vibration in <italic>y</italic> direction).</p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)

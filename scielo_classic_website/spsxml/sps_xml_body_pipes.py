@@ -714,3 +714,39 @@ class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
         raw, xml = data
         _process(xml, "graphic", self.parser_node)
         return data
+
+
+class InlineGraphicPipe(plumber.Pipe):
+    """
+    Crie um pipe para converter graphic em inline-graphic.
+    Estes graphic são aqueles cujo parent tem
+    text (parent.text and parent.text.strip() e / ou
+    graphic tem tail (graphic.tail and graphic.tail.strip()) e / ou
+    nó anterior tem tail(graphic.getprevious() and graphic.getprevious().tail.strip())
+    """
+
+    def graphic_to_inline(self, node):
+        node.tag = "inline-graphic"
+
+    def parser_node(self, node):
+        if node.text and node.text.strip():
+            _process(node, "graphic", self.graphic_to_inline)
+            return
+
+        for child in node.getchildren():
+            if child.tag != "graphic":
+                continue
+
+            if child.tail and child.tail.strip():
+                child.tag = "inline-graphic"
+                continue
+
+            previous = child.getprevious()
+            if previous is not None and previous.tail and previous.tail.strip():
+                child.tag = "inline-graphic"
+                continue
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "p[graphic]", self.parser_node)
+        return data
