@@ -938,13 +938,12 @@ class TestRemoveParentPTagOfGraphicPipe(TestCase):
             (
                 '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
                 "<body>"
-                "<div>"
+                "<p>"
                 '<p align="center">'
                 '<graphic xlink:href="t01.jpg"/>'
                 "</p>"
                 '<p align="center"> </p>'
-                "<div/>"
-                "</div>"
+                "</p>"
                 '<p align="center"> </p>'
                 "</body>"
                 "</root>"
@@ -953,11 +952,10 @@ class TestRemoveParentPTagOfGraphicPipe(TestCase):
         expected = (
             '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
             "<body>"
-            "<div>"
+            "<p>"
             '<graphic xlink:href="t01.jpg"/>'
             '<p align="center"> </p>'
-            "<div/>"
-            "</div>"
+            "</p>"
             '<p align="center"> </p>'
             "</body>"
             "</root>"
@@ -1042,12 +1040,7 @@ class TestInlineGraphicPipe(TestCase):
             (
                 '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
                 "<body>"
-                "<p>"
-                '<graphic id="g1" xlink:href="d1"/> tail 1'
-                '<graphic id="g2" xlink:href="d2"/> tail 2'
-                '<graphic id="g3" xlink:href="d3"/> tail 3'
-                '<graphic id="g4" xlink:href="d4"/> tail 4'
-                "</p>"
+                '<p><graphic/>... <graphic/><graphic/><graphic/>....</p>'
                 "</body>"
                 "</root>"
             )
@@ -1055,12 +1048,7 @@ class TestInlineGraphicPipe(TestCase):
         expected = (
             '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
             "<body>"
-            "<p>"
-            '<inline-graphic id="g1" xlink:href="d1"/> tail 1'
-            '<inline-graphic id="g2" xlink:href="d2"/> tail 2'
-            '<inline-graphic id="g3" xlink:href="d3"/> tail 3'
-            '<inline-graphic id="g4" xlink:href="d4"/> tail 4'
-            "</p>"
+            '<p><inline-graphic/>... <inline-graphic/><inline-graphic/><inline-graphic/>....</p>'
             "</body>"
             "</root>"
         )

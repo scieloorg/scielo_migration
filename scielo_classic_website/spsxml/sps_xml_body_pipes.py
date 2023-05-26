@@ -774,18 +774,14 @@ class InlineGraphicPipe(plumber.Pipe):
             _process(node, "graphic", self.graphic_to_inline)
             return
 
+        has_text = False
         for child in node.getchildren():
-            if child.tag != "graphic":
-                continue
-
             if child.tail and child.tail.strip():
-                child.tag = "inline-graphic"
-                continue
+                has_text = True
+                break
 
-            previous = child.getprevious()
-            if previous is not None and previous.tail and previous.tail.strip():
-                child.tag = "inline-graphic"
-                continue
+        if has_text:
+            _process(node, "graphic", self.graphic_to_inline)
 
     def transform(self, data):
         raw, xml = data
