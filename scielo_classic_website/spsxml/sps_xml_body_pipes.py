@@ -696,8 +696,10 @@ class RemoveEmptyPTagPipe(plumber.Pipe):
     """
 
     def parser_node(self, node):
+        # Verifica se existe algum filho no node.
         if len(node.getchildren()):
             return None
+        # Verifica se node.text tem conteúdo.
         if node.text.strip():
             return None
 
