@@ -634,13 +634,35 @@ class TableWrapPipe(plumber.Pipe):
     """
     Envolve o elemento graphic dentro de table-wrap.
 
+    Antes:
+
+    <p align="center">
+        <table-wrap id="t1"/>
+    </p>
+    <p align="center"> </p>
+    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
+    <p align="center">
+        <graphic xlink:href="t01.jpg"/>
+    </p>
+
     Resultado esperado:
 
     <table-wrap id="t1">
-        <graphic xlink:href="t1.jpg"/>
+        <graphic xlink:href="t01.jpg"/>
     </table-wrap>
 
-    ou
+    Antes:
+
+    <p align="center">
+        <table-wrap id="t1"/>
+    </p>
+    <p align="center"> </p>
+    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
+    <p align="center">
+        <table/>
+    </p>
+
+    Depois:
 
     <table-wrap id="t1">
         <table/>
