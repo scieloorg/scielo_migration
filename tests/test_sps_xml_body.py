@@ -882,6 +882,35 @@ class TestRemoveEmptyPTagPipe(TestCase):
 
         self.assertEqual(expected, result)
 
+    def test_transform6(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                "<div>"
+                '<p> </p> The quick brown fox jumps over the lazy dog.'
+                "</div>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<div>"
+            ' The quick brown fox jumps over the lazy dog.'
+            "</div>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
 
 class TestRemoveParentPTagOfGraphicPipe(TestCase):
     def test_transform(self):

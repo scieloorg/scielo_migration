@@ -703,8 +703,12 @@ class RemoveEmptyPTagPipe(plumber.Pipe):
         if node.text.strip():
             return None
 
+        tail = node.tail
         parent = node.getparent()
         parent.remove(node)
+
+        # Adiciona o tail no parent.
+        parent.text = tail
 
     def transform(self, data):
         raw, xml = data
