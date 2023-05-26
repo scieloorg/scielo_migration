@@ -1043,3 +1043,38 @@ class TestInlineGraphicPipe(TestCase):
         result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
+
+    def test_transform6(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                "<p>"
+                '<graphic id="g1" xlink:href="d1"/> tail 1'
+                '<graphic id="g2" xlink:href="d2"/> tail 2'
+                '<graphic id="g3" xlink:href="d3"/> tail 3'
+                '<graphic id="g4" xlink:href="d4"/> tail 4'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<p>"
+            '<inline-graphic id="g1" xlink:href="d1"/> tail 1'
+            '<inline-graphic id="g2" xlink:href="d2"/> tail 2'
+            '<inline-graphic id="g3" xlink:href="d3"/> tail 3'
+            '<inline-graphic id="g4" xlink:href="d4"/> tail 4'
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
