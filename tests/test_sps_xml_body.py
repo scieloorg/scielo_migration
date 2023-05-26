@@ -672,7 +672,7 @@ class TestTableWrapPipe(TestCase):
                 '<p align="center"> </p>'
                 '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
                 '<p align="center">'
-                '<graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>'
+                '<graphic xlink:href="t01.jpg"/>'
                 "</p>"
                 "</body>"
                 "</root>"
@@ -683,7 +683,7 @@ class TestTableWrapPipe(TestCase):
             "<body>"
             '<p align="center">'
             '<table-wrap id="t1">'
-            '<graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>'
+            '<graphic xlink:href="t01.jpg"/>'
             "</table-wrap>"
             "</p>"
             '<p align="center"> </p>'
@@ -889,7 +889,7 @@ class TestRemoveEmptyPTagPipe(TestCase):
                 '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
                 "<body>"
                 "<div>"
-                '<p> </p> The quick brown fox jumps over the lazy dog.'
+                "<p> </p> The quick brown fox jumps over the lazy dog."
                 "</div>"
                 "</body>"
                 "</root>"
@@ -899,7 +899,7 @@ class TestRemoveEmptyPTagPipe(TestCase):
             '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
             "<body>"
             "<div>"
-            ' The quick brown fox jumps over the lazy dog.'
+            " The quick brown fox jumps over the lazy dog."
             "</div>"
             "</body>"
             "</root>"
@@ -913,14 +913,14 @@ class TestRemoveEmptyPTagPipe(TestCase):
 
 
 class TestRemoveParentPTagOfGraphicPipe(TestCase):
-    def test_transform(self):
+    def test_transform1(self):
         raw = None
         xml = get_tree(
             (
                 '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
                 "<body>"
                 '<p align="center">'
-                '<graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>'
+                '<graphic xlink:href="t01.jpg"/>'
                 "</p>"
                 "</body>"
                 "</root>"
@@ -929,7 +929,44 @@ class TestRemoveParentPTagOfGraphicPipe(TestCase):
         expected = (
             '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
             "<body>"
-            '<graphic xlink:href="/fbpe/img/bres/v48/53t01.jpg"/>'
+            '<graphic xlink:href="t01.jpg"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveParentPTagOfGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform2(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                "<div>"
+                '<p align="center">'
+                '<graphic xlink:href="t01.jpg"/>'
+                "</p>"
+                '<p align="center"> </p>'
+                "<div/>"
+                "</div>"
+                '<p align="center"> </p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<div>"
+            '<graphic xlink:href="t01.jpg"/>'
+            '<p align="center"> </p>'
+            "<div/>"
+            "</div>"
+            '<p align="center"> </p>'
             "</body>"
             "</root>"
         )

@@ -732,18 +732,22 @@ class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
     """
 
     def parser_node(self, node):
+        # Pega o parent do node.
         parent = node.getparent()
 
-        if parent is None:
-            return None
+        # Pega o primeiro filho do node.
+        graphic = node.getchildren()[0]
 
-        if parent.tag == "p":
-            grand_parent = parent.getparent()
-            grand_parent.replace(parent, node)
+        # Adiciona o graphic em parent.
+        index = parent.index(node)
+        parent.insert(index, graphic)
+
+        # Remove o node. <p> com todos os filhos.
+        parent.remove(node)
 
     def transform(self, data):
         raw, xml = data
-        _process(xml, "graphic", self.parser_node)
+        _process(xml, "p[graphic]", self.parser_node)
         return data
 
 
