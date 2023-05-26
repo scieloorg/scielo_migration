@@ -97,7 +97,9 @@ def convert_html_to_xml_step_3(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         XRefTypePipe(),
-        TableWrapFigPipe(),
+        RemoveEmptyPTagPipe(),
+        InlineGraphicPipe(),
+        RemoveParentPTagOfGraphicPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -124,6 +126,7 @@ def convert_html_to_xml_step_4(document):
     """
     ppl = plumber.Pipeline(
         StartPipe(),
+        TableWrapFigPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
