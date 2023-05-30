@@ -14,6 +14,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     InlineGraphicPipe,
     InsertCaptionAndTitleInTableWrapPipe,
     InsertGraphicInTableWrapPipe,
+    InsertTableWrapFootInTableWrapPipe,
     MainHTMLPipe,
     OlPipe,
     RemoveCDATAPipe,
@@ -1093,5 +1094,40 @@ class TestInsertCaptionAndTitleInTableWrapPipe(TestCase):
         data = (raw, xml)
 
         _, transformed_xml = InsertCaptionAndTitleInTableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestInsertTableWrapFootInTableWrapPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<table-wrap id="t1"/>'
+                "</p>"
+                "<p>The quick brown fox jumps over the lazy dog.</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            "<table-wrap-foot>"
+            "<p>The quick brown fox jumps over the lazy dog.</p>"
+            "</table-wrap-foot>"
+            "</table-wrap>"
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InsertTableWrapFootInTableWrapPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)

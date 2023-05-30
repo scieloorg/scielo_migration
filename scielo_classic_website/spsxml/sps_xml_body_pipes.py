@@ -179,6 +179,7 @@ def convert_html_to_xml_step_6(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         InsertGraphicInTableWrapPipe(),
+        InsertTableWrapFootInTableWrapPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -883,6 +884,26 @@ class InsertCaptionAndTitleInTableWrapPipe(plumber.Pipe):
 
         # Remove next_node
         parent.getparent().remove(next_node)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "table-wrap[@id]", self.parser_node)
+        return data
+
+
+class InsertTableWrapFootInTableWrapPipe(plumber.Pipe):
+    """
+    Insere table-wrap-foot em table-wrap.
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+        next_node = parent.getnext()
+
+        table_wrap_foot = ET.Element("table-wrap-foot")
+        table_wrap_foot.append(next_node)
+
+        node.append(table_wrap_foot)
 
     def transform(self, data):
         raw, xml = data
