@@ -766,7 +766,6 @@ class TableWrapPipe(plumber.Pipe):
     """
 
     def parser_node(self, node):
-        # table_wraper = node.getchildren()[0]
         parent = node.getparent()
 
         for sibling in parent.itersiblings():
@@ -779,20 +778,6 @@ class TableWrapPipe(plumber.Pipe):
                     table = sibling.find("table")
                     node.append(table)
                     break
-
-        # for sibling in node.itersiblings():
-        #     if sibling.find("graphic") is not None:
-        #         graphic = sibling.find("graphic")
-        #         table_wraper.append(graphic)
-        #         break
-        #     elif sibling.find("table") is not None:
-        #         table = sibling.find("table")
-        #         table_wraper.append(table)
-        #         break
-
-        # index = parent.index(node)
-        # parent.insert(index, table_wraper)
-        # parent.remove(node)
 
     def transform(self, data):
         raw, xml = data

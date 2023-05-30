@@ -1048,7 +1048,7 @@ class TestInlineGraphicPipe(TestCase):
             (
                 '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
                 "<body>"
-                '<p><graphic/>... <graphic/><graphic/><graphic/>....</p>'
+                "<p><graphic/>... <graphic/><graphic/><graphic/>....</p>"
                 "</body>"
                 "</root>"
             )
@@ -1056,7 +1056,7 @@ class TestInlineGraphicPipe(TestCase):
         expected = (
             '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
             "<body>"
-            '<p><inline-graphic/>... <inline-graphic/><inline-graphic/><inline-graphic/>....</p>'
+            "<p><inline-graphic/>... <inline-graphic/><inline-graphic/><inline-graphic/>....</p>"
             "</body>"
             "</root>"
         )
