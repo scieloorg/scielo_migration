@@ -127,7 +127,8 @@ def convert_html_to_xml_step_4(document):
     """
     ppl = plumber.Pipeline(
         StartPipe(),
-        TableWrapFigPipe(),
+        InsertGraphicInTableWrap(),
+        DivIdToTableWrap(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -564,20 +565,6 @@ class ANamePipe(plumber.Pipe):
         return data
 
 
-class TableWrapFigPipe(plumber.Pipe):
-    def parser_node(self, node):
-        attrib_id = node.get("id")
-        if attrib_id and attrib_id.startswith("t") and attrib_id != "top":
-            node.tag = "table-wrap"
-        elif attrib_id and attrib_id.startswith("f"):
-            node.tag = "fig"
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "div[@id]", self.parser_node)
-        return data
-
-
 class ImgSrcPipe(plumber.Pipe):
     def parser_node(self, node):
         node.tag = "graphic"
@@ -628,6 +615,65 @@ class FigPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
         _process(xml, "fig[@id]", self.parser_node)
+        return data
+
+
+class InsertGraphicInTableWrap(plumber.Pipe):
+    """
+    Envolve o elemento graphic dentro de table-wrap.
+
+    Antes:
+
+    <p align="center">
+        <table-wrap id="t1"/>
+    </p>
+    <p align="center"> </p>
+    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
+    <p align="center">
+        <graphic xlink:href="t01.jpg"/>
+    </p>
+
+    Resultado esperado:
+
+    <table-wrap id="t1">
+        <graphic xlink:href="t01.jpg"/>
+    </table-wrap>
+
+    Antes:
+
+    <p align="center">
+        <table-wrap id="t1"/>
+    </p>
+    <p align="center"> </p>
+    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
+    <p align="center">
+        <table/>
+    </p>
+
+    Depois:
+
+    <table-wrap id="t1">
+        <table/>
+    </table-wrap>
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+
+        for sibling in parent.itersiblings():
+            if sibling.tag == "p":
+                if sibling.find("graphic") is not None:
+                    graphic = sibling.find("graphic")
+                    node.append(graphic)
+                    break
+                elif sibling.find("table") is not None:
+                    table = sibling.find("table")
+                    node.append(table)
+                    break
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "table-wrap[@id]", self.parser_node)
         return data
 
 
@@ -726,60 +772,19 @@ class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
         return data
 
 
-class TableWrapPipe(plumber.Pipe):
+class DivIdToTableWrap(plumber.Pipe):
     """
-    Envolve o elemento graphic dentro de table-wrap.
-
-    Antes:
-
-    <p align="center">
-        <table-wrap id="t1"/>
-    </p>
-    <p align="center"> </p>
-    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
-    <p align="center">
-        <graphic xlink:href="t01.jpg"/>
-    </p>
-
-    Resultado esperado:
-
-    <table-wrap id="t1">
-        <graphic xlink:href="t01.jpg"/>
-    </table-wrap>
-
-    Antes:
-
-    <p align="center">
-        <table-wrap id="t1"/>
-    </p>
-    <p align="center"> </p>
-    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
-    <p align="center">
-        <table/>
-    </p>
-
-    Depois:
-
-    <table-wrap id="t1">
-        <table/>
-    </table-wrap>
+    Transforma div em table-wrap ou fig.
     """
 
     def parser_node(self, node):
-        parent = node.getparent()
-
-        for sibling in parent.itersiblings():
-            if sibling.tag == "p":
-                if sibling.find("graphic") is not None:
-                    graphic = sibling.find("graphic")
-                    node.append(graphic)
-                    break
-                elif sibling.find("table") is not None:
-                    table = sibling.find("table")
-                    node.append(table)
-                    break
+        attrib_id = node.get("id")
+        if attrib_id and attrib_id.startswith("t") and attrib_id != "top":
+            node.tag = "table-wrap"
+        elif attrib_id and attrib_id.startswith("f"):
+            node.tag = "fig"
 
     def transform(self, data):
         raw, xml = data
-        _process(xml, "table-wrap[@id]", self.parser_node)
+        _process(xml, "div[@id]", self.parser_node)
         return data

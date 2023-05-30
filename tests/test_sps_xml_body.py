@@ -6,11 +6,13 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     AHrefPipe,
     ANamePipe,
     ASourcePipe,
+    DivIdToTableWrap,
     EndPipe,
     FigPipe,
     FontSymbolPipe,
     ImgSrcPipe,
     InlineGraphicPipe,
+    InsertGraphicInTableWrap,
     MainHTMLPipe,
     OlPipe,
     RemoveCDATAPipe,
@@ -20,8 +22,6 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     RemoveTagsPipe,
     RenameElementsPipe,
     StylePipe,
-    TableWrapFigPipe,
-    TableWrapPipe,
     TagsHPipe,
     TranslatedHTMLPipe,
     UlPipe,
@@ -488,7 +488,7 @@ class TestANamePipe(TestCase):
         self.assertEqual(expected, result)
 
 
-class TestTableWrapFigPipe(TestCase):
+class TestDivIdToTableWrap(TestCase):
     def setUp(self):
         self.input_xml = (
             "<root><body>"
@@ -512,7 +512,7 @@ class TestTableWrapFigPipe(TestCase):
             '<fig id="f3"/>'
             "</body></root>"
         )
-        self.pipe = TableWrapFigPipe()
+        self.pipe = DivIdToTableWrap()
 
     def test_transform(self):
         xml = get_tree(self.input_xml)
@@ -659,7 +659,7 @@ class TestFigPipe(TestCase):
         self.assertEqual(expected, result)
 
 
-class TestTableWrapPipe(TestCase):
+class TestInsertGraphicInTableWrap(TestCase):
     def test_transform(self):
         raw = None
         xml = get_tree(
@@ -696,7 +696,7 @@ class TestTableWrapPipe(TestCase):
         )
         data = (raw, xml)
 
-        _, transformed_xml = TableWrapPipe().transform(data)
+        _, transformed_xml = InsertGraphicInTableWrap().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
 
@@ -736,7 +736,7 @@ class TestTableWrapPipe(TestCase):
         )
         data = (raw, xml)
 
-        _, transformed_xml = TableWrapPipe().transform(data)
+        _, transformed_xml = InsertGraphicInTableWrap().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
 
