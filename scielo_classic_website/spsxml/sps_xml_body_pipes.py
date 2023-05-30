@@ -15,6 +15,7 @@ def convert_html_to_xml(document):
     document.xml_body_and_back.append(convert_html_to_xml_step_2(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_3(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_4(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_5(document))
 
 
 def convert_html_to_xml_step_1(document):
@@ -109,9 +110,32 @@ def convert_html_to_xml_step_3(document):
 
 def convert_html_to_xml_step_4(document):
     """
-    Converte o XML obtido no passo 2,
-    remove o conteúdo de CDATA e converte as tags HTML nas XML correspondentes
-    sem preocupação em manter a hierarquia exigida no XML
+    Converte o XML obtido no passo 3,
+
+    Parameters
+    ----------
+    document: Document
+
+    ((address | alternatives | answer | answer-set | array |
+    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
+    fig | fig-group | graphic | media | preformat | question | question-wrap |
+    question-wrap-group | supplementary-material | table-wrap |
+    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
+    tex-math | mml:math | p | related-article | related-object | disp-quote |
+    speech | statement | verse-group)*, (sec)*, sig-block?)
+    """
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        DivIdToTableWrap(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_5(document):
+    """
+    Converte o XML obtido no passo 4,
 
     Parameters
     ----------
@@ -128,7 +152,6 @@ def convert_html_to_xml_step_4(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         InsertGraphicInTableWrap(),
-        DivIdToTableWrap(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
