@@ -631,6 +631,101 @@ class FigPipe(plumber.Pipe):
         return data
 
 
+class RemoveEmptyPTagPipe(plumber.Pipe):
+    """
+    Remove parágrafo vazio, ou que contenha somente espaços em branco.
+
+    Ex: <p> </p>
+    """
+
+    def parser_node(self, node):
+        # Verifica se existe algum filho no node.
+        if len(node.getchildren()):
+            return None
+        # Verifica se node.text tem conteúdo.
+        if node.text.strip():
+            return None
+
+        tail = node.tail
+        parent = node.getparent()
+        parent.remove(node)
+
+        # Adiciona o tail no parent.
+        parent.text = tail
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "p", self.parser_node)
+        return data
+
+
+class InlineGraphicPipe(plumber.Pipe):
+    """
+    Crie um pipe para converter graphic em inline-graphic.
+    Estes graphic são aqueles cujo parent tem
+    text (parent.text and parent.text.strip() e / ou
+    graphic tem tail (graphic.tail and graphic.tail.strip()) e / ou
+    nó anterior tem tail(graphic.getprevious() and graphic.getprevious().tail.strip())
+    """
+
+    def graphic_to_inline(self, node):
+        node.tag = "inline-graphic"
+
+    def parser_node(self, node):
+        if node.text and node.text.strip():
+            _process(node, "graphic", self.graphic_to_inline)
+            return
+
+        has_text = False
+        for child in node.getchildren():
+            if child.tail and child.tail.strip():
+                has_text = True
+                break
+
+        if has_text:
+            _process(node, "graphic", self.graphic_to_inline)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "p[graphic]", self.parser_node)
+        return data
+
+
+class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
+    """
+    Remove parent de graphic se parent.tag == 'p'.
+
+    Antes:
+
+    <p align="center">
+      <graphic xlink:href="53t01.jpg"/>
+    </p>
+
+    Depois:
+
+    <graphic xlink:href="53t01.jpg"/>
+    """
+
+    def parser_node(self, node):
+        # Pega o parent do node.
+        parent = node.getparent()
+
+        # Pega o primeiro filho do node.
+        graphic = node.getchildren()[0]
+
+        # Adiciona o graphic em parent.
+        index = parent.index(node)
+        parent.insert(index, graphic)
+
+        # Remove o node. <p> com todos os filhos.
+        parent.remove(node)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "p[graphic]", self.parser_node)
+        return data
+
+
 class TableWrapPipe(plumber.Pipe):
     """
     Envolve o elemento graphic dentro de table-wrap.
@@ -691,99 +786,4 @@ class TableWrapPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
         _process(xml, "p[table-wrap]", self.parser_node)
-        return data
-
-
-class RemoveEmptyPTagPipe(plumber.Pipe):
-    """
-    Remove parágrafo vazio, ou que contenha somente espaços em branco.
-
-    Ex: <p> </p>
-    """
-
-    def parser_node(self, node):
-        # Verifica se existe algum filho no node.
-        if len(node.getchildren()):
-            return None
-        # Verifica se node.text tem conteúdo.
-        if node.text.strip():
-            return None
-
-        tail = node.tail
-        parent = node.getparent()
-        parent.remove(node)
-
-        # Adiciona o tail no parent.
-        parent.text = tail
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "p", self.parser_node)
-        return data
-
-
-class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
-    """
-    Remove parent de graphic se parent.tag == 'p'.
-
-    Antes:
-
-    <p align="center">
-      <graphic xlink:href="53t01.jpg"/>
-    </p>
-
-    Depois:
-
-    <graphic xlink:href="53t01.jpg"/>
-    """
-
-    def parser_node(self, node):
-        # Pega o parent do node.
-        parent = node.getparent()
-
-        # Pega o primeiro filho do node.
-        graphic = node.getchildren()[0]
-
-        # Adiciona o graphic em parent.
-        index = parent.index(node)
-        parent.insert(index, graphic)
-
-        # Remove o node. <p> com todos os filhos.
-        parent.remove(node)
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "p[graphic]", self.parser_node)
-        return data
-
-
-class InlineGraphicPipe(plumber.Pipe):
-    """
-    Crie um pipe para converter graphic em inline-graphic.
-    Estes graphic são aqueles cujo parent tem
-    text (parent.text and parent.text.strip() e / ou
-    graphic tem tail (graphic.tail and graphic.tail.strip()) e / ou
-    nó anterior tem tail(graphic.getprevious() and graphic.getprevious().tail.strip())
-    """
-
-    def graphic_to_inline(self, node):
-        node.tag = "inline-graphic"
-
-    def parser_node(self, node):
-        if node.text and node.text.strip():
-            _process(node, "graphic", self.graphic_to_inline)
-            return
-
-        has_text = False
-        for child in node.getchildren():
-            if child.tail and child.tail.strip():
-                has_text = True
-                break
-
-        if has_text:
-            _process(node, "graphic", self.graphic_to_inline)
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "p[graphic]", self.parser_node)
         return data
