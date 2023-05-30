@@ -669,6 +669,7 @@ class TestTableWrapPipe(TestCase):
                 '<p align="center">'
                 '<table-wrap id="t1"/>'
                 "</p>"
+                '<p align="center"> </p>'
                 '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
                 '<p align="center">'
                 '<graphic xlink:href="t01.jpg"/>'
@@ -680,9 +681,12 @@ class TestTableWrapPipe(TestCase):
         expected = (
             '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
             "<body>"
+            '<p align="center">'
             '<table-wrap id="t1">'
             '<graphic xlink:href="t01.jpg"/>'
             "</table-wrap>"
+            "</p>"
+            '<p align="center"> </p>'
             '<p align="center">'
             "<b>Table 1 Composition and energy provide by the experimental diets</b>"
             "</p>"
@@ -705,6 +709,7 @@ class TestTableWrapPipe(TestCase):
                 '<p align="center">'
                 '<table-wrap id="t1"/>'
                 "</p>"
+                '<p align="center"> </p>'
                 '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
                 '<p align="center">'
                 "<table><tbody><tr><td>Um</td></tr></tbody></table>"
@@ -716,9 +721,12 @@ class TestTableWrapPipe(TestCase):
         expected = (
             '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
             "<body>"
+            '<p align="center">'
             '<table-wrap id="t1">'
             "<table><tbody><tr><td>Um</td></tr></tbody></table>"
             "</table-wrap>"
+            "</p>"
+            '<p align="center"> </p>'
             '<p align="center">'
             "<b>Table 1 Composition and energy provide by the experimental diets</b>"
             "</p>"
