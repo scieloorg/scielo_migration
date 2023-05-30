@@ -16,7 +16,7 @@ def convert_html_to_xml(document):
     document.xml_body_and_back.append(convert_html_to_xml_step_3(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_4(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_5(document))
-    # document.xml_body_and_back.append(convert_html_to_xml_step_6(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_6(document))
 
 
 def convert_html_to_xml_step_1(document):
@@ -716,24 +716,24 @@ class InsertGraphicInTableWrapPipe(plumber.Pipe):
     def parser_node(self, node):
         parent = node.getparent()
 
-        for sibling in parent.itersiblings():
-            if sibling.tag == "p":
-                if sibling.find("graphic") is not None:
-                    graphic = sibling.find("graphic")
-                    node.append(graphic)
+        sibling = parent.getnext()
 
-                    # Remove o node atual
-                    parent_node = sibling.getparent()
-                    parent_node.remove(sibling)
-                    break
-                elif sibling.find("table") is not None:
-                    table = sibling.find("table")
-                    node.append(table)
+        if sibling.tag == "p":
+            if sibling.find("graphic") is not None:
+                graphic = sibling.find("graphic")
+                node.append(graphic)
 
-                    # Remove o node atual
-                    parent_node = sibling.getparent()
-                    parent_node.remove(sibling)
-                    break
+                # Remove o node atual
+                parent_node = sibling.getparent()
+                parent_node.remove(sibling)
+
+            elif sibling.find("table") is not None:
+                table = sibling.find("table")
+                node.append(table)
+
+                # Remove o node atual
+                parent_node = sibling.getparent()
+                parent_node.remove(sibling)
 
     def transform(self, data):
         raw, xml = data

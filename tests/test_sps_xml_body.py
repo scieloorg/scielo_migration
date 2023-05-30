@@ -668,8 +668,6 @@ class TestInsertGraphicInTableWrapPipe(TestCase):
                 '<p align="center">'
                 '<table-wrap id="t1"/>'
                 "</p>"
-                '<p align="center"> </p>'
-                '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
                 '<p align="center">'
                 '<graphic xlink:href="t01.jpg"/>'
                 "</p>"
@@ -684,10 +682,6 @@ class TestInsertGraphicInTableWrapPipe(TestCase):
             '<table-wrap id="t1">'
             '<graphic xlink:href="t01.jpg"/>'
             "</table-wrap>"
-            "</p>"
-            '<p align="center"> </p>'
-            '<p align="center">'
-            "<b>Table 1 Composition and energy provide by the experimental diets</b>"
             "</p>"
             "</body>"
             "</root>"
@@ -707,8 +701,6 @@ class TestInsertGraphicInTableWrapPipe(TestCase):
                 '<p align="center">'
                 '<table-wrap id="t1"/>'
                 "</p>"
-                '<p align="center"> </p>'
-                '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
                 '<p align="center">'
                 "<table><tbody><tr><td>Um</td></tr></tbody></table>"
                 "</p>"
@@ -723,10 +715,6 @@ class TestInsertGraphicInTableWrapPipe(TestCase):
             '<table-wrap id="t1">'
             "<table><tbody><tr><td>Um</td></tr></tbody></table>"
             "</table-wrap>"
-            "</p>"
-            '<p align="center"> </p>'
-            '<p align="center">'
-            "<b>Table 1 Composition and energy provide by the experimental diets</b>"
             "</p>"
             "</body>"
             "</root>"
