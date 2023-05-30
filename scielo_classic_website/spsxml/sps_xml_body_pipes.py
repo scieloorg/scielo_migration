@@ -153,6 +153,8 @@ def convert_html_to_xml_step_5(document):
     """
     ppl = plumber.Pipeline(
         StartPipe(),
+        InsertTitleInTableWrapPipe(),
+        InsertCaptionInTableWrapPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -720,10 +722,18 @@ class InsertGraphicInTableWrapPipe(plumber.Pipe):
                 if sibling.find("graphic") is not None:
                     graphic = sibling.find("graphic")
                     node.append(graphic)
+
+                    # Remove o node atual
+                    parent_node = sibling.getparent()
+                    parent_node.remove(sibling)
                     break
                 elif sibling.find("table") is not None:
                     table = sibling.find("table")
                     node.append(table)
+
+                    # Remove o node atual
+                    parent_node = sibling.getparent()
+                    parent_node.remove(sibling)
                     break
 
     def transform(self, data):

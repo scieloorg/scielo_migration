@@ -688,7 +688,6 @@ class TestInsertGraphicInTableWrapPipe(TestCase):
             '<p align="center">'
             "<b>Table 1 Composition and energy provide by the experimental diets</b>"
             "</p>"
-            '<p align="center"/>'
             "</body>"
             "</root>"
         )
@@ -728,7 +727,6 @@ class TestInsertGraphicInTableWrapPipe(TestCase):
             '<p align="center">'
             "<b>Table 1 Composition and energy provide by the experimental diets</b>"
             "</p>"
-            '<p align="center"/>'
             "</body>"
             "</root>"
         )
