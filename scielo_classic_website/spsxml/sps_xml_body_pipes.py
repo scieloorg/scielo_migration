@@ -15,7 +15,7 @@ def convert_html_to_xml(document):
     document.xml_body_and_back.append(convert_html_to_xml_step_2(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_3(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_4(document))
-    document.xml_body_and_back.append(convert_html_to_xml_step_5(document))
+    # document.xml_body_and_back.append(convert_html_to_xml_step_5(document))
 
 
 def convert_html_to_xml_step_1(document):
@@ -101,7 +101,7 @@ def convert_html_to_xml_step_3(document):
         XRefTypePipe(),
         RemoveEmptyPTagPipe(),
         InlineGraphicPipe(),
-        RemoveParentPTagOfGraphicPipe(),
+        # RemoveParentPTagOfGraphicPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -127,6 +127,7 @@ def convert_html_to_xml_step_4(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         DivIdToTableWrap(),
+        InsertGraphicInTableWrap(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -628,11 +629,17 @@ class FigPipe(plumber.Pipe):
 
     def parser_node(self, node):
         parent = node.getparent()
+
         for sibling in parent.itersiblings():
-            # Verifica se o elemento irmão é '<p>' e se contém o elemento '<graphic>'.
-            if sibling.tag == "p" and sibling.find("graphic") is not None:
+            if sibling.tag != "p":
+                continue
+
+            if sibling.find("graphic") is not None:
                 graphic = sibling.find("graphic")
                 node.append(graphic)
+
+                parent_node = sibling.getparent()
+                parent_node.remove(sibling)
                 break
 
     def transform(self, data):

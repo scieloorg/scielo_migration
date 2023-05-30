@@ -608,7 +608,6 @@ class TestFigPipe(TestCase):
             "</fig>"
             "</p>"
             '<p align="center"/>'
-            '<p align="center"/>'
             "</body>"
             "</root>"
         )
@@ -645,7 +644,6 @@ class TestFigPipe(TestCase):
             '<graphic xlink:href="/fbpe/img/bres/v48/53f01.jpg"/>'
             "</fig>"
             "</p>"
-            '<p align="center"/>'
             '<p align="center"/>'
             '<p align="center"/>'
             '<p align="center"/>'
