@@ -15,7 +15,8 @@ def convert_html_to_xml(document):
     document.xml_body_and_back.append(convert_html_to_xml_step_2(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_3(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_4(document))
-    # document.xml_body_and_back.append(convert_html_to_xml_step_5(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_5(document))
+    # document.xml_body_and_back.append(convert_html_to_xml_step_6(document))
 
 
 def convert_html_to_xml_step_1(document):
@@ -127,7 +128,7 @@ def convert_html_to_xml_step_4(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         DivIdToTableWrap(),
-        InsertGraphicInTableWrap(),
+        FigPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -152,7 +153,31 @@ def convert_html_to_xml_step_5(document):
     """
     ppl = plumber.Pipeline(
         StartPipe(),
-        InsertGraphicInTableWrap(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_6(document):
+    """
+    Converte o XML obtido no passo 5,
+
+    Parameters
+    ----------
+    document: Document
+
+    ((address | alternatives | answer | answer-set | array |
+    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
+    fig | fig-group | graphic | media | preformat | question | question-wrap |
+    question-wrap-group | supplementary-material | table-wrap |
+    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
+    tex-math | mml:math | p | related-article | related-object | disp-quote |
+    speech | statement | verse-group)*, (sec)*, sig-block?)
+    """
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        InsertGraphicInTableWrapPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -648,7 +673,7 @@ class FigPipe(plumber.Pipe):
         return data
 
 
-class InsertGraphicInTableWrap(plumber.Pipe):
+class InsertGraphicInTableWrapPipe(plumber.Pipe):
     """
     Envolve o elemento graphic dentro de table-wrap.
 

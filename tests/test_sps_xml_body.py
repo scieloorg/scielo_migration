@@ -12,7 +12,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     FontSymbolPipe,
     ImgSrcPipe,
     InlineGraphicPipe,
-    InsertGraphicInTableWrap,
+    InsertGraphicInTableWrapPipe,
     MainHTMLPipe,
     OlPipe,
     RemoveCDATAPipe,
@@ -657,7 +657,7 @@ class TestFigPipe(TestCase):
         self.assertEqual(expected, result)
 
 
-class TestInsertGraphicInTableWrap(TestCase):
+class TestInsertGraphicInTableWrapPipe(TestCase):
     def test_transform(self):
         raw = None
         xml = get_tree(
@@ -694,7 +694,7 @@ class TestInsertGraphicInTableWrap(TestCase):
         )
         data = (raw, xml)
 
-        _, transformed_xml = InsertGraphicInTableWrap().transform(data)
+        _, transformed_xml = InsertGraphicInTableWrapPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
 
@@ -734,7 +734,7 @@ class TestInsertGraphicInTableWrap(TestCase):
         )
         data = (raw, xml)
 
-        _, transformed_xml = InsertGraphicInTableWrap().transform(data)
+        _, transformed_xml = InsertGraphicInTableWrapPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)
 
