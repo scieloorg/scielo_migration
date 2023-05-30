@@ -12,6 +12,7 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     FontSymbolPipe,
     ImgSrcPipe,
     InlineGraphicPipe,
+    InsertCaptionAndTitleInTableWrapPipe,
     InsertGraphicInTableWrapPipe,
     MainHTMLPipe,
     OlPipe,
@@ -1061,4 +1062,48 @@ class TestInlineGraphicPipe(TestCase):
         _, transformed_xml = InlineGraphicPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
 
+        self.assertEqual(expected, result)
+
+
+class TestInsertCaptionAndTitleInTableWrapPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<table-wrap id="t1"/>'
+                "</p>"
+                '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
+                '<p align="center">'
+                '<graphic xlink:href="t01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            "<caption>"
+            "<title>"
+            "Table 1"
+            "</title>"
+            '<p align="center">Composition and energy provide by the experimental diets</p>'
+            "</caption>"
+            "</table-wrap>"
+            "</p>"
+            '<p align="center">'
+            '<graphic xlink:href="t01.jpg"/>'
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InsertCaptionAndTitleInTableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
         self.assertEqual(expected, result)

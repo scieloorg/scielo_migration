@@ -153,8 +153,7 @@ def convert_html_to_xml_step_5(document):
     """
     ppl = plumber.Pipeline(
         StartPipe(),
-        InsertTitleInTableWrapPipe(),
-        InsertCaptionInTableWrapPipe(),
+        InsertCaptionAndTitleInTableWrapPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -852,4 +851,40 @@ class DivIdToTableWrap(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
         _process(xml, "div[@id]", self.parser_node)
+        return data
+
+
+class InsertCaptionAndTitleInTableWrapPipe(plumber.Pipe):
+    """
+    Insere caption dentro de table-wrap.
+    E title dentro de caption.
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+        next_node = parent.getnext()
+        text = next_node.getchildren()[0].text
+        texts = text.split()
+        title_text = " ".join(texts[:2])
+        p_text = " ".join(texts[2:])
+
+        caption = ET.Element("caption")
+
+        title_element = ET.Element("title")
+        title_element.text = title_text
+
+        p_element = ET.Element("p")
+        p_element.text = p_text
+        p_element.set("align", "center")
+
+        caption.append(title_element)
+        caption.append(p_element)
+        node.append(caption)
+
+        # Remove next_node
+        parent.getparent().remove(next_node)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "table-wrap[@id]", self.parser_node)
         return data
