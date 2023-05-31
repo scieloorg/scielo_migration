@@ -871,14 +871,13 @@ class InsertCaptionAndTitleInTableWrapPipe(plumber.Pipe):
 
         caption = ET.Element("caption")
 
-        title_element = ET.Element("title")
-        title_element.text = title_text
+        label_element = ET.Element("label")
+        label_element.text = title_text
 
         p_element = ET.Element("p")
         p_element.text = p_text
-        p_element.set("align", "center")
 
-        caption.append(title_element)
+        node.append(label_element)
         caption.append(p_element)
         node.append(caption)
 

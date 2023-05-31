@@ -1077,11 +1077,13 @@ class TestInsertCaptionAndTitleInTableWrapPipe(TestCase):
             "<body>"
             '<p align="center">'
             '<table-wrap id="t1">'
-            "<caption>"
-            "<title>"
+            "<label>"
             "Table 1"
-            "</title>"
-            '<p align="center">Composition and energy provide by the experimental diets</p>'
+            "</label>"
+            "<caption>"
+            "<p>"
+            'Composition and energy provide by the experimental diets'
+            "</p>"
             "</caption>"
             "</table-wrap>"
             "</p>"
@@ -1106,7 +1108,9 @@ class TestInsertTableWrapFootInTableWrapPipe(TestCase):
                 '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
                 "<body>"
                 '<p align="center">'
-                '<table-wrap id="t1"/>'
+                '<table-wrap id="t1">'
+                '<graphic xlink:href="t01.jpg"/>'
+                '</table-wrap>'
                 "</p>"
                 "<p>The quick brown fox jumps over the lazy dog.</p>"
                 "</body>"
@@ -1118,6 +1122,7 @@ class TestInsertTableWrapFootInTableWrapPipe(TestCase):
             "<body>"
             '<p align="center">'
             '<table-wrap id="t1">'
+            '<graphic xlink:href="t01.jpg"/>'
             "<table-wrap-foot>"
             "<p>The quick brown fox jumps over the lazy dog.</p>"
             "</table-wrap-foot>"
@@ -1130,4 +1135,5 @@ class TestInsertTableWrapFootInTableWrapPipe(TestCase):
 
         _, transformed_xml = InsertTableWrapFootInTableWrapPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
+
         self.assertEqual(expected, result)
