@@ -1055,6 +1055,7 @@ class TestInlineGraphicPipe(TestCase):
 
 
 class TestInsertCaptionAndTitleInTableWrapPipe(TestCase):
+    # https://scielo.readthedocs.io/projects/scielo-publishing-schema/pt_BR/latest/tagset/elemento-table-wrap.html
     def test_transform(self):
         raw = None
         xml = get_tree(
@@ -1081,9 +1082,9 @@ class TestInsertCaptionAndTitleInTableWrapPipe(TestCase):
             "Table 1"
             "</label>"
             "<caption>"
-            "<p>"
+            "<title>"
             'Composition and energy provide by the experimental diets'
-            "</p>"
+            "</title>"
             "</caption>"
             "</table-wrap>"
             "</p>"

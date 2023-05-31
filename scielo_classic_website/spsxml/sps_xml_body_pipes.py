@@ -874,11 +874,11 @@ class InsertCaptionAndTitleInTableWrapPipe(plumber.Pipe):
         label_element = ET.Element("label")
         label_element.text = title_text
 
-        p_element = ET.Element("p")
-        p_element.text = p_text
+        title_element = ET.Element("title")
+        title_element.text = p_text
 
         node.append(label_element)
-        caption.append(p_element)
+        caption.append(title_element)
         node.append(caption)
 
         # Remove next_node
