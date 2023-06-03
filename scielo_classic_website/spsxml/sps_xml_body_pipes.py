@@ -859,34 +859,63 @@ class InsertCaptionAndTitleInTableWrapPipe(plumber.Pipe):
     """
     Insere caption dentro de table-wrap.
     E title dentro de caption.
+    Pode conter label ou não.
     """
 
-    def parser_node(self, node):
+    def process(self, xml, tag, xref_dict, func):
+        # Este process passa a tag e uma lista.
+        nodes = xml.findall(".//%s" % tag)
+        for node in nodes:
+            func(node, xref_dict)
+
+    def add_label_element(self, node, xref_dict):
+        # Pega o texto da label de xref_dict a partir do id do node.
+        label_text = xref_dict.get(node.attrib["id"])
+
+        # Verifica se o id do node está no dicionário de xref_dict.
+        if node.attrib["id"] in xref_dict.keys():
+            label_element = ET.Element("label")
+            label_element.text = label_text
+            node.append(label_element)
+
+    def add_caption(self, node, xref_dict, p_text):
+        # Cria elemento caption.
+        caption = ET.Element("caption")
+
+        # Cria elemento title
+        title_element = ET.Element("title")
+        title_element.text = p_text
+
+        self.add_label_element(node, xref_dict)
+
+        # Adiciona elementos ao caption e a node.
+        caption.append(title_element)
+        node.append(caption)
+
+    def parser_node(self, node, xref_dict):
         parent = node.getparent()
         next_node = parent.getnext()
         text = next_node.getchildren()[0].text
         texts = text.split()
-        title_text = " ".join(texts[:2])
         p_text = " ".join(texts[2:])
 
-        caption = ET.Element("caption")
+        self.add_caption(node, xref_dict, p_text)
 
-        label_element = ET.Element("label")
-        label_element.text = title_text
-
-        title_element = ET.Element("title")
-        title_element.text = p_text
-
-        node.append(label_element)
-        caption.append(title_element)
-        node.append(caption)
-
-        # Remove next_node
+        # Remove next_node.
         parent.getparent().remove(next_node)
 
     def transform(self, data):
         raw, xml = data
-        _process(xml, "table-wrap[@id]", self.parser_node)
+        body_element = xml.find(".//body")
+        xref_element = body_element.findall(".//xref[@rid]")
+
+        xref_dict = {}
+        for xref in xref_element:
+            # A chave é o id e o valor é o texto.
+            # Ex: {'t1': 'Table 1', 't2': 'Table 2'}
+            xref_dict[xref.attrib["rid"]] = xref.text
+
+        self.process(xml, "table-wrap[@id]", xref_dict, self.parser_node)
         return data
 
 
