@@ -2,18 +2,18 @@
 Leia o README.md na mesma pasta.
 """
 
-import pyautogui
 import time
 
+import pyautogui
 
 # pyautogui.position()
 
-pyautogui.hotkey('ctrl', 'shift', 'o')
+pyautogui.hotkey("ctrl", "shift", "o")
 
 time.sleep(2)
 
-pyautogui.write('firefox /tmp/scielo_tmp/output_1.xml', interval=0.02)
-pyautogui.press('enter')
+pyautogui.write("firefox /tmp/scielo_tmp/output_1.xml", interval=0.02)
+pyautogui.press("enter")
 
 time.sleep(1)
 
@@ -22,19 +22,19 @@ pyautogui.click(314, 1289)
 
 # seleciona
 pyautogui.moveTo(321, 1289)
-pyautogui.dragTo(321 + 200, 1289, button='left', duration=0.5)
+pyautogui.dragTo(321 + 200, 1289, button="left", duration=0.5)
 
 # clica expande
 pyautogui.click(314, 1289)
 
 # copia
-pyautogui.hotkey('ctrl', 'c')
+pyautogui.hotkey("ctrl", "c")
 
 # Volta para o terminal
-pyautogui.hotkey('alt', 'tab')
+pyautogui.hotkey("alt", "tab")
 
-pyautogui.write('google-chrome https://www.diffchecker.com/', interval=0.02)
-pyautogui.press('enter')
+pyautogui.write("google-chrome https://www.diffchecker.com/", interval=0.02)
+pyautogui.press("enter")
 
 time.sleep(2)
 
@@ -42,14 +42,14 @@ time.sleep(2)
 pyautogui.click(635, 1458)
 
 # Cola
-pyautogui.hotkey('ctrl', 'v')
+pyautogui.hotkey("ctrl", "v")
 
 # Volta para o terminal
-pyautogui.hotkey('alt', 'tab')
+pyautogui.hotkey("alt", "tab")
 
 # Abre segundo arquivo
-pyautogui.write('firefox /tmp/scielo_tmp/output_2.xml', interval=0.02)
-pyautogui.press('enter')
+pyautogui.write("firefox /tmp/scielo_tmp/output_2.xml", interval=0.02)
+pyautogui.press("enter")
 
 time.sleep(1)
 
@@ -58,19 +58,19 @@ pyautogui.click(314, 1289)
 
 # seleciona
 pyautogui.moveTo(321, 1289)
-pyautogui.dragTo(321 + 200, 1289, button='left', duration=0.5)
+pyautogui.dragTo(321 + 200, 1289, button="left", duration=0.5)
 
 # clica expande
 pyautogui.click(314, 1289)
 
 # copia
-pyautogui.hotkey('ctrl', 'c')
+pyautogui.hotkey("ctrl", "c")
 
 # Volta para o terminal
-pyautogui.keyDown('alt')
-pyautogui.press('tab')
-pyautogui.press('tab')
-pyautogui.keyUp('alt')
+pyautogui.keyDown("alt")
+pyautogui.press("tab")
+pyautogui.press("tab")
+pyautogui.keyUp("alt")
 
 time.sleep(1)
 
@@ -78,7 +78,7 @@ time.sleep(1)
 pyautogui.click(1580, 1458)
 
 # Cola
-pyautogui.hotkey('ctrl', 'v')
+pyautogui.hotkey("ctrl", "v")
 
 # Clica em Find Difference
 pyautogui.click(1222, 1663)
@@ -89,13 +89,13 @@ pyautogui.click(1222, 1663)
 
 for i in range(3, 7):
     # Volta para o terminal
-    pyautogui.keyDown('alt')
-    pyautogui.press('tab')
-    pyautogui.press('tab')
-    pyautogui.keyUp('alt')
+    pyautogui.keyDown("alt")
+    pyautogui.press("tab")
+    pyautogui.press("tab")
+    pyautogui.keyUp("alt")
 
-    pyautogui.write('google-chrome https://www.diffchecker.com/', interval=0.02)
-    pyautogui.press('enter')
+    pyautogui.write("google-chrome https://www.diffchecker.com/", interval=0.02)
+    pyautogui.press("enter")
 
     time.sleep(2)
 
@@ -103,14 +103,14 @@ for i in range(3, 7):
     pyautogui.click(635, 1458)
 
     # Cola
-    pyautogui.hotkey('ctrl', 'v')
+    pyautogui.hotkey("ctrl", "v")
 
     # Volta para o terminal
-    pyautogui.hotkey('alt', 'tab')
+    pyautogui.hotkey("alt", "tab")
 
     # Abre segundo arquivo
-    pyautogui.write(f'firefox /tmp/scielo_tmp/output_{i}.xml', interval=0.02)
-    pyautogui.press('enter')
+    pyautogui.write(f"firefox /tmp/scielo_tmp/output_{i}.xml", interval=0.02)
+    pyautogui.press("enter")
 
     time.sleep(1)
 
@@ -119,19 +119,19 @@ for i in range(3, 7):
 
     # seleciona
     pyautogui.moveTo(321, 1289)
-    pyautogui.dragTo(321 + 200, 1289, button='left', duration=0.5)
+    pyautogui.dragTo(321 + 200, 1289, button="left", duration=0.5)
 
     # clica expande
     pyautogui.click(314, 1289)
 
     # copia
-    pyautogui.hotkey('ctrl', 'c')
+    pyautogui.hotkey("ctrl", "c")
 
     # Volta para o terminal
-    pyautogui.keyDown('alt')
-    pyautogui.press('tab')
-    pyautogui.press('tab')
-    pyautogui.keyUp('alt')
+    pyautogui.keyDown("alt")
+    pyautogui.press("tab")
+    pyautogui.press("tab")
+    pyautogui.keyUp("alt")
 
     time.sleep(1)
 
@@ -139,7 +139,7 @@ for i in range(3, 7):
     pyautogui.click(1580, 1458)
 
     # Cola
-    pyautogui.hotkey('ctrl', 'v')
+    pyautogui.hotkey("ctrl", "v")
 
     # Clica em Find Difference
     pyautogui.click(1222, 1663)
