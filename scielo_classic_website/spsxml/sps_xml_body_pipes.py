@@ -994,15 +994,23 @@ class AlternativesGraphicPipe(plumber.Pipe):
 
         alternatives = ET.Element("alternatives")
 
-        graphic = ET.Element("graphic")
-        graphic.set("{http://www.w3.org/1999/xlink}href", node.attrib["href"])
-        alternatives.append(graphic)
+        graphic1 = ET.Element("graphic")
+        xlink_ref = "{http://www.w3.org/1999/xlink}href"
+        graphic1.set(xlink_ref, node.attrib["href"])
+        alternatives.append(graphic1)
+
+        graphic2 = ET.Element("graphic")
+        xlink_ref = "{http://www.w3.org/1999/xlink}href"
+        graphic2.set(xlink_ref, node.attrib["href"])
+        graphic2.set("specific-use", "scielo-web")
+        alternatives.append(graphic2)
 
         graphic_thumb = ET.Element("graphic")
         graphic_thumb.set(
-            "{http://www.w3.org/1999/xlink}href",
-            _graphic.attrib["{http://www.w3.org/1999/xlink}href"],
+            xlink_ref, _graphic.attrib["{http://www.w3.org/1999/xlink}href"]
         )
+        graphic_thumb.set("specific-use", "scielo-web")
+        graphic_thumb.set("content-type", "scielo-267x140")
         alternatives.append(graphic_thumb)
 
         # Troca o node 'a' por 'alternatives'

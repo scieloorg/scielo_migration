@@ -1208,7 +1208,8 @@ class TestAlternativesGraphicPipe(TestCase):
             '<p align="center">'
             "<alternatives>"
             '<graphic xlink:href="/fbpe/img/bres/v48/53t03.jpg"/>'
-            '<graphic xlink:href="/fbpe/img/bres/v48/53t03thumb.jpg"/>'
+            '<graphic xlink:href="/fbpe/img/bres/v48/53t03.jpg" specific-use="scielo-web"/>'
+            '<graphic xlink:href="/fbpe/img/bres/v48/53t03thumb.jpg" specific-use="scielo-web" content-type="scielo-267x140"/>'
             "</alternatives>"
             "</p>"
             "</body>"

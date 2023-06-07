@@ -85,9 +85,9 @@ pyautogui.click(1222, 1663)
 
 # ------------------
 
-# for 3 to 6, porque temos 6 arquivos para serem comparados.
+# for 3 to 7, porque temos 7 arquivos para serem comparados.
 
-for i in range(3, 7):
+for i in range(3, 8):
     # Volta para o terminal
     pyautogui.keyDown("alt")
     pyautogui.press("tab")
