@@ -17,6 +17,7 @@ def convert_html_to_xml(document):
     document.xml_body_and_back.append(convert_html_to_xml_step_4(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_5(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_6(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_7(document))
 
 
 def convert_html_to_xml_step_1(document):
@@ -180,6 +181,31 @@ def convert_html_to_xml_step_6(document):
         StartPipe(),
         InsertGraphicInTableWrapPipe(),
         InsertTableWrapFootInTableWrapPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_7(document):
+    """
+    Converte o XML obtido no passo 6,
+
+    Parameters
+    ----------
+    document: Document
+
+    ((address | alternatives | answer | answer-set | array |
+    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
+    fig | fig-group | graphic | media | preformat | question | question-wrap |
+    question-wrap-group | supplementary-material | table-wrap |
+    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
+    tex-math | mml:math | p | related-article | related-object | disp-quote |
+    speech | statement | verse-group)*, (sec)*, sig-block?)
+    """
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        AlternativesGraphicPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -936,4 +962,57 @@ class InsertTableWrapFootInTableWrapPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
         _process(xml, "table-wrap[@id]", self.parser_node)
+        return data
+
+
+class AlternativesGraphicPipe(plumber.Pipe):
+    """
+    Agrupa as imagens miniatura e padrão em alternatives.
+
+    Antes:
+
+    <qualquer-tag>
+        <a href="/fbpe/img/bres/v48/53t03.jpg">
+          <graphic xlink:href="/fbpe/img/bres/v48/53t03thumb.jpg"/>
+        </a>
+    </qualquer-tag>
+
+    Depois:
+
+    <qualquer-tag>
+        <alternatives>
+            <graphic xlink:href="/fbpe/img/bres/v48/53t03.jpg"/> <!-- imagem "original" (tiff), mas na ausência usar a imagem padrão -->
+            <graphic xlink:href="/fbpe/img/bres/v48/53t03.jpg" specific-use="scielo-web"/> <!-- imagem "ampliada" ou padrão -->
+            <graphic xlink:href="/fbpe/img/bres/v48/53t03thumb.jpg" specific-use="scielo-web" content-type="scielo-267x140"/> <!-- imagem miniatura -->
+        </alternatives>
+    </qualquer-tag>
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+        _graphic = node.getchildren()[0]
+
+        alternatives = ET.Element("alternatives")
+
+        graphic = ET.Element("graphic")
+        graphic.set("{http://www.w3.org/1999/xlink}href", node.attrib["href"])
+        alternatives.append(graphic)
+
+        graphic_thumb = ET.Element("graphic")
+        graphic_thumb.set(
+            "{http://www.w3.org/1999/xlink}href",
+            _graphic.attrib["{http://www.w3.org/1999/xlink}href"],
+        )
+        alternatives.append(graphic_thumb)
+
+        # Troca o node 'a' por 'alternatives'
+        # Adicionando 'alternatives'
+        parent.append(alternatives)
+
+        # E removendo o node 'a'
+        parent.remove(node)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "a[graphic]", self.parser_node)
         return data

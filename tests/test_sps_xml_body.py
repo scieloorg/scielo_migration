@@ -4,6 +4,7 @@ from lxml import etree
 
 from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     AHrefPipe,
+    AlternativesGraphicPipe,
     ANamePipe,
     ASourcePipe,
     DivIdToTableWrap,
@@ -1180,6 +1181,42 @@ class TestInsertTableWrapFootInTableWrapPipe(TestCase):
         data = (raw, xml)
 
         _, transformed_xml = InsertTableWrapFootInTableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestAlternativesGraphicPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<a href="/fbpe/img/bres/v48/53t03.jpg">'
+                '<graphic xlink:href="/fbpe/img/bres/v48/53t03thumb.jpg"/>'
+                "</a>"
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            "<alternatives>"
+            '<graphic xlink:href="/fbpe/img/bres/v48/53t03.jpg"/>'
+            '<graphic xlink:href="/fbpe/img/bres/v48/53t03thumb.jpg"/>'
+            "</alternatives>"
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = AlternativesGraphicPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
 
         self.assertEqual(expected, result)
