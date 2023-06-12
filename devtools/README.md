@@ -50,6 +50,16 @@ Este teste específico, `read_diffchecker_xml_test.py`, requer que você tenha u
 * Google-Chrome aberto
 * Os arquivos `output_*.xml` já devem existir na pasta `/tmp/scielo_tmp/`
 
+E antes você deve rodar
+
+```
+mkdir /tmp/scielo_tmp
+
+python html_to_xml.py
+
+ls -l /tmp/scielo_tmp/
+```
+
 Então rode
 
 ```
