@@ -60,6 +60,7 @@ python html_to_xml.py
 ls -l /tmp/scielo_tmp/
 ```
 
+
 Então rode
 
 ```

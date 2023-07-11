@@ -28,6 +28,7 @@ pyautogui.dragTo(321 + 200, 1289, button="left", duration=0.5)
 pyautogui.click(314, 1289)
 
 # copia
+
 pyautogui.hotkey("ctrl", "c")
 
 # Volta para o terminal
@@ -78,7 +79,7 @@ time.sleep(1)
 pyautogui.click(1580, 1458)
 
 # Cola
-pyautogui.hotkey("ctrl", "v")
+pyautogui.hotkey('ctrl', 'v')
 
 # Clica em Find Difference
 pyautogui.click(1222, 1663)
@@ -103,6 +104,7 @@ for i in range(3, 8):
     pyautogui.click(635, 1458)
 
     # Cola
+
     pyautogui.hotkey("ctrl", "v")
 
     # Volta para o terminal
@@ -111,6 +113,7 @@ for i in range(3, 8):
     # Abre segundo arquivo
     pyautogui.write(f"firefox /tmp/scielo_tmp/output_{i}.xml", interval=0.02)
     pyautogui.press("enter")
+
 
     time.sleep(1)
 
