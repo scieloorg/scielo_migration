@@ -6,18 +6,24 @@ from scielo_classic_website.spsxml.sps_xml_body_pipes import (
     AHrefPipe,
     ANamePipe,
     ASourcePipe,
+    DivIdToTableWrap,
     EndPipe,
     FigPipe,
     FontSymbolPipe,
     ImgSrcPipe,
+    InlineGraphicPipe,
+    InsertCaptionAndTitleInTableWrapPipe,
+    InsertGraphicInTableWrapPipe,
+    InsertTableWrapFootInTableWrapPipe,
     MainHTMLPipe,
     OlPipe,
     RemoveCDATAPipe,
     RemoveCommentPipe,
+    RemoveEmptyPTagPipe,
+    RemoveParentPTagOfGraphicPipe,
     RemoveTagsPipe,
     RenameElementsPipe,
     StylePipe,
-    TableWrapFigPipe,
     TagsHPipe,
     TranslatedHTMLPipe,
     UlPipe,
@@ -484,7 +490,7 @@ class TestANamePipe(TestCase):
         self.assertEqual(expected, result)
 
 
-class TestTableWrapFigPipe(TestCase):
+class TestDivIdToTableWrap(TestCase):
     def setUp(self):
         self.input_xml = (
             "<root><body>"
@@ -508,7 +514,7 @@ class TestTableWrapFigPipe(TestCase):
             '<fig id="f3"/>'
             "</body></root>"
         )
-        self.pipe = TableWrapFigPipe()
+        self.pipe = DivIdToTableWrap()
 
     def test_transform(self):
         xml = get_tree(self.input_xml)
@@ -604,7 +610,6 @@ class TestFigPipe(TestCase):
             "</fig>"
             "</p>"
             '<p align="center"/>'
-            '<p align="center"/>'
             "</body>"
             "</root>"
         )
@@ -644,7 +649,6 @@ class TestFigPipe(TestCase):
             '<p align="center"/>'
             '<p align="center"/>'
             '<p align="center"/>'
-            '<p align="center"/>'
             "</body>"
             "</root>"
         )
@@ -652,4 +656,530 @@ class TestFigPipe(TestCase):
 
         _, transformed_xml = FigPipe().transform(data)
         result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestInsertGraphicInTableWrapPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<table-wrap id="t1"/>'
+                "</p>"
+                '<p align="center">'
+                '<graphic xlink:href="t01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            '<graphic xlink:href="t01.jpg"/>'
+            "</table-wrap>"
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InsertGraphicInTableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+    def test_transform_with_table(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<table-wrap id="t1"/>'
+                "</p>"
+                '<p align="center">'
+                "<table><tbody><tr><td>Um</td></tr></tbody></table>"
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            "<table><tbody><tr><td>Um</td></tr></tbody></table>"
+            "</table-wrap>"
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InsertGraphicInTableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestRemoveEmptyPTagPipe(TestCase):
+    def test_transform1(self):
+        # Testa a remoção de <p></p> vazios.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">Lorem ipsum</p>'
+                '<p align="center"> </p>'
+                '<p align="center"> </p>'
+                '<p align="center"> </p>'
+                '<p align="center">The quick brown fox jumps over the lazy dog.</p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">Lorem ipsum</p>'
+            '<p align="center">The quick brown fox jumps over the lazy dog.</p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform2(self):
+        # Testa se o graphic se mantem.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center"><graphic></graphic></p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center"><graphic/></p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform3(self):
+        # Testa se um texto formatado dentro de p se mantém, no caso o bold.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">Lorem ipsum</p>'
+                '<p align="center"> </p>'
+                '<p align="center"> </p>'
+                '<p align="center"> </p>'
+                '<p align="center">The quick <b>brown</b> fox jumps over the lazy dog.</p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">Lorem ipsum</p>'
+            '<p align="center">The quick <b>brown</b> fox jumps over the lazy dog.</p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform4(self):
+        # testa um p dentro de outro p.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center"><p>Inner</p></p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center"><p>Inner</p></p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform5(self):
+        # testa um p dentro de outro p, onde o segundo é vazio.
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center"><p> </p></p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform6(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                "<div>"
+                "<p> </p> The quick brown fox jumps over the lazy dog."
+                "</div>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<div>"
+            " The quick brown fox jumps over the lazy dog."
+            "</div>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveEmptyPTagPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestRemoveParentPTagOfGraphicPipe(TestCase):
+    def test_transform1(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<graphic xlink:href="t01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<graphic xlink:href="t01.jpg"/>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveParentPTagOfGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform2(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                "<p>"
+                '<p align="center">'
+                '<graphic xlink:href="t01.jpg"/>'
+                "</p>"
+                '<p align="center"> </p>'
+                "</p>"
+                '<p align="center"> </p>'
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<p>"
+            '<graphic xlink:href="t01.jpg"/>'
+            '<p align="center"> </p>'
+            "</p>"
+            '<p align="center"> </p>'
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = RemoveParentPTagOfGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestInlineGraphicPipe(TestCase):
+    def test_transform1(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><graphic/></p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><graphic/></p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform2(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><graphic id="g1" xlink:href="d1"/>: Rotational</p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><inline-graphic id="g1" xlink:href="d1"/>: Rotational</p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform3(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p>Models to approximate the bound frequencies as waves in X→M (<graphic id="g1" xlink:href="d1"/></p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p>Models to approximate the bound frequencies as waves in X→M (<inline-graphic id="g1" xlink:href="d1"/></p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform4(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><italic>y</italic> direction, <graphic id="g3" xlink:href="d3"/></p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p><italic>y</italic> direction, <inline-graphic id="g3" xlink:href="d3"/></p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform5(self):
+        raw = None
+        xml = get_tree(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p>Models to approximate the bound frequencies as waves in X→M (<graphic id="g1" xlink:href="d1"/>: Rotational, <graphic id="g2" xlink:href="d2"/>: Vibrate in <italic>y</italic> direction, <graphic id="g3" xlink:href="d3"/>: Vibrate in <italic>x</italic> direction, <graphic id="g4" xlink:href="d4"/>: Vibrate mainly in <italic>y</italic> direction including a small portion of vibration in <italic>x</italic> direction, <graphic id="g5" xlink:href="d5"/>: Vibrate mainly in <italic>x</italic> direction including a small portion of vibration in <italic>y</italic> direction).</p></body></root>'
+        )
+        expected = '<root xmlns:xlink="http://www.w3.org/1999/xlink"><body><p>Models to approximate the bound frequencies as waves in X→M (<inline-graphic id="g1" xlink:href="d1"/>: Rotational, <inline-graphic id="g2" xlink:href="d2"/>: Vibrate in <italic>y</italic> direction, <inline-graphic id="g3" xlink:href="d3"/>: Vibrate in <italic>x</italic> direction, <inline-graphic id="g4" xlink:href="d4"/>: Vibrate mainly in <italic>y</italic> direction including a small portion of vibration in <italic>x</italic> direction, <inline-graphic id="g5" xlink:href="d5"/>: Vibrate mainly in <italic>x</italic> direction including a small portion of vibration in <italic>y</italic> direction).</p></body></root>'
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+    def test_transform6(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                "<p><graphic/>... <graphic/><graphic/><graphic/>....</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<p><inline-graphic/>... <inline-graphic/><inline-graphic/><inline-graphic/>....</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InlineGraphicPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
+        self.assertEqual(expected, result)
+
+
+class TestInsertCaptionAndTitleInTableWrapPipe(TestCase):
+    # https://scielo.readthedocs.io/projects/scielo-publishing-schema/pt_BR/latest/tagset/elemento-table-wrap.html
+    def test_transform_com_label(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p>Mixtures for each of the diets were prepared on an industrial mixer at the Molino La Estampa, Chile, using the proportions for each of the ingredients shown in <xref rid="t1" ref-type="table">Table 1</xref> <xref rid="t2" ref-type="table">Table 2</xref>. Food pellets for each of the animal diets were prepared daily by adding the same amount of water to a fraction of each of the powder mixtures.</p>'
+                '<p align="center">'
+                '<table-wrap id="t1"/>'
+                "</p>"
+                '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
+                '<p align="center">'
+                '<graphic xlink:href="t01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p>Mixtures for each of the diets were prepared on an industrial mixer at the Molino La Estampa, Chile, using the proportions for each of the ingredients shown in <xref rid="t1" ref-type="table">Table 1</xref> <xref rid="t2" ref-type="table">Table 2</xref>. Food pellets for each of the animal diets were prepared daily by adding the same amount of water to a fraction of each of the powder mixtures.</p>'
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            "<label>"
+            "Table 1"
+            "</label>"
+            "<caption>"
+            "<title>"
+            "Composition and energy provide by the experimental diets"
+            "</title>"
+            "</caption>"
+            "</table-wrap>"
+            "</p>"
+            '<p align="center">'
+            '<graphic xlink:href="t01.jpg"/>'
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InsertCaptionAndTitleInTableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+    def test_transform_sem_label(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                "<p>Mixtures for each of the diets were prepared on an industrial mixer at the Molino La Estampa, Chile, using the proportions for each of the ingredients shown in. Food pellets for each of the animal diets were prepared daily by adding the same amount of water to a fraction of each of the powder mixtures.</p>"
+                '<p align="center">'
+                '<table-wrap id="t1"/>'
+                "</p>"
+                '<p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>'
+                '<p align="center">'
+                '<graphic xlink:href="t01.jpg"/>'
+                "</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<p>Mixtures for each of the diets were prepared on an industrial mixer at the Molino La Estampa, Chile, using the proportions for each of the ingredients shown in. Food pellets for each of the animal diets were prepared daily by adding the same amount of water to a fraction of each of the powder mixtures.</p>"
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            "<caption>"
+            "<title>"
+            "Composition and energy provide by the experimental diets"
+            "</title>"
+            "</caption>"
+            "</table-wrap>"
+            "</p>"
+            '<p align="center">'
+            '<graphic xlink:href="t01.jpg"/>'
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InsertCaptionAndTitleInTableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+        self.assertEqual(expected, result)
+
+
+class TestInsertTableWrapFootInTableWrapPipe(TestCase):
+    def test_transform(self):
+        raw = None
+        xml = get_tree(
+            (
+                '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+                "<body>"
+                '<p align="center">'
+                '<table-wrap id="t1">'
+                '<graphic xlink:href="t01.jpg"/>'
+                "</table-wrap>"
+                "</p>"
+                "<p>The quick brown fox jumps over the lazy dog.</p>"
+                "</body>"
+                "</root>"
+            )
+        )
+        expected = (
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            '<p align="center">'
+            '<table-wrap id="t1">'
+            '<graphic xlink:href="t01.jpg"/>'
+            "<table-wrap-foot>"
+            "<p>The quick brown fox jumps over the lazy dog.</p>"
+            "</table-wrap-foot>"
+            "</table-wrap>"
+            "</p>"
+            "</body>"
+            "</root>"
+        )
+        data = (raw, xml)
+
+        _, transformed_xml = InsertTableWrapFootInTableWrapPipe().transform(data)
+        result = tree_tostring_decode(transformed_xml)
+
         self.assertEqual(expected, result)

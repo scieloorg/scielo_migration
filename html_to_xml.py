@@ -42,7 +42,7 @@ def main():
 
     for i, item in enumerate(result):
         print(pretty_print(item))
-        save_file(f"/tmp/output_{i}.xml", item)
+        save_file(f"/tmp/scielo_tmp/output_{i+1}.xml", item)
 
 
 if __name__ == "__main__":

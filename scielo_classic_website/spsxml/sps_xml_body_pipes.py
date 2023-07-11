@@ -14,6 +14,9 @@ def convert_html_to_xml(document):
     document.xml_body_and_back.append(convert_html_to_xml_step_1(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_2(document))
     document.xml_body_and_back.append(convert_html_to_xml_step_3(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_4(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_5(document))
+    document.xml_body_and_back.append(convert_html_to_xml_step_6(document))
 
 
 def convert_html_to_xml_step_1(document):
@@ -97,7 +100,9 @@ def convert_html_to_xml_step_3(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         XRefTypePipe(),
-        TableWrapFigPipe(),
+        RemoveEmptyPTagPipe(),
+        InlineGraphicPipe(),
+        # RemoveParentPTagOfGraphicPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -106,9 +111,7 @@ def convert_html_to_xml_step_3(document):
 
 def convert_html_to_xml_step_4(document):
     """
-    Converte o XML obtido no passo 2,
-    remove o conteúdo de CDATA e converte as tags HTML nas XML correspondentes
-    sem preocupação em manter a hierarquia exigida no XML
+    Converte o XML obtido no passo 3,
 
     Parameters
     ----------
@@ -124,6 +127,59 @@ def convert_html_to_xml_step_4(document):
     """
     ppl = plumber.Pipeline(
         StartPipe(),
+        DivIdToTableWrap(),
+        FigPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_5(document):
+    """
+    Converte o XML obtido no passo 4,
+
+    Parameters
+    ----------
+    document: Document
+
+    ((address | alternatives | answer | answer-set | array |
+    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
+    fig | fig-group | graphic | media | preformat | question | question-wrap |
+    question-wrap-group | supplementary-material | table-wrap |
+    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
+    tex-math | mml:math | p | related-article | related-object | disp-quote |
+    speech | statement | verse-group)*, (sec)*, sig-block?)
+    """
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        InsertCaptionAndTitleInTableWrapPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_6(document):
+    """
+    Converte o XML obtido no passo 5,
+
+    Parameters
+    ----------
+    document: Document
+
+    ((address | alternatives | answer | answer-set | array |
+    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
+    fig | fig-group | graphic | media | preformat | question | question-wrap |
+    question-wrap-group | supplementary-material | table-wrap |
+    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
+    tex-math | mml:math | p | related-article | related-object | disp-quote |
+    speech | statement | verse-group)*, (sec)*, sig-block?)
+    """
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        InsertGraphicInTableWrapPipe(),
+        InsertTableWrapFootInTableWrapPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -267,7 +323,7 @@ class MainHTMLPipe(plumber.Pipe):
             # adiciona ao elemento `back`
             back.append(sec)
 
-        print("back/sec %i" % len(back.findall("sec")))
+        # print("back/sec %i" % len(back.findall("sec")))
 
         return data
 
@@ -560,20 +616,6 @@ class ANamePipe(plumber.Pipe):
         return data
 
 
-class TableWrapFigPipe(plumber.Pipe):
-    def parser_node(self, node):
-        attrib_id = node.get("id")
-        if attrib_id and attrib_id.startswith("t") and attrib_id != "top":
-            node.tag = "table-wrap"
-        elif attrib_id and attrib_id.startswith("f"):
-            node.tag = "fig"
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "div[@id]", self.parser_node)
-        return data
-
-
 class ImgSrcPipe(plumber.Pipe):
     def parser_node(self, node):
         node.tag = "graphic"
@@ -614,14 +656,284 @@ class FigPipe(plumber.Pipe):
 
     def parser_node(self, node):
         parent = node.getparent()
+
         for sibling in parent.itersiblings():
-            # Verifica se o elemento irmão é '<p>' e se contém o elemento '<graphic>'.
-            if sibling.tag == "p" and sibling.find("graphic") is not None:
+            if sibling.tag != "p":
+                continue
+
+            if sibling.find("graphic") is not None:
                 graphic = sibling.find("graphic")
                 node.append(graphic)
+
+                parent_node = sibling.getparent()
+                parent_node.remove(sibling)
                 break
 
     def transform(self, data):
         raw, xml = data
         _process(xml, "fig[@id]", self.parser_node)
+        return data
+
+
+class InsertGraphicInTableWrapPipe(plumber.Pipe):
+    """
+    Envolve o elemento graphic dentro de table-wrap.
+
+    Antes:
+
+    <p align="center">
+        <table-wrap id="t1"/>
+    </p>
+    <p align="center"> </p>
+    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
+    <p align="center">
+        <graphic xlink:href="t01.jpg"/>
+    </p>
+
+    Resultado esperado:
+
+    <table-wrap id="t1">
+        <graphic xlink:href="t01.jpg"/>
+    </table-wrap>
+
+    Antes:
+
+    <p align="center">
+        <table-wrap id="t1"/>
+    </p>
+    <p align="center"> </p>
+    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
+    <p align="center">
+        <table/>
+    </p>
+
+    Depois:
+
+    <table-wrap id="t1">
+        <table/>
+    </table-wrap>
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+
+        sibling = parent.getnext()
+
+        if sibling.tag == "p":
+            if sibling.find("graphic") is not None:
+                graphic = sibling.find("graphic")
+                node.append(graphic)
+
+                # Remove o node atual
+                parent_node = sibling.getparent()
+                parent_node.remove(sibling)
+
+            elif sibling.find("table") is not None:
+                table = sibling.find("table")
+                node.append(table)
+
+                # Remove o node atual
+                parent_node = sibling.getparent()
+                parent_node.remove(sibling)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "table-wrap[@id]", self.parser_node)
+        return data
+
+
+class RemoveEmptyPTagPipe(plumber.Pipe):
+    """
+    Remove parágrafo vazio, ou que contenha somente espaços em branco.
+
+    Ex: <p> </p>
+    """
+
+    def parser_node(self, node):
+        # Verifica se existe algum filho no node.
+        if len(node.getchildren()):
+            return None
+        # Verifica se node.text tem conteúdo.
+        if node.text.strip():
+            return None
+
+        tail = node.tail
+        parent = node.getparent()
+        parent.remove(node)
+
+        # Adiciona o tail no parent.
+        parent.text = tail
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "p", self.parser_node)
+        return data
+
+
+class InlineGraphicPipe(plumber.Pipe):
+    """
+    Crie um pipe para converter graphic em inline-graphic.
+    Estes graphic são aqueles cujo parent tem
+    text (parent.text and parent.text.strip() e / ou
+    graphic tem tail (graphic.tail and graphic.tail.strip()) e / ou
+    nó anterior tem tail(graphic.getprevious() and graphic.getprevious().tail.strip())
+    """
+
+    def graphic_to_inline(self, node):
+        node.tag = "inline-graphic"
+
+    def parser_node(self, node):
+        if node.text and node.text.strip():
+            _process(node, "graphic", self.graphic_to_inline)
+            return
+
+        has_text = False
+        for child in node.getchildren():
+            if child.tail and child.tail.strip():
+                has_text = True
+                break
+
+        if has_text:
+            _process(node, "graphic", self.graphic_to_inline)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "p[graphic]", self.parser_node)
+        return data
+
+
+class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
+    """
+    Remove parent de graphic se parent.tag == 'p'.
+
+    Antes:
+
+    <p align="center">
+      <graphic xlink:href="53t01.jpg"/>
+    </p>
+
+    Depois:
+
+    <graphic xlink:href="53t01.jpg"/>
+    """
+
+    def parser_node(self, node):
+        # Pega o parent do node.
+        parent = node.getparent()
+
+        # Pega o primeiro filho do node.
+        graphic = node.getchildren()[0]
+
+        # Adiciona o graphic em parent.
+        index = parent.index(node)
+        parent.insert(index, graphic)
+
+        # Remove o node. <p> com todos os filhos.
+        parent.remove(node)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "p[graphic]", self.parser_node)
+        return data
+
+
+class DivIdToTableWrap(plumber.Pipe):
+    """
+    Transforma div em table-wrap ou fig.
+    """
+
+    def parser_node(self, node):
+        attrib_id = node.get("id")
+        if attrib_id and attrib_id.startswith("t") and attrib_id != "top":
+            node.tag = "table-wrap"
+        elif attrib_id and attrib_id.startswith("f"):
+            node.tag = "fig"
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "div[@id]", self.parser_node)
+        return data
+
+
+class InsertCaptionAndTitleInTableWrapPipe(plumber.Pipe):
+    """
+    Insere caption dentro de table-wrap.
+    E title dentro de caption.
+    Pode conter label ou não.
+    """
+
+    def process(self, xml, tag, xref_dict, func):
+        # Este process passa a tag e uma lista.
+        nodes = xml.findall(".//%s" % tag)
+        for node in nodes:
+            func(node, xref_dict)
+
+    def add_label_element(self, node, xref_dict):
+        # Pega o texto da label de xref_dict a partir do id do node.
+        label_text = xref_dict.get(node.attrib["id"])
+
+        # Verifica se o id do node está no dicionário de xref_dict.
+        if node.attrib["id"] in xref_dict.keys():
+            label_element = ET.Element("label")
+            label_element.text = label_text
+            node.append(label_element)
+
+    def add_caption(self, node, xref_dict, p_text):
+        # Cria elemento caption.
+        caption = ET.Element("caption")
+
+        # Cria elemento title
+        title_element = ET.Element("title")
+        title_element.text = p_text
+
+        self.add_label_element(node, xref_dict)
+
+        # Adiciona elementos ao caption e a node.
+        caption.append(title_element)
+        node.append(caption)
+
+    def parser_node(self, node, xref_dict):
+        parent = node.getparent()
+        next_node = parent.getnext()
+        text = next_node.getchildren()[0].text
+        texts = text.split()
+        p_text = " ".join(texts[2:])
+
+        self.add_caption(node, xref_dict, p_text)
+
+        # Remove next_node.
+        parent.getparent().remove(next_node)
+
+    def transform(self, data):
+        raw, xml = data
+        body_element = xml.find(".//body")
+        xref_element = body_element.findall(".//xref[@rid]")
+
+        xref_dict = {}
+        for xref in xref_element:
+            # A chave é o id e o valor é o texto.
+            # Ex: {'t1': 'Table 1', 't2': 'Table 2'}
+            xref_dict[xref.attrib["rid"]] = xref.text
+
+        self.process(xml, "table-wrap[@id]", xref_dict, self.parser_node)
+        return data
+
+
+class InsertTableWrapFootInTableWrapPipe(plumber.Pipe):
+    """
+    Insere table-wrap-foot em table-wrap.
+    """
+
+    def parser_node(self, node):
+        parent = node.getparent()
+        next_node = parent.getnext()
+
+        table_wrap_foot = ET.Element("table-wrap-foot")
+        table_wrap_foot.append(next_node)
+
+        node.append(table_wrap_foot)
+
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "table-wrap[@id]", self.parser_node)
         return data
