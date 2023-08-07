@@ -15,7 +15,7 @@ tests_require = [
 
 setuptools.setup(
     name="scielo_classic_website",
-    version="0.1.6",
+    version="1.0.0",
     author="SciELO",
     author_email="scielo-dev@googlegroups.com",
     description="",
@@ -38,9 +38,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3 :: Only",
-        "Framework :: Pyramid",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
         "Operating System :: OS Independent",
     ],
 )
