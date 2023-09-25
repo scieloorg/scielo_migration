@@ -42,7 +42,7 @@ def iso_8601_date(yyyymmdd):
 class XMLArticleMetaCitationsPipe(plumber.Pipe):
     def precond(data):
         raw, xml = data
-        if not list(raw.citations):
+        if not raw.citations or not list(raw.citations):
             raise plumber.UnmetPrecondition()
 
     @plumber.precondition(precond)
@@ -77,7 +77,7 @@ class XMLArticleMetaCitationsPipe(plumber.Pipe):
                                 ref.insert(0, mixed_citation)
                     refs.append(ref)
             except Exception as e:
-                logging.info(i)
+                logging.info(f"citation number: {i}")
                 logging.exception(e)
                 raise e
         back.replace(reflist, refs)
@@ -168,7 +168,6 @@ class XMLCitation(object):
         @plumber.precondition(precond)
         def transform(self, data):
             raw, xml = data
-            logging.info(type(raw))
             articletitle = ET.Element("article-title")
 
             articletitle.text = raw.article_title
@@ -389,7 +388,7 @@ class XMLCitation(object):
             raw, xml = data
 
             issue = ET.Element("issue")
-            issue.text = raw.issue
+            issue.text = raw.number
             xml.find("./element-citation").append(issue)
 
             return data
@@ -448,7 +447,6 @@ class XMLCitation(object):
     class VolumePipe(plumber.Pipe):
         def transform(self, data):
             raw, xml = data
-            print((raw.volume, raw.colvolid, raw.tome))
             if raw.volume or raw.colvolid or raw.tome:
                 volume = ET.Element("volume")
                 volume.text = raw.volume or raw.colvolid or raw.tome
@@ -610,7 +608,7 @@ class XMLCitation(object):
                 group_type = None
                 for author in authors:
                     name = self.build_name(author)
-                    if name:
+                    if name is not None:
                         group.append(name)
                     group_type = author.get("role")
                 if not group_type or group_type.lower() == "nd":
@@ -632,7 +630,7 @@ class XMLCitation(object):
                 group_type = None
                 for author in authors:
                     name = self.build_collab(author)
-                    if name:
+                    if name is not None:
                         group.append(name)
                     group_type = author.get("role")
                 if not group_type or group_type.lower() == "nd":
@@ -646,36 +644,36 @@ class XMLCitation(object):
             citation = xml.find("./element-citation")
 
             person_group = self.build_person_authors(raw.analytic_person_authors)
-            if person_group:
+            if person_group is not None:
                 citation.append(person_group)
 
             person_group = self.build_person_authors(raw.monographic_person_authors)
-            if person_group:
+            if person_group is not None:
                 citation.append(person_group)
 
             person_group = self.build_person_authors(raw.serial_person_authors)
-            if person_group:
+            if person_group is not None:
                 citation.append(person_group)
 
             person_group = self.build_institutional_authors(
                 raw.analytic_corporative_authors
             )
-            if person_group:
+            if person_group is not None:
                 citation.append(person_group)
 
             person_group = self.build_institutional_authors(
                 raw.monographic_corporative_authors
             )
-            if person_group:
+            if person_group is not None:
                 citation.append(person_group)
 
             person_group = self.build_institutional_authors(
                 raw.serial_corporative_authors
             )
-            if person_group:
+            if person_group is not None:
                 citation.append(person_group)
 
-            if person_group and raw.etal:
+            if person_group is not None and raw.etal:
                 xml.find(".//person-group").append(ET.Element("etal"))
             return data
 

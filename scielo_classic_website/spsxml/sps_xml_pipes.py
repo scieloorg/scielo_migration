@@ -22,6 +22,7 @@ from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLArticleMetaSelfUriPipe,
     XMLArticleMetaTitleGroupPipe,
     XMLArticleMetaTranslatedTitleGroupPipe,
+    XMLNormalizeSpacePipe,
 )
 from scielo_classic_website.spsxml.sps_xml_attributes import (
     ARTICLE_TYPES,
@@ -78,6 +79,7 @@ def _process(document):
         XMLArticleMetaCitationsPipe(),
         XMLSubArticlePipe(),
         XMLArticleMetaCountsPipe(),
+        XMLNormalizeSpacePipe(),
         XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -113,6 +115,8 @@ class XMLClosePipe(plumber.Pipe):
             xml,
             encoding="utf-8",
             method="xml",
+            xml_declaration=True,
+            pretty_print=True,
             doctype=(
                 '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
                 'Journal Publishing DTD v1.0 20120330//EN" '
@@ -137,7 +141,7 @@ class XMLArticlePipe(plumber.Pipe):
 
         document_type = ARTICLE_TYPES.get(raw.document_type)
         xml.set("{http://www.w3.org/XML/1998/namespace}lang", raw.original_language)
-        xml.set("article-type", document_type)
+        xml.set("article-type", document_type or raw.document_type)
 
         return data
 
@@ -219,10 +223,12 @@ class XMLJournalMetaPublisherPipe(plumber.Pipe):
         publishername.text = "; ".join(raw.journal.publisher_name or [])
         publisher.append(publishername)
 
+        logging.debug("XMLJournalMetaPublisherPipe")
         if raw.journal.publisher_country:
             countrycode = raw.journal.publisher_country
             countryname = COUNTRY_ITEMS.name(countrycode)
             publishercountry = countryname or countrycode
+        logging.debug("---XMLJournalMetaPublisherPipe")
 
         publisherloc = [
             raw.journal.publisher_city or "",
@@ -245,6 +251,7 @@ class XMLBodyPipe(plumber.Pipe):
         raw, xml = data
 
         if not raw.xml_body:
+            logging.exception("XMLBodyPipe not found raw.xml_body")
             raise plumber.UnmetPrecondition()
 
     @plumber.precondition(precond)
@@ -314,14 +321,22 @@ class XMLSubArticlePipe(plumber.Pipe):
                 titlegroup = ET.Element("title-group")
                 articletitle = ET.Element("article-title")
                 articletitle.set("{http://www.w3.org/XML/1998/namespace}lang", language)
-                articletitle.text = raw.get_article_title(language)
+                title = raw.get_article_title(language)
+                if "&" in title:
+                    articletitle.text = ET.CDATA(title)
+                else:
+                    articletitle.text = title
                 titlegroup.append(articletitle)
                 frontstub.append(titlegroup)
 
             # ABSTRACT
             if raw.translated_abstracts:
                 p = ET.Element("p")
-                p.text = raw.get_abstract(language)
+                text = raw.get_abstract(language)
+                if "&" in text:
+                    p.text = ET.CDATA(text)
+                else:
+                    p.text = text
                 abstract = ET.Element("abstract")
                 abstract.set("{http://www.w3.org/XML/1998/namespace}lang", language)
                 abstract.append(p)
@@ -334,7 +349,7 @@ class XMLSubArticlePipe(plumber.Pipe):
                 kwd_group.set("{http://www.w3.org/XML/1998/namespace}lang", language)
                 for item in keywords_group:
                     kwd = ET.Element("kwd")
-                    kwd.text = item
+                    kwd.text = ET.CDATA(item) if "&" in item else item
                     kwd_group.append(kwd)
                 frontstub.append(kwd_group)
             subarticle.append(frontstub)

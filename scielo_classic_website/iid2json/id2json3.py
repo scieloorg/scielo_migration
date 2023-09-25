@@ -46,10 +46,9 @@ def pids_and_their_records(id_file_path, db_type):
     id_function = get_id_function(db_type)
 
     rows = _get_id_file_rows(id_file_path)
-    logging.info("pids_and_their_records rows=%s" % rows)
 
     records = _join_id_file_rows_and_return_records(rows)
-    logging.info("pids_and_their_records records=%s" % records)
+
     return _get_id_and_json_records(records, id_function)
 
 
