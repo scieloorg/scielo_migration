@@ -3,6 +3,7 @@ import logging
 import os
 
 from scielo_classic_website.htmlbody.html_body import HTMLFile
+from scielo_classic_website.isisdb.isis_cmd import get_documents_by_issue_folder
 from scielo_classic_website.utils.files_utils import create_zip_file
 
 
@@ -119,13 +120,18 @@ class IssueFiles:
             for path in paths:
                 basename = os.path.basename(path)
                 name, ext = os.path.splitext(basename)
-                if name[2] == "_":
-                    # translations
-                    lang = name[:2]
-                    name = name[3:]
-                else:
-                    # main pdf
-                    lang = None
+                try:
+                    if "_" in name and name[2] == "_":
+                        # translations
+                        lang = name[:2]
+                        name = name[3:]
+                    else:
+                        # main pdf
+                        lang = None
+                except IndexError as e:
+                    logging.info(path)
+                    logging.exception(e)
+                    continue
                 files.append(
                     {
                         "type": "pdf",
@@ -303,7 +309,7 @@ class ArtigoDBPath:
         )
         try:
             items.append(
-                controller.isis_cmd.get_documents_by_issue_folder(
+                get_documents_by_issue_folder(
                     self.classic_website_paths.cisis_path,
                     _bases_work_acron_path,
                     self.issue_folder,
@@ -312,3 +318,67 @@ class ArtigoDBPath:
         except Exception as e:
             logging.exception(e)
         return items
+
+
+class ArtigoRecordsPath:
+    def __init__(self, classic_website_paths, journal_acron):
+        self.classic_website_paths = classic_website_paths
+        self.journal_acron = journal_acron
+
+    def get_db_from_serial_base_xml_dir(self, issue_folder):
+        _serial_path = os.path.join(
+            self.classic_website_paths.serial_path,
+            self.journal_acron,
+            issue_folder,
+            "base_xml",
+            "id",
+        )
+        if os.path.isdir(_serial_path):
+            yield os.path.join(_serial_path, "i.id")
+            for item in os.listdir(_serial_path):
+                if item != "i.id" and item.endswith(".id"):
+                    yield os.path.join(_serial_path, item)
+
+    def get_db_from_serial_base_dir(self, issue_folder):
+        _serial_path = os.path.join(
+            self.classic_website_paths.serial_path,
+            self.journal_acron,
+            issue_folder,
+            "base",
+        )
+        path = os.path.join(_serial_path, issue_folder)
+        if os.path.isfile(path+".mst"):
+            yield path
+
+    def get_db_from_bases_work_acron_id(self):
+        _bases_work_acron_path = os.path.join(
+            self.classic_website_paths.bases_work_path,
+            self.journal_acron,
+            self.journal_acron,
+        )
+        if os.path.isfile(_bases_work_acron_path + ".id"):
+            yield _bases_work_acron_path + ".id"
+
+    def get_db_from_bases_work_acron(self):
+        path = os.path.join(
+            self.classic_website_paths.bases_work_path,
+            self.journal_acron,
+            self.journal_acron,
+        )
+        if os.path.isfile(path + ".mst"):
+            yield path
+
+    def get_db_from_bases_work_acron_subset(self, issue_folder):
+        _bases_work_acron_path = os.path.join(
+            self.classic_website_paths.bases_work_path,
+            self.journal_acron,
+            self.journal_acron,
+        )
+        try:
+            yield get_documents_by_issue_folder(
+                self.classic_website_paths.cisis_path,
+                _bases_work_acron_path,
+                issue_folder,
+            )
+        except Exception as e:
+            logging.exception(e)

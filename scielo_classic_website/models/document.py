@@ -1,6 +1,6 @@
 import logging
 
-from scielo_classic_website.htmlbody.html_body import BodyFromHTMLFile, BodyFromISIS
+from scielo_classic_website.htmlbody.html_body import BodyFromISIS
 from scielo_classic_website.isisdb.c_record import ReferenceRecord
 from scielo_classic_website.isisdb.h_record import DocumentRecord
 from scielo_classic_website.isisdb.meta_record import MetaRecord
@@ -19,6 +19,14 @@ RECORD = dict(
     c=ReferenceRecord,
     p=ParagraphRecord,
 )
+
+
+class GenerateFullXMLError(Exception):
+    ...
+
+
+class GenerateBodyAndBackFromHTMLError(Exception):
+    ...
 
 
 def _get_value(data, tag):
@@ -48,35 +56,81 @@ class Document:
                     issue
                     fulltexts (list of dict: uri, uri_text, lang, )
         """
+        self._body_from_isis = None
+        self.xml_from_html = None
+        self._translated_html_by_lang = {}
+        self._main_html_paragraphs = {}
+        self._document_records = None
+        self.xml_body_and_back = None
+        self.xml_body = None
+
         self.data = {}
         try:
             self.data["article"] = data["article"]
-        except KeyError:
+        except (TypeError, KeyError):
             self.data["article"] = data
-        self.document_records = DocumentRecords(self.data["article"], _id)
-        self._h_record = self.document_records.article_meta
-
-        self.main_html_paragraphs = BodyFromISIS(
-            self.document_records.get_record("p")
-        ).parts
-        logging.info([(k, len(v)) for k, v in self.main_html_paragraphs.items()])
         try:
             self._journal = Journal(data["title"])
-        except KeyError:
+        except (TypeError, KeyError):
             self._journal = None
         try:
             self._issue = Issue(data["issue"])
-        except KeyError:
+        except (TypeError, KeyError):
             self._issue = None
-        self.xml_from_html = None
+        self.document_records = DocumentRecords(self.data["article"], _id)
 
     def __getattr__(self, name):
         # desta forma Document não precisa herdar de DocumentRecord
         # fica menos acoplado
 
-        if hasattr(self._h_record, name):
-            return getattr(self._h_record, name)
-        raise AttributeError(f"{type(self._h_record)}.{name} does not exist")
+        if hasattr(self.h_record, name):
+            return getattr(self.h_record, name)
+        raise AttributeError(f"{type(self.h_record)}.{name} does not exist")
+
+    @property
+    def record_types(self):
+        return self._document_records.records.keys()
+
+    @property
+    def document_records(self):
+        return self._document_records
+
+    @document_records.setter
+    def document_records(self, document_records):
+        self._document_records = document_records
+
+    @property
+    def h_record(self):
+        try:
+            return self.document_records.get_record("f")[0]
+        except TypeError as e:
+            if len(self.document_records._records.keys()) == 0:
+                try:
+                    logging.info(
+                        f"Document.h_record: {self.data['article']}")
+                except KeyError:
+                    logging.info(
+                        f"Document.h_record: {self.data.keys()}")
+            else:
+                logging.info(
+                    f"Document.h_record: {self.document_records._records.keys()}")
+            logging.exception(e)
+
+    @property
+    def p_records(self):
+        return self.document_records.get_record("p")
+
+    @property
+    def body_from_isis(self):
+        if not self._body_from_isis:
+            self._body_from_isis = BodyFromISIS(self.p_records)
+        return self._body_from_isis
+
+    @property
+    def main_html_paragraphs(self):
+        if not self._main_html_paragraphs:
+            self._main_html_paragraphs = self.body_from_isis.parts
+        return self._main_html_paragraphs
 
     @property
     def translated_html_by_lang(self):
@@ -92,30 +146,7 @@ class Document:
             }
         }
         """
-        return self._translated_html_by_lang
-
-    def add_translated_html(self, lang, before_references, after_references):
-        """
-        {
-            "en": {
-                "before references": html,
-                "after references": html,
-            },
-            "es": {
-                "before references": html,
-                "after references": html,
-            }
-        }
-        """
-        if (
-            not hasattr(self, "_translated_html_by_lang")
-            or not self._translated_html_by_lang
-        ):
-            self._translated_html_by_lang = {}
-        self._translated_html_by_lang[lang] = {
-            "before references": before_references,
-            "after references": after_references,
-        }
+        return self._translated_html_by_lang or {}
 
     @property
     def journal(self):
@@ -200,28 +231,19 @@ class Document:
 
     def get_keywords_group(self, lang):
         if not hasattr(self, "_keywords_groups") or not self._keywords_groups:
-            self._keywords_groups = self._h_record.keywords_groups
+            self._keywords_groups = self.h_record.keywords_groups
         try:
             return self._keywords_groups[lang]
         except KeyError:
             return None
 
     @property
-    def translated_htmls(self):
-        _translated_htmls = (self.data.get("body") or {}).copy()
-        try:
-            del _translated_htmls[self.original_language]
-        except KeyError:
-            pass
-        return _translated_htmls
-
-    @property
     def isis_updated_date(self):
-        return self.update_date
+        return self.h_record.update_date
 
     @property
     def isis_created_date(self):
-        return self.creation_date
+        return self.h_record.creation_date
 
     @property
     def permissions(self):
@@ -239,49 +261,66 @@ class Document:
     def citations(self):
         return self.document_records.get_record("c")
 
-    def generate_body_and_back_from_html(self, html_texts=None):
+    def generate_body_and_back_from_html(self, translated_texts=None):
         """
         Parameters
         ----------
-        html_texts : {
+        translated_texts : {
             lang: {
                 "before references": before,
                 "after references": after,
                 }
             }
         """
-        if not self.main_html_paragraphs:
-            logging.info("generate_body_and_back_from_html: No main HTML found")
-            return
-        langs = {}
-        # obtém os textos html
-        html_texts = html_texts or {}
-        for lang, html_text in html_texts.items():
-            logging.info("generate_body_and_back_from_html %s" % lang)
-            self.add_translated_html(
-                lang, html_text["before references"], html_text["after references"]
+        translations = False
+        for lang, parts in (translated_texts or {}).items():
+            text = "".join(parts.values())
+            if text:
+                translations = True
+                break
+
+        main_text = False
+        for part_name, part_items in (self.main_html_paragraphs or {}).items():
+            for item in part_items:
+                if item["text"]:
+                    main_text = True
+                    break
+
+        if main_text or translations:
+            try:
+                sps_xml_body_pipes.convert_html_to_xml(self)
+            except Exception as e:
+                raise GenerateBodyAndBackFromHTMLError(
+                    f"XML body and back were not generated {e} {self.data}"
+                )
+
+            if not self.xml_body_and_back:
+                raise GenerateBodyAndBackFromHTMLError(
+                    f"XML body and back were not generated {self.data}"
+                )
+        else:
+            raise GenerateBodyAndBackFromHTMLError(
+                "XML body and back were not generated "
+                "because there is no main text and no translations"
+                f"{self.data}"
             )
-        sps_xml_body_pipes.convert_html_to_xml(self)
 
     def generate_full_xml(self, selected_xml_body=None):
         """
         Parameters
         ----------
-        html_texts : {
-            lang: {
-                "before references": before,
-                "after references": after,
-                }
-            }
+        selected_xml_body : str
         """
-        if not self.main_html_paragraphs:
-            return
-        self.xml_body = selected_xml_body
+        try:
+            self.xml_body = selected_xml_body or self.xml_body_and_back[-1]
+        except (TypeError, IndexError) as e:
+            self.xml_body = None
         try:
             return get_xml_rsps(self)
         except Exception as e:
-            logging.exception(e)
-            raise e
+            raise GenerateFullXMLError(
+                f"Unable to generate XML {e} {self.data}"
+            )
 
 
 class DocumentRecords:
@@ -297,26 +336,21 @@ class DocumentRecords:
     @records.setter
     def records(self, _records):
         self._records = {}
-        for _record in _records:
+        for _record in _records or []:
             meta_record = MetaRecord(_record)
             rec_type = meta_record.rec_type
+            if not rec_type:
+                continue
             try:
                 record = RECORD[rec_type](_record)
                 self._records[rec_type] = self._records.get(rec_type) or []
                 self._records[rec_type].append(record)
-            except KeyError:
-                pass
+            except KeyError as e:
+                logging.exception(f"DocumentRecords.records {rec_type} {e} {_record}")
 
     def get_record(self, rec_type):
         return self._records.get(rec_type)
 
     @property
     def article_meta(self):
-        try:
-            return self._records.get("f")[0]
-        except TypeError:
-            return None
-        except Exception as e:
-            logging.info(self._records.keys())
-            logging.exception(e)
-            raise e
+        return self._records.get("f")[0]

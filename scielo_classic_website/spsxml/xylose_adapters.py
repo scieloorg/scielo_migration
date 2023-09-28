@@ -46,13 +46,13 @@ class ReferenceXyloseAdapter:
     def __getattr__(self, name):
         # desta forma Reference não precisa herdar de ReferenceRecord
         # fica menos acoplado
-        logging.info("getting attribute %s %s" % (type(self._reference), name))
+        # logging.info("getting attribute %s %s" % (type(self._reference), name))
         if hasattr(self._reference, name):
             return getattr(self._reference, name)
-        logging.info("getting attribute %s %s" % (type(self._reference_record), name))
+        # logging.info("getting attribute %s %s" % (type(self._reference_record), name))
         if hasattr(self._reference_record, name):
             return getattr(self._reference_record, name)
-        logging.info("getting attribute %s %s" % (type(self), name))
+        # logging.info("getting attribute %s %s" % (type(self), name))
         raise AttributeError(f"ReferenceXyloseAdapter has no attribute {name}")
 
     @property

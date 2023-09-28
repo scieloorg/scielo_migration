@@ -6,3 +6,55 @@ from scielo_classic_website.isisdb.base_c_record import BaseReferenceRecord
 class ReferenceRecord(BaseReferenceRecord):
     def __init__(self, record):
         super().__init__(record)
+
+    @property
+    def publication_date(self):
+        return self.publication_date_iso
+
+    @property
+    def number(self):
+        try:
+            return self.issue["number"]
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    @property
+    def supplement(self):
+        try:
+            return self.issue["suppl"]
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    @property
+    def elocation(self):
+        try:
+            return self.pages_range["elocation"]
+        except (KeyError, TypeError, ValueError):
+            try:
+                return self.pages["elocation"]
+            except (KeyError, TypeError, ValueError):
+                return None
+
+    @property
+    def page_range(self):
+        try:
+            return self.pages_range["range"]
+        except (KeyError, TypeError, ValueError):
+            try:
+                return self.pages["range"]
+            except (KeyError, TypeError, ValueError):
+                return None
+
+    @property
+    def start_page(self):
+        try:
+            return self.pages["first"]
+        except (KeyError, TypeError, ValueError):
+            return None
+
+    @property
+    def end_page(self):
+        try:
+            return self.pages["last"]
+        except (KeyError, TypeError, ValueError):
+            return None

@@ -5,7 +5,11 @@ from scielo_classic_website.iid2json import id2json3
 from scielo_classic_website.isisdb.isis_cmd import ISISCommader
 from scielo_classic_website.models.document import Document
 from scielo_classic_website.models.issue import Issue
-from scielo_classic_website.models.issue_files import ArtigoDBPath, IssueFiles
+from scielo_classic_website.models.issue_files import (
+    ArtigoDBPath,
+    ArtigoRecordsPath,
+    IssueFiles,
+)
 from scielo_classic_website.models.journal import Journal
 
 
@@ -47,6 +51,18 @@ class ClassicWebsitePaths:
                 article_pid[-5:] + ".id",
             )
 
+    @property
+    def id_files(self):
+        artigo_p_path = os.path.join(self.bases_path, "artigo", "p")
+        for issn in os.listdir(artigo_p_path):
+            issn_path = os.path.join(artigo_p_path, issn)
+            for year in os.listdir(issn_path):
+                year_path = os.path.join(issn_path, year)
+                for issue_id in os.listdir(year_path):
+                    issue_id_path = os.path.join(year_path, issue_id)
+                    for id_file in os.listdir(issue_id_path):
+                        yield os.path.join(issue_id_path, id_file)
+
 
 class ClassicWebsite:
     def __init__(
@@ -75,6 +91,7 @@ class ClassicWebsite:
             issue_path,
         )
         self.isis_commander = ISISCommader(self.classic_website_paths)
+        self.data = {}
 
     def get_issue_files(self, acron, issue_folder):
         classic_ws_fs = IssueFiles(acron, issue_folder, self.classic_website_paths)
@@ -92,27 +109,65 @@ class ClassicWebsite:
         )
         return id2json3.pids_and_their_records(id_file_path, "issue")
 
-    def get_documents_pids_and_records(self, acron, issue_folder, issue_pid):
-        article_db_path = ArtigoDBPath(self.classic_website_paths, acron, issue_folder)
-        for source_path in article_db_path.get_artigo_db_path():
-            id_file_path = self.isis_commander.get_id_file_path(source_path)
-            pids_and_records = id2json3.pids_and_their_records(id_file_path, "artigo")
-            for group_id, records in pids_and_records:
-                pid, p_records = self._get_p_records(group_id, records, issue_pid)
-                yield (pid, records + p_records)
-
-    def _get_p_records(self, group_id, records, issue_pid):
+    def get_p_records(self, pid):
         p_records = []
-        if issue_pid in group_id:
-            pid = group_id
-        else:
-            pid = "S" + issue_pid + records[1]["v121"][0]["_"]
-        if len(pid) == 23:
-            logging.info("Get documents pids and records - p - %s" % pid)
-            id_file_path = self.classic_website_paths.get_paragraphs_id_file_path(pid)
+        if len(pid) != 23:
+            raise ValueError(f"Found pid={pid} invalid size ({len(pid)})")
 
-            for p_pids, p_records in id2json3.pids_and_their_records(
-                id_file_path, "artigo"
-            ):
-                break
-        return pid, p_records
+        id_file_path = self.classic_website_paths.get_paragraphs_id_file_path(pid)
+        for p_pids, p_records in id2json3.pids_and_their_records(
+            id_file_path, "artigo"
+        ):
+            return pid, p_records
+
+    @property
+    def p_records(self):
+        for id_file_path in self.classic_website_paths.id_files:
+            logging.info(f"p_records from id_file_path={id_file_path}")
+            yield from id2json3.pids_and_their_records(id_file_path, "artigo")
+
+    def get_documents_pids_and_records(
+        self,
+        acron,
+        issue_folder=None,
+        issue_pid=None,
+    ):
+        article_db_path = ArtigoRecordsPath(self.classic_website_paths, acron)
+        source_path = None
+        if issue_folder:
+            funcs = (
+                article_db_path.get_db_from_serial_base_xml_dir,
+                article_db_path.get_db_from_bases_work_acron_subset,
+                article_db_path.get_db_from_serial_base_dir,
+            )
+            for func in funcs:
+                if source_path:
+                    break
+                for path in func(issue_folder):
+                    source_path = path
+                    break
+
+        if source_path:
+            id_file_path = self.isis_commander.get_id_file_path(source_path)
+            return id2json3.pids_and_their_records(id_file_path, "artigo")
+
+        if issue_pid:
+            funcs = (
+                article_db_path.get_db_from_bases_work_acron_id,
+                article_db_path.get_db_from_bases_work_acron,
+            )
+            for func in funcs:
+                if source_path:
+                    break
+                for path in func():
+                    source_path = path
+                    break
+
+        if not source_path:
+            raise FileNotFoundError(
+                f"Unable to find document records of {acron} {issue_folder}"
+            )
+        id_file_path = self.isis_commander.get_id_file_path(source_path)
+        for doc_id, records in id2json3.pids_and_their_records(id_file_path, "artigo"):
+            if issue_pid in doc_id:
+                yield doc_id, records

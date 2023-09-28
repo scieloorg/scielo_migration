@@ -1,10 +1,38 @@
+import logging
+
 import plumber
 from lxml import etree as ET
 
+from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_attributes import (
     CONTRIB_ROLES,
     get_attribute_value,
 )
+
+
+def fix_html_text(html_text):
+    """
+    Remove tags b e troca tags i por italic
+    """
+    hc = HTMLContent(html_text)
+    node = hc.tree.find(".")
+    ET.strip_tags(node, "b")
+    ET.strip_tags(node, "B")
+
+    texts = []
+    texts.append(node.text or '')
+    last = None
+    for item in node.findall(".//*"):
+        if item.tag.lower() == "i":
+            item.tag = "italic"
+        texts.append(ET.tostring(item, encoding="utf-8").decode("utf-8"))
+        last = item.tail
+    texts.append(last or '')
+    text = "".join(texts)
+    if html_text != text:
+        logging.debug(f"fix_html_text: antes: |{html_text}|")
+        logging.debug(f"fix_html_text: depoi: |{text}|")
+    return text
 
 
 def _create_date_element(element_name, attributes, date_text):
@@ -116,7 +144,9 @@ class XMLArticleMetaTitleGroupPipe(plumber.Pipe):
         raw, xml = data
 
         article_title = ET.Element("article-title")
-        article_title.text = raw.original_title
+
+        text = raw.original_title
+        article_title.text = fix_html_text(text)
 
         titlegroup = ET.Element("title-group")
         titlegroup.append(article_title)
@@ -138,7 +168,9 @@ class XMLArticleMetaTranslatedTitleGroupPipe(plumber.Pipe):
 
         for item in raw.translated_titles:
             trans_title = ET.Element("trans-title")
-            trans_title.text = item["text"]
+
+            text = item["text"]
+            trans_title.text = fix_html_text(text)
 
             trans_titlegrp = ET.Element("trans-title-group")
             trans_titlegrp.set(
@@ -430,7 +462,8 @@ class XMLArticleMetaAbstractsPipe(plumber.Pipe):
 
         if raw.original_abstract:
             p = ET.Element("p")
-            p.text = raw.original_abstract
+            text = raw.original_abstract
+            p.text = fix_html_text(text)
 
             abstract = ET.Element("abstract")
             abstract.append(p)
@@ -438,14 +471,14 @@ class XMLArticleMetaAbstractsPipe(plumber.Pipe):
             articlemeta.append(abstract)
 
         if raw.translated_abstracts:
-            langs = list(raw.translated_htmls.keys())
+            langs = list((raw.translated_htmls or {}).keys())
 
             for item in raw.translated_abstracts:
                 if item["language"] in langs:
                     continue
 
                 p = ET.Element("p")
-                p.text = item["text"]
+                p.text = fix_html_text(item["text"])
 
                 abstract = ET.Element("trans-abstract")
                 abstract.set(
@@ -469,7 +502,7 @@ class XMLArticleMetaKeywordsPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        translated_langs = list(raw.translated_htmls.keys())
+        translated_langs = list((raw.translated_htmls or {}).keys())
 
         articlemeta = xml.find("./front/article-meta")
 
@@ -483,7 +516,7 @@ class XMLArticleMetaKeywordsPipe(plumber.Pipe):
 
             for item in keywords:
                 kwd = ET.Element("kwd")
-                kwd.text = item
+                kwd.text = fix_html_text(item)
                 kwdgroup.append(kwd)
             articlemeta.append(kwdgroup)
 
@@ -557,27 +590,27 @@ class XMLArticleMetaCountsPipe(plumber.Pipe):
             counts = ET.Element("counts")
 
         body_node = xml.find("./body")
+        if body_node is not None:
+            elems = [
+                (
+                    "fig-count",
+                    len(body_node.findall(".//fig[@id]"))
+                    + len(body_node.findall(".//fig-group[@id]")),
+                ),
+                (
+                    "table-count",
+                    len(body_node.findall(".//table-wrap[@id]"))
+                    + len(body_node.findall(".//table-wrap-group[@id]")),
+                ),
+                ("equation-count", len(body_node.findall(".//disp-formula[@id]"))),
+            ]
 
-        elems = [
-            (
-                "fig-count",
-                len(body_node.findall(".//fig[@id]"))
-                + len(body_node.findall(".//fig-group[@id]")),
-            ),
-            (
-                "table-count",
-                len(body_node.findall(".//table-wrap[@id]"))
-                + len(body_node.findall(".//table-wrap-group[@id]")),
-            ),
-            ("equation-count", len(body_node.findall(".//disp-formula[@id]"))),
-        ]
-
-        for elem_name, count in elems:
-            count_elem = counts.find(elem_name)
-            if count_elem is None:
-                count_elem = ET.Element(elem_name)
-            count_elem.set("count", str(count))
-            counts.append(count_elem)
+            for elem_name, count in elems:
+                count_elem = counts.find(elem_name)
+                if count_elem is None:
+                    count_elem = ET.Element(elem_name)
+                count_elem.set("count", str(count))
+                counts.append(count_elem)
 
         count_refs = ET.Element("ref-count")
         if raw.citations:
@@ -608,27 +641,42 @@ class XMLArticleMetaCountsPipe(plumber.Pipe):
                 counts = ET.Element("counts")
 
             body_node = xml.find("./body")
+            if body_node is not None:
 
-            elems = [
-                (
-                    "fig-count",
-                    len(body_node.findall(".//fig[@id]"))
-                    + len(body_node.findall(".//fig-group[@id]")),
-                ),
-                (
-                    "table-count",
-                    len(body_node.findall(".//table-wrap[@id]"))
-                    + len(body_node.findall(".//table-wrap-group[@id]")),
-                ),
-                ("equation-count", len(body_node.findall(".//disp-formula[@id]"))),
-            ]
+                elems = [
+                    (
+                        "fig-count",
+                        len(body_node.findall(".//fig[@id]"))
+                        + len(body_node.findall(".//fig-group[@id]")),
+                    ),
+                    (
+                        "table-count",
+                        len(body_node.findall(".//table-wrap[@id]"))
+                        + len(body_node.findall(".//table-wrap-group[@id]")),
+                    ),
+                    ("equation-count", len(body_node.findall(".//disp-formula[@id]"))),
+                ]
 
-            for elem_name, count in elems:
-                count_elem = counts.find(elem_name)
-                if count_elem is None:
-                    count_elem = ET.Element(elem_name)
-                count_elem.set("count", str(count))
-                counts.append(count_elem)
+                for elem_name, count in elems:
+                    count_elem = counts.find(elem_name)
+                    if count_elem is None:
+                        count_elem = ET.Element(elem_name)
+                    count_elem.set("count", str(count))
+                    counts.append(count_elem)
 
             frontstub.append(counts)
+        return data
+
+
+class XMLNormalizeSpacePipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+
+        for node in xml.xpath(".//*"):
+            if node.text and '  ' in node.text:
+                node.text = " ".join(
+                    [word for word in node.text.split() if word.strip()])
+            if node.tail and '  ' in node.tail:
+                node.tail = " ".join(
+                    [word for word in node.tail.split() if word.strip()])
         return data

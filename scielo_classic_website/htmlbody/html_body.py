@@ -1,8 +1,10 @@
 import logging
 import os
 
-from lxml.html import fromstring, iterlinks, rewrite_links, tostring
+from lxml.etree import ParseError
+from lxml.html import fromstring, html_to_xhtml, iterlinks, rewrite_links, tostring
 
+from scielo_classic_website.htmlbody.html_code_utils import html_safe_decode
 from scielo_classic_website.utils.files_utils import read_file
 
 
@@ -10,6 +12,7 @@ class HTMLFile:
     """ """
 
     def __init__(self, file_path):
+        logging.info(f"HTMLFILE {file_path}")
         self._html_content = HTMLContent(read_file(file_path, encoding="iso-8859-1"))
 
     @property
@@ -33,35 +36,112 @@ class HTMLFile:
         return self._html_content.body_content
 
 
+def html2xml(node):
+    return (
+        # html_safe_decode(
+            # tostring(node, method="xml", encoding="utf-8", pretty_print=True).decode(
+            tostring(node, method="xml", encoding="utf-8").decode(
+                "utf-8"
+            )
+        # )
+    )
+
+
 class HTMLContent:
+    """
+    >>> from scielo_classic_website.htmlbody.html_body import HTMLContent
+    >>> hc = HTMLContent("<root><p>&nbsp;&ntilde;&#985;<br><hr><img src='x.gif'></root>")
+    >>> hc.content
+    >>> '<root><p>\xa0ñϙ<br/></p><hr/><img src="x.gif"/></root>'
+    """
+
     def __init__(self, content=None):
         self._content = content
+        self.tree = content
+        # if content != self.content:
+        #     logging.info(content)
+        #     logging.info(self.content)
 
     @property
     def body_content(self):
-        p = self._content.find("<body")
-        if not p:
-            return ""
-        b = self._content[p:]
-        b = b[b.find(">") + 1 :]
-        b = b[: b.find("</body>")]
-        return b
+        if self.tree is None:
+            return self._content
+        try:
+            body = self.tree.find(".//body")
+            return html2xml(body)
+        except (AttributeError, TypeError):
+            return self.content
 
     @property
     def content(self):
-        return self._content
+        if self.tree is None:
+            return self._content
+        return html2xml(self.tree)
 
     @property
     def tree(self):
-        if not self._content:
-            return
-        if not hasattr(self, "_tree") or not self._tree:
-            try:
-                self._tree = fromstring(self._content)
-            except Exception as e:
-                self._tree = None
-                logging.info("Unable to get tree {} {}".format(e, self._content))
         return self._tree
+
+    # def standardize(self, content):
+    #     item = content.replace("<", "standardizeBREAK<")
+    #     item = item.replace(">", ">standardizeBREAK")
+    #     items = item.split("standardizeBREAK")
+    #     tags = set((
+    #         tag
+    #         for tag in items
+    #         if tag.startswith("<") and tag.endswith(">")
+    #     ))
+    #     new_content = content
+    #     for tag in tags:
+    #         if "/" == tag[1]:
+    #             new_content = new_content.replace(tag, "</TAG>")
+    #         elif " " in tag:
+    #             name = tag[:tag.find(" ")+1]
+    #             if name in ("hr", "br", "img"):
+    #                 new_tag = f'<TAG NAME="{name}" '
+    #             else:
+    #                 new_tag = f'<TAG NAME="{name}" '
+    #             new_content = new_content.replace(tag, new_tag)
+    #         else:
+    #             name = tag[1:-1].lower()
+    #             if name in ("hr", "br", "img"):
+    #                 new_tag = f'<TAG NAME="{name}"/>'
+    #             else:
+    #                 new_tag = f'<TAG NAME="{name}">'
+    #             new_content = new_content.replace(tag, new_tag)
+    #     return new_content
+
+    @tree.setter
+    def tree(self, content):
+        self._tree = None
+        if not content.strip():
+            content = "<span></span>"
+        try:
+            self._tree = fromstring(content)
+            return
+        except Exception as e:
+            pass
+            # logging.exception(f"Error 1 {type(e)} {e} {content}")
+
+        # try:
+        #     html_safe_content = html_safe_decode(content)
+        #     self._tree = fromstring(html_safe_content)
+        #     return
+        # except Exception as e:
+        #     pass
+        #     # logging.exception(f"Error 2 {type(e)} {e} {content}")
+
+        try:
+            alt_content = (
+                f'<span data-bad-format="yes"><!-- {content} --></span>'
+            )
+            self._tree = fromstring(alt_content)
+            return
+        except Exception as e:
+            pass
+            # logging.exception(f"Error 3 {type(e)} {e} {content}")
+
+        logging.error(f"HTMLContent {content}")
 
     @property
     def asset_path_fixes(self):
@@ -69,7 +149,7 @@ class HTMLContent:
 
     @property
     def old_and_new_links(self):
-        if not self.tree:
+        if self.tree is None:
             return []
 
         for elem, attr in (("img", "src"), ("a", "href")):
@@ -85,12 +165,12 @@ class HTMLContent:
                                 new_link = new_link[
                                     new_link.find(folder) + len(folder) :
                                 ]
-                                logging.info(f"{old_link} {new_link}")
+                                logging.info({"old_link": old_link, "new_link": new_link})
                                 yield {"old_link": old_link, "new_link": new_link}
                                 break
 
     def replace_old_and_new_links(self):
-        if not self.tree:
+        if self.tree is None:
             return []
         for elem, attr in (("img", "src"), ("a", "href")):
             for node in self.tree.xpath(f"//{elem}"):
@@ -105,11 +185,10 @@ class HTMLContent:
                                 new_link = new_link[
                                     new_link.find(folder) + len(folder) :
                                 ]
-                                logging.info(f"{old_link} {new_link}")
+                                logging.info(f"old {old_link} => new {new_link}")
                                 node.set("data-old-link", old_link)
                                 node.set(attr, new_link)
                                 break
-        self._content = tostring(self._tree, encoding="utf-8").decode("utf-8")
 
 
 class BodyFromISIS:
@@ -124,32 +203,46 @@ class BodyFromISIS:
         self.p_records = p_records or []
         self._identify_references_range()
 
-    def get_paragraphs_data(self, p_records):
+    def get_paragraphs_data(self, p_records, part_name=None):
         for item in p_records:
             # item.data (dict which keys: text, index, reference_index)
             if item.data["text"]:
-                html_content = HTMLContent(item.data["text"])
-                html_content.replace_old_and_new_links()
-                item.data["text"] = html_content.body_content
+                # logging.info("Antes:")
+                # logging.info(item.data)
+
+                hc = HTMLContent(item.data["text"])
+                root = hc.tree.find(".")
+                if part_name:
+                    root.set("data-part", part_name)
+
+                ref_idx = item.data.get("reference_index")
+                if ref_idx:
+                    root.set("data-ref-index", ref_idx)
+
+                hc.replace_old_and_new_links()
+                item.data["text"] = hc.content
+
+                # logging.info("Depois:")
+                # logging.info(item.data["text"])
                 yield item.data
 
     @property
     def before_references_paragraphs(self):
-        if not self.p_records:
-            return []
-        return self.p_records[: self.first_reference]
+        if self.p_records and self.first_reference:
+            return self.p_records[: self.first_reference]
+        return self.p_records
 
     @property
     def references_paragraphs(self):
-        if not self.p_records:
-            return []
-        return self.p_records[self.first_reference : self.last_reference + 1]
+        if self.p_records and self.first_reference and self.last_reference:
+            return self.p_records[self.first_reference : self.last_reference + 1]
+        return []
 
     @property
     def after_references_paragraphs(self):
-        if not self.p_records:
-            return []
-        return self.p_records[self.last_reference + 1 :]
+        if self.p_records and self.last_reference:
+            return self.p_records[self.last_reference + 1 :]
+        return []
 
     def _identify_references_range(self):
         for i, item in enumerate(self.p_records):
@@ -157,6 +250,8 @@ class BodyFromISIS:
                 self.first_reference = i
             if item.reference_index:
                 self.last_reference = i
+        logging.info(f"first_reference: {self.first_reference}")
+        logging.info(f"last_reference: {self.last_reference}")
 
     @property
     def parts(self):

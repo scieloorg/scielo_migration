@@ -196,11 +196,17 @@ class Reference:
 
     @property
     def patent_application_date(self):
-        return self._reference_record.patent.get("date")
+        try:
+            return self._reference_record.patent.get("date")
+        except AttributeError:
+            return None
 
     @property
     def patent_application_date_iso(self):
-        return self._reference_record.patent.get("date_iso")
+        try:
+            return self._reference_record.patent.get("date_iso")
+        except AttributeError:
+            return None
 
     @property
     def patent_country(self):
