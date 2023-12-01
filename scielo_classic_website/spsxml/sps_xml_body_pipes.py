@@ -10,6 +10,10 @@ from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 
 
+class XMLBodyAnBackConvertException(Exception):
+    ...
+
+
 def _report(xml, func_name):
     # logging.info(f"Function: {func_name}")
     # logging.info(
@@ -44,15 +48,13 @@ def convert_html_to_xml(document):
         # convert_html_to_xml_step_7,
     )
     document.xml_body_and_back = []
-    for i, call_ in enumerate(calls):
-        try:
-            result = call_(document)
-        except Exception as e:
-            logging.exception(
-                f"{document.filename_without_extension}: etapa {i} {e} {result}"
-            )
-        else:
-            document.xml_body_and_back.append(result)
+    try:
+        for i, call_ in enumerate(calls, start=1):
+            document.xml_body_and_back.append(call_(document))
+    except Exception as e:
+        raise XMLBodyAnBackConvertException(
+            f"convert_html_to_xml (step {i}): {type(e)} {e}"
+        )
 
 
 def convert_html_to_xml_step_1(document):
