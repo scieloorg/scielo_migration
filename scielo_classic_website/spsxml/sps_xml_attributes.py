@@ -1,9 +1,9 @@
 import csv
 import os
 
-from scielo_classic_website.settings.attributes.country import COUNTRY
-from scielo_classic_website.settings.attributes.contrib_type import CONTRIB_TYPE
-from scielo_classic_website.settings.attributes.article_type import ARTICLE_TYPE
+from scielo_classic_website.attributes.country import COUNTRY
+from scielo_classic_website.attributes.contrib_type import CONTRIB_TYPE
+from scielo_classic_website.attributes.article_type import ARTICLE_TYPE
 
 
 def country_name(code, lang=None):
