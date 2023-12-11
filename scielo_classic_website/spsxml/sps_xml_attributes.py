@@ -5,6 +5,11 @@ from scielo_classic_website.attr_values import AttrValues
 from scielo_classic_website.config import ATTRIBUTES_PATH
 
 
+ISIS2SPS_ARTICLE_TYPES_CSV = "isis2sps_article_types.csv"
+CONTRIB_ROLES_CSV = "contrib_roles.csv"
+COUNTRY_CSV = "country.csv"
+
+
 def _read_csv_file(file_path):
     with open(file_path, newline="") as csvfile:
         reader = csv.DictReader(csvfile)
@@ -17,12 +22,19 @@ def _get_dict(items):
 
 
 def _load_values(filename):
-    file_path = os.path.join(ATTRIBUTES_PATH, filename)
+    file_path = _get_file_path(filename)
     return _get_dict(_read_csv_file(file_path))
 
 
 def _get_file_path(filename):
-    return os.path.join(ATTRIBUTES_PATH, filename)
+    file_path = os.path.join(ATTRIBUTES_PATH, filename)
+    if os.path.isfile(file_path):
+        return file_path
+
+    file_path = os.path.join(os.path.getcwd(), "..", "settings", "attributes")
+    if os.path.isfile(file_path):
+        return file_path
+
 
 
 class Country:
@@ -63,11 +75,11 @@ class Country:
             return country
 
 
-ARTICLE_TYPES = _load_values("isis2sps_article_types.csv")
+ARTICLE_TYPES = _load_values(ISIS2SPS_ARTICLE_TYPES_CSV)
 
-CONTRIB_ROLES = AttrValues(_read_csv_file(_get_file_path("contrib_roles.csv")))
+CONTRIB_ROLES = AttrValues(_read_csv_file(_get_file_path(CONTRIB_ROLES_CSV)))
 
-file_path = _get_file_path("country.csv")
+file_path = _get_file_path(COUNTRY_CSV)
 COUNTRY_ITEMS = Country(_read_csv_file(file_path))
 
 
