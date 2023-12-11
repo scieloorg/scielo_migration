@@ -4,10 +4,10 @@ import os
 from scielo_classic_website.attr_values import AttrValues
 from scielo_classic_website.config import ATTRIBUTES_PATH
 from scielo_classic_website.settings.attributes.country import COUNTRY
+from scielo_classic_website.settings.attributes.contrib_type import CONTRIB_TYPE
+
 
 ISIS2SPS_ARTICLE_TYPES_CSV = "isis2sps_article_types.csv"
-CONTRIB_ROLES_CSV = "contrib_roles.csv"
-COUNTRY_CSV = "country.csv"
 
 
 def _read_csv_file(file_path):
@@ -65,11 +65,14 @@ def country_get(code):
     return country
 
 
+def get_contrib_type(code):
+    try:
+        return CONTRIB_TYPE[code]
+    except KeyError:
+        return "author"
+
+
 ARTICLE_TYPES = _load_values(ISIS2SPS_ARTICLE_TYPES_CSV)
-
-CONTRIB_ROLES = AttrValues(_read_csv_file(_get_file_path(CONTRIB_ROLES_CSV)))
-
-file_path = _get_file_path(COUNTRY_CSV)
 
 
 def get_attribute_value(attribute_name, code, lang=None):
@@ -78,7 +81,7 @@ def get_attribute_value(attribute_name, code, lang=None):
     if attribute_name == "country_name":
         return country_name(code, lang)
     if attribute_name == "role":
-        return CONTRIB_ROLES.get_sps_value(code)
+        return get_contrib_type(code)
     if attribute_name == "article-type":
         return ARTICLE_TYPES.get(code)
     return code
