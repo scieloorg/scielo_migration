@@ -27,14 +27,13 @@ def _load_values(filename):
 
 
 def _get_file_path(filename):
+    file_path = os.path.join(os.path.abspath('..'), "settings", "attributes")
+    if os.path.isfile(file_path):
+        return file_path
+
     file_path = os.path.join(ATTRIBUTES_PATH, filename)
     if os.path.isfile(file_path):
         return file_path
-
-    file_path = os.path.join(os.path.getcwd(), "..", "settings", "attributes")
-    if os.path.isfile(file_path):
-        return file_path
-
 
 
 class Country:
