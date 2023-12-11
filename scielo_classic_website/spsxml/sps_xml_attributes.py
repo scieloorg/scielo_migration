@@ -1,39 +1,9 @@
 import csv
 import os
 
-from scielo_classic_website.attr_values import AttrValues
-from scielo_classic_website.config import ATTRIBUTES_PATH
 from scielo_classic_website.settings.attributes.country import COUNTRY
 from scielo_classic_website.settings.attributes.contrib_type import CONTRIB_TYPE
-
-
-ISIS2SPS_ARTICLE_TYPES_CSV = "isis2sps_article_types.csv"
-
-
-def _read_csv_file(file_path):
-    with open(file_path, newline="") as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            yield row
-
-
-def _get_dict(items):
-    return {item["from"]: item["to"] for item in items}
-
-
-def _load_values(filename):
-    file_path = _get_file_path(filename)
-    return _get_dict(_read_csv_file(file_path))
-
-
-def _get_file_path(filename):
-    file_path = os.path.join(os.path.abspath('..'), "settings", "attributes")
-    if os.path.isfile(file_path):
-        return file_path
-
-    file_path = os.path.join(ATTRIBUTES_PATH, filename)
-    if os.path.isfile(file_path):
-        return file_path
+from scielo_classic_website.settings.attributes.article_type import ARTICLE_TYPE
 
 
 def country_name(code, lang=None):
@@ -72,7 +42,11 @@ def get_contrib_type(code):
         return "author"
 
 
-ARTICLE_TYPES = _load_values(ISIS2SPS_ARTICLE_TYPES_CSV)
+def get_article_type(code):
+    try:
+        return ARTICLE_TYPE[code]
+    except KeyError:
+        return "author"
 
 
 def get_attribute_value(attribute_name, code, lang=None):
@@ -83,5 +57,5 @@ def get_attribute_value(attribute_name, code, lang=None):
     if attribute_name == "role":
         return get_contrib_type(code)
     if attribute_name == "article-type":
-        return ARTICLE_TYPES.get(code)
+        return get_article_type(code)
     return code
