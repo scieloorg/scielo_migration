@@ -27,6 +27,9 @@ from scielo_classic_website.spsxml.sps_xml_article_meta import (
 from scielo_classic_website.spsxml.sps_xml_attributes import (
     ARTICLE_TYPES,
     COUNTRY_ITEMS,
+    get_article_type,
+    country_name,
+    country_get,
 )
 from scielo_classic_website.spsxml.sps_xml_refs import XMLArticleMetaCitationsPipe
 
@@ -139,7 +142,7 @@ class XMLArticlePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        document_type = ARTICLE_TYPES.get(raw.document_type)
+        document_type = get_article_type(raw.document_type)
         xml.set("{http://www.w3.org/XML/1998/namespace}lang", raw.original_language)
         xml.set("article-type", document_type or raw.document_type)
 
@@ -226,7 +229,7 @@ class XMLJournalMetaPublisherPipe(plumber.Pipe):
         logging.debug("XMLJournalMetaPublisherPipe")
         if raw.journal.publisher_country:
             countrycode = raw.journal.publisher_country
-            countryname = COUNTRY_ITEMS.name(countrycode)
+            countryname = country_name(countrycode)
             publishercountry = countryname or countrycode
         logging.debug("---XMLJournalMetaPublisherPipe")
 
