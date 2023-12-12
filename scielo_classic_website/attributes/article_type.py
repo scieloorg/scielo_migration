@@ -1,4 +1,4 @@
-ARTICLE_TYPES = {
+ARTICLE_TYPE = {
     "ab": "abstract",
     "addendum": "addendum",
     "an": "announcement",
