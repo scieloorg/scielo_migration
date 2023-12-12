@@ -18,6 +18,7 @@ def country_name(code, lang=None):
         name = country.get(k)
         if name:
             return name
+    return code
 
 
 def country_get(code):
@@ -46,7 +47,7 @@ def get_article_type(code):
     try:
         return ARTICLE_TYPE[code]
     except KeyError:
-        return "author"
+        return code
 
 
 def get_attribute_value(attribute_name, code, lang=None):

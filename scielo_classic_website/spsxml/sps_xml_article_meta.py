@@ -5,7 +5,7 @@ from lxml import etree as ET
 
 from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_attributes import (
-    CONTRIB_ROLES,
+    get_contrib_type,
     get_attribute_value,
 )
 
@@ -211,7 +211,7 @@ class XMLArticleMetaContribGroupPipe(plumber.Pipe):
             # cria o elemento contrib e seu atributo contrib-type
             contrib = ET.Element("contrib")
             try:
-                contrib_type = CONTRIB_ROLES.get_sps_value(author["role"])
+                contrib_type = get_contrib_type(author["role"])
             except KeyError:
                 contrib_type = "author"
             contrib.set("contrib-type", contrib_type)
