@@ -25,11 +25,8 @@ from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLNormalizeSpacePipe,
 )
 from scielo_classic_website.spsxml.sps_xml_attributes import (
-    ARTICLE_TYPES,
-    COUNTRY_ITEMS,
     get_article_type,
     country_name,
-    country_get,
 )
 from scielo_classic_website.spsxml.sps_xml_refs import XMLArticleMetaCitationsPipe
 
