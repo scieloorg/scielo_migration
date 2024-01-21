@@ -287,22 +287,16 @@ class Document:
                     break
 
         if main_text or translations:
-            try:
-                sps_xml_body_pipes.convert_html_to_xml(self)
-            except Exception as e:
-                raise GenerateBodyAndBackFromHTMLError(
-                    f"XML body and back were not generated {e} {self.data}"
-                )
+            sps_xml_body_pipes.convert_html_to_xml(self)
 
             if not self.xml_body_and_back:
                 raise GenerateBodyAndBackFromHTMLError(
-                    f"XML body and back were not generated {self.data}"
+                    f"XML body and back were not generated"
                 )
         else:
             raise GenerateBodyAndBackFromHTMLError(
                 "XML body and back were not generated "
                 "because there is no main text and no translations"
-                f"{self.data}"
             )
 
     def generate_full_xml(self, selected_xml_body=None):
@@ -315,12 +309,7 @@ class Document:
             self.xml_body = selected_xml_body or self.xml_body_and_back[-1]
         except (TypeError, IndexError) as e:
             self.xml_body = None
-        try:
-            return get_xml_rsps(self)
-        except Exception as e:
-            raise GenerateFullXMLError(
-                f"Unable to generate XML {e} {self.data}"
-            )
+        return get_xml_rsps(self)
 
 
 class DocumentRecords:
