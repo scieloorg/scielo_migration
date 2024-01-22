@@ -354,3 +354,8 @@ class DocumentRecords:
     @property
     def article_meta(self):
         return self._records.get("f")[0]
+
+    @property
+    def stats(self):
+        for label, records in self.records.items():
+            yield {"record_type": label, "count": len(records)}
