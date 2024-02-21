@@ -323,7 +323,7 @@ class XMLArticleMetaPublicationDatesPipe(plumber.Pipe):
     def precond(data):
         raw, xml = data
 
-        if not raw.document_publication_date and not raw.issue_publication_date:
+        if not raw.document_publication_date and not raw.issue_publication_date and not raw.processing_date:
             raise plumber.UnmetPrecondition()
 
     def _node_pub_date(self, date_text, date_type):
@@ -347,7 +347,7 @@ class XMLArticleMetaPublicationDatesPipe(plumber.Pipe):
 
         articlemeta = xml.find("./front/article-meta")
 
-        pubdate = self._node_pub_date(raw.document_publication_date, "pub")
+        pubdate = self._node_pub_date(raw.document_publication_date or raw.processing_date, "pub")
         if pubdate is not None:
             articlemeta.append(pubdate)
 
