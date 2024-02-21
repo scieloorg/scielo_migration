@@ -43,6 +43,8 @@ def _get_journal():
 
 
 def _get_document(data):
+    for item in data:
+        item.update({"v702": [{"_": "path/filename.xml"}]})
     data = {"article": data}
     data.update(_get_journal())
     return Document(data)
@@ -51,6 +53,7 @@ def _get_document(data):
 class TestXMLArticleMetaAffiliationPipe(TestCase):
     def setUp(self):
         document_data = {
+            "v706": [{"_": "f"}],
             "v070": [
                 {
                     "p": "Brasil",
@@ -108,6 +111,7 @@ class TestXMLArticleMetaPublicationDatesPipe(TestCase):
     def setUp(self):
         # https://articlemeta.scielo.org/api/v1/article/?collection=scl&code=S0103-20032019000300379
         document_data = {
+            "v706": [{"_": "f"}],
             "v065": [{"_": "20190000"}],
             "v223": [{"_": "20190916"}],
         }
@@ -149,9 +153,61 @@ class TestXMLArticleMetaPublicationDatesPipe(TestCase):
         self.assertEqual(expected, result)
 
 
+class TestXMLArticleMetaProcessingDatePipe(TestCase):
+    def setUp(self):
+        # https://articlemeta.scielo.org/api/v1/article/?collection=scl&code=S0103-20032019000300379
+        document_data = [
+            {
+                "v706": [{"_": "o"}],
+                "v091": [{"_": "20190916"}],
+            },
+            {
+                "v706": [{"_": "f"}],
+                "v065": [{"_": "20190000"}],
+            },
+        ]
+        document = _get_document(document_data)
+        xml = (
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
+            'Journal Publishing DTD v1.0 20120330//EN" '
+            '"JATS-journalpublishing1.dtd">\n'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            "<front>"
+            "<article-meta>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        self.data = document, etree.fromstring(xml)
+
+    def test_transform(self):
+        transformed = XMLArticleMetaPublicationDatesPipe().transform(self.data)
+        expected = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            "<front>"
+            "<article-meta>"
+            '<pub-date publication-format="electronic" date-type="pub">'
+            "<day>16</day>"
+            "<month>09</month>"
+            "<year>2019</year>"
+            "</pub-date>"
+            '<pub-date publication-format="electronic" date-type="collection">'
+            "<year>2019</year>"
+            "</pub-date>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        result = tostring(transformed[1])
+        self.assertEqual(expected, result)
+
+
 class TestXMLArticleMetaIssueInfoPipe(TestCase):
     def _get_document(self, document_data=None):
         document_data_default = {
+            "v706": [{"_": "f"}],
             "v031": [{"_": "4"}],
             "v032": [{"_": "1"}],
             "v132": [{"_": "B"}],
@@ -189,7 +245,10 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
         self.assertEqual(expected, result)
 
     def test_transform_v4(self):
-        d = {"v031": [{"_": "4"}]}
+        d = {
+            "v706": [{"_": "f"}],
+            "v031": [{"_": "4"}]
+        ,}
         transformed = XMLArticleMetaIssueInfoPipe().transform(self._get_document(d))
         expected = (
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
@@ -205,7 +264,9 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
         self.assertEqual(expected, result)
 
     def test_transform_n2(self):
-        d = {"v032": [{"_": "2"}]}
+        d = {
+            "v706": [{"_": "f"}],
+            "v032": [{"_": "2"}]}
         transformed = XMLArticleMetaIssueInfoPipe().transform(self._get_document(d))
         expected = (
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
@@ -221,7 +282,9 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
         self.assertEqual(expected, result)
 
     def test_transform_n2s0(self):
-        d = {"v032": [{"_": "2"}], "v132": [{"_": "0"}]}
+        d = {
+            "v706": [{"_": "f"}],
+            "v032": [{"_": "2"}], "v132": [{"_": "0"}]}
         transformed = XMLArticleMetaIssueInfoPipe().transform(self._get_document(d))
         expected = (
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
@@ -238,7 +301,9 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
         self.assertEqual(expected, result)
 
     def test_transform_v2s1(self):
-        d = {"v031": [{"_": "2"}], "v132": [{"_": "1"}]}
+        d = {
+            "v706": [{"_": "f"}],
+            "v031": [{"_": "2"}], "v132": [{"_": "1"}]}
         transformed = XMLArticleMetaIssueInfoPipe().transform(self._get_document(d))
         expected = (
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
@@ -256,6 +321,7 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
 
     def test_transform_aop(self):
         d = {
+            "v706": [{"_": "f"}],
             "v032": [{"_": "ahead"}],
         }
         transformed = XMLArticleMetaIssueInfoPipe().transform(self._get_document(d))
@@ -274,6 +340,7 @@ class TestXMLArticleMetaIssueInfoPipe(TestCase):
 class TestXMLArticleMetaElocationInfoPipe(TestCase):
     def _get_document(self, document_data=None):
         document_data_default = {
+            "v706": [{"_": "f"}],
             "v014": [{"e": "44444"}],
         }
         document = _get_document(document_data or document_data_default)
@@ -310,6 +377,7 @@ class TestXMLArticleMetaElocationInfoPipe(TestCase):
 class TestXMLArticleMetaPagesInfoPipe(TestCase):
     def _get_document(self, document_data=None):
         document_data_default = {
+            "v706": [{"_": "f"}],
             "v014": [{"f": "4", "l": "9", "s": "a"}],
         }
         document = _get_document(document_data or document_data_default)
@@ -347,6 +415,7 @@ class TestXMLArticleMetaPagesInfoPipe(TestCase):
 class TestXMLArticleMetaHistoryPipe(TestCase):
     def _get_document(self, document_data=None):
         document_data_default = {
+            "v706": [{"_": "f"}],
             "v112": [{"_": "20200220"}],
             "v116": [{"_": "20200515"}],
             "v114": [{"_": "20200905"}],
@@ -395,6 +464,7 @@ class TestXMLArticleMetaHistoryPipe(TestCase):
 class TestXMLArticleMetaAbstractsPipe(TestCase):
     def _get_document(self, document_data=None):
         document_data_default = {
+            "v706": [{"_": "f"}],
             "v083": [
                 {"_": "Resumo", "l": "pt"},
                 {"_": "Resumen", "l": "es"},
@@ -437,6 +507,7 @@ class TestXMLArticleMetaAbstractsPipe(TestCase):
 class TestXMLArticleMetaKeywordsPipe(TestCase):
     def _get_document(self, document_data=None):
         document_data_default = {
+            "v706": [{"_": "f"}],
             "v85": [
                 {"_": "", "d": "nd", "i": "1"},
                 {
@@ -511,6 +582,7 @@ class TestXMLArticleMetaKeywordsPipe(TestCase):
 class TestXMLArticleMetaPermissionPipe(TestCase):
     def _get_document(self, document_data=None):
         document_data_default = {
+            "v706": [{"_": "f"}],
             "v85": [
                 {"_": "", "d": "nd", "i": "1"},
                 {

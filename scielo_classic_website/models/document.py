@@ -100,6 +100,14 @@ class Document:
         self._document_records = document_records
 
     @property
+    def processing_date(self):
+        try:
+            item = self.document_records.get_record("o")[0]
+            return item.processing_date
+        except (KeyError, IndexError):
+            return None
+
+    @property
     def h_record(self):
         try:
             return self.document_records.get_record("f")[0]
@@ -336,6 +344,7 @@ class DocumentRecords:
                 self._records[rec_type].append(record)
             except KeyError as e:
                 logging.exception(f"DocumentRecords.records {rec_type} {e} {_record}")
+
 
     def get_record(self, rec_type):
         return self._records.get(rec_type)
