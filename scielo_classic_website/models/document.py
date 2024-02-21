@@ -78,6 +78,7 @@ class Document:
         except (TypeError, KeyError):
             self._issue = None
         self.document_records = DocumentRecords(self.data["article"], _id)
+        self._params_for_xml_creation = {}
 
     def __getattr__(self, name):
         # desta forma Document não precisa herdar de DocumentRecord
@@ -86,6 +87,17 @@ class Document:
         if hasattr(self.h_record, name):
             return getattr(self.h_record, name)
         raise AttributeError(f"{type(self.h_record)}.{name} does not exist")
+
+    @property
+    def params_for_xml_creation(self):
+        return self._params_for_xml_creation
+
+    @params_for_xml_creation.setter
+    def params_for_xml_creation(self, params):
+        if isinstance(params, dict):
+            self._params_for_xml_creation = params
+        else:
+            raise TypeError("Document.params_for_xml_creation must be dict")
 
     @property
     def record_types(self):

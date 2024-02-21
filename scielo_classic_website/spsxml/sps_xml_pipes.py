@@ -42,7 +42,7 @@ def get_xml_rsps(document):
     return _process(document)
 
 
-def _process(document):
+def _process(document, data):
     """
     Aplica as transformações
 
@@ -98,8 +98,15 @@ class SetupArticlePipe(plumber.Pipe):
         }
 
         xml = ET.Element("article", nsmap=nsmap)
-        xml.set("specific-use", "sps-1.4")
-        xml.set("dtd-version", "1.0")
+
+        try:
+            xml.set("specific-use", data.params_for_xml_creation["specific-use"])
+        except (KeyError, AttributeError):
+            xml.set("specific-use", "sps-1.10")
+        try:
+            xml.set("dtd-version", data.params_for_xml_creation["dtd-version"])
+        except (KeyError, AttributeError):
+            xml.set("dtd-version", "1.3")
         return data, xml
 
 
@@ -111,17 +118,22 @@ class XMLClosePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
+        try:
+            doctype = raw.params_for_xml_creation["doctype"]
+        except (KeyError, AttributeError):
+            doctype = (
+                '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
+                'Journal Publishing DTD v1.3 20210610//EN" '
+                '"JATS-journalpublishing1-3.dtd">'
+            )
+
         data = ET.tostring(
             xml,
             encoding="utf-8",
             method="xml",
             xml_declaration=True,
             pretty_print=True,
-            doctype=(
-                '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
-                'Journal Publishing DTD v1.0 20120330//EN" '
-                '"JATS-journalpublishing1.dtd">'
-            ),
+            doctype=doctype,
         )
         return data
 
