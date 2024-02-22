@@ -42,7 +42,7 @@ def get_xml_rsps(document):
     return _process(document)
 
 
-def _process(document, data):
+def _process(document):
     """
     Aplica as transformações
 
@@ -103,9 +103,15 @@ class SetupArticlePipe(plumber.Pipe):
             xml.set("specific-use", data.params_for_xml_creation["specific-use"])
         except (KeyError, AttributeError):
             xml.set("specific-use", "sps-1.10")
+        except Exception as e:
+            logging.exception(e)
+            xml.set("specific-use", "sps-1.10")
         try:
             xml.set("dtd-version", data.params_for_xml_creation["dtd-version"])
         except (KeyError, AttributeError):
+            xml.set("dtd-version", "1.3")
+        except Exception as e:
+            logging.exception(e)
             xml.set("dtd-version", "1.3")
         return data, xml
 
@@ -121,6 +127,13 @@ class XMLClosePipe(plumber.Pipe):
         try:
             doctype = raw.params_for_xml_creation["doctype"]
         except (KeyError, AttributeError):
+            doctype = (
+                '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
+                'Journal Publishing DTD v1.3 20210610//EN" '
+                '"JATS-journalpublishing1-3.dtd">'
+            )
+        except Exception as e:
+            logging.exception(e)
             doctype = (
                 '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) '
                 'Journal Publishing DTD v1.3 20210610//EN" '
