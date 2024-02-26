@@ -33,3 +33,8 @@ def get_records_by_source_path(db_type, source_path):
 def get_issue_files(acron, issue_folder):
     issue_files = IssueFiles(acron, issue_folder)
     return issue_files.files
+
+
+def get_issue_files_and_exceptions(acron, issue_folder):
+    issue_files = IssueFiles(acron, issue_folder)
+    return {"files": issue_files.files, "exceptions": issue_files.exceptions}
