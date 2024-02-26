@@ -27,6 +27,11 @@ class IssueFiles:
         self._bases_pdf_files = None
         self._bases_xml_files = None
         self._classic_website_paths = classic_website_paths
+        self._exceptions = {}
+
+    @property
+    def exceptions(self):
+        return self._exceptions
 
     @property
     def files(self):
@@ -69,26 +74,33 @@ class IssueFiles:
             )
             files = []
             for path in paths:
-                basename = os.path.basename(path)
-                name, ext = os.path.splitext(basename)
-                lang = name[:2]
-                name = name[3:]
-                label = "before"
-                if name[0] == "b":
-                    name = name[1:]
-                    label = "after"
-                files.append(
-                    {
-                        "type": "html",
-                        "key": name,
-                        "path": path,
-                        "name": basename,
-                        "relative_path": _get_classic_website_rel_path(path),
-                        "lang": lang,
-                        "part": label,
-                        "replacements": HTMLFile(path).asset_path_fixes,
-                    }
-                )
+                try:
+                    basename = os.path.basename(path)
+                    name, ext = os.path.splitext(basename)
+                    lang = name[:2]
+                    name = name[3:]
+                    label = "before"
+                    if name[0] == "b":
+                        name = name[1:]
+                        label = "after"
+
+                    files.append(
+                        {
+                            "type": "html",
+                            "key": name,
+                            "path": path,
+                            "name": basename,
+                            "relative_path": _get_classic_website_rel_path(path),
+                            "lang": lang,
+                            "part": label,
+                            "replacements": HTMLFile(path).asset_path_fixes,
+                        }
+                    )
+                except Exception as e:
+                    self._exceptions.setdefault("bases_translation_files", [])
+                    self._exceptions["bases_translation_files"].append(
+                        {"message": e.message, "type": str(type(e))}
+                    )
             self._bases_translation_files = files
         return self._bases_translation_files
 
@@ -118,30 +130,36 @@ class IssueFiles:
             )
             files = []
             for path in paths:
-                basename = os.path.basename(path)
-                name, ext = os.path.splitext(basename)
                 try:
-                    if "_" in name and name[2] == "_":
-                        # translations
-                        lang = name[:2]
-                        name = name[3:]
-                    else:
-                        # main pdf
-                        lang = None
-                except IndexError as e:
-                    logging.info(path)
-                    logging.exception(e)
-                    continue
-                files.append(
-                    {
-                        "type": "pdf",
-                        "key": name,
-                        "path": path,
-                        "name": basename,
-                        "relative_path": _get_classic_website_rel_path(path),
-                        "lang": lang,
-                    }
-                )
+                    basename = os.path.basename(path)
+                    name, ext = os.path.splitext(basename)
+                    try:
+                        if "_" in name and name[2] == "_":
+                            # translations
+                            lang = name[:2]
+                            name = name[3:]
+                        else:
+                            # main pdf
+                            lang = None
+                    except IndexError as e:
+                        logging.info(path)
+                        logging.exception(e)
+                        continue
+                    files.append(
+                        {
+                            "type": "pdf",
+                            "key": name,
+                            "path": path,
+                            "name": basename,
+                            "relative_path": _get_classic_website_rel_path(path),
+                            "lang": lang,
+                        }
+                    )
+                except Exception as e:
+                    self._exceptions.setdefault("bases_pdf_files", [])
+                    self._exceptions["bases_pdf_files"].append(
+                        {"message": e.message, "type": str(type(e))}
+                    )
             self._bases_pdf_files = files
         return self._bases_pdf_files
 
@@ -174,25 +192,45 @@ class IssueFiles:
             )
             files = []
             for path in paths:
-                if os.path.isfile(path):
-                    files.append(
-                        {
-                            "type": "asset",
-                            "path": path,
-                            "relative_path": _get_classic_website_rel_path(path),
-                            "name": os.path.basename(path),
-                        }
+                try:
+                    if os.path.isfile(path):
+                        try:
+                            files.append(
+                                {
+                                    "type": "asset",
+                                    "path": path,
+                                    "relative_path": _get_classic_website_rel_path(path),
+                                    "name": os.path.basename(path),
+                                }
+                            )
+                        except Exception as e:
+                            self._exceptions.setdefault("htdocs_img_revistas_files", [])
+                            self._exceptions["htdocs_img_revistas_files"].append(
+                                {"message": e.message, "type": str(type(e))}
+                            )
+
+                    elif os.path.isdir(path):
+                        for item in glob.glob(os.path.join(path, "*")):
+                            try:
+                                files.append(
+                                    {
+                                        "type": "asset",
+                                        "path": item,
+                                        "relative_path": _get_classic_website_rel_path(item),
+                                        "name": os.path.basename(item),
+                                    }
+                                )
+                            except Exception as e:
+                                self._exceptions.setdefault("htdocs_img_revistas_files", [])
+                                self._exceptions["htdocs_img_revistas_files"].append(
+                                    {"message": e.message, "type": str(type(e))}
+                                )
+                except Exception as e:
+                    self._exceptions.setdefault("htdocs_img_revistas_files", [])
+                    self._exceptions["htdocs_img_revistas_files"].append(
+                        {"message": e.message, "type": str(type(e))}
                     )
-                elif os.path.isdir(path):
-                    for item in glob.glob(os.path.join(path, "*")):
-                        files.append(
-                            {
-                                "type": "asset",
-                                "path": item,
-                                "relative_path": _get_classic_website_rel_path(item),
-                                "name": os.path.basename(item),
-                            }
-                        )
+
             self._htdocs_img_revistas_files = files
         return self._htdocs_img_revistas_files
 
@@ -210,15 +248,21 @@ class IssueFiles:
             for path in paths:
                 basename = os.path.basename(path)
                 name, ext = os.path.splitext(basename)
-                files.append(
-                    {
-                        "type": "xml",
-                        "key": name,
-                        "path": path,
-                        "name": basename,
-                        "relative_path": _get_classic_website_rel_path(path),
-                    }
-                )
+                try:
+                    files.append(
+                        {
+                            "type": "xml",
+                            "key": name,
+                            "path": path,
+                            "name": basename,
+                            "relative_path": _get_classic_website_rel_path(path),
+                        }
+                    )
+                except Exception as e:
+                    self._exceptions.setdefault("bases_xml_files", [])
+                    self._exceptions["bases_xml_files"].append(
+                        {"message": e.message, "type": str(type(e))}
+                    )
             self._bases_xml_files = files
         return self._bases_xml_files
 
