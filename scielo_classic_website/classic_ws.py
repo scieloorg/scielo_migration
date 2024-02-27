@@ -98,7 +98,7 @@ class ClassicWebsite:
         return classic_ws_fs.files
 
     def get_issue_files_and_exceptions(self, acron, issue_folder):
-        issue_files = IssueFiles(acron, issue_folder)
+        issue_files = IssueFiles(acron, issue_folder, self.classic_website_paths)
         return {"files": issue_files.files, "exceptions": issue_files.exceptions}
 
     def get_journals_pids_and_records(self):
