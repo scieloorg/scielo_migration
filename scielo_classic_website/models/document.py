@@ -355,7 +355,9 @@ class DocumentRecords:
                 self._records[rec_type] = self._records.get(rec_type) or []
                 self._records[rec_type].append(record)
             except KeyError as e:
-                logging.exception(f"DocumentRecords.records {rec_type} {e} {_record}")
+                # todos os registros são armazenados, no entanto,
+                # durante a migração nem todos os registros são usados
+                pass
 
 
     def get_record(self, rec_type):
