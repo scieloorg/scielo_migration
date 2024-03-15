@@ -138,6 +138,7 @@ class ClassicWebsite:
     ):
         article_db_path = ArtigoRecordsPath(self.classic_website_paths, acron)
         source_paths = None
+        found = False
         if issue_folder:
             funcs = (
                 article_db_path.get_db_from_serial_base_xml_dir,
@@ -149,7 +150,17 @@ class ClassicWebsite:
                 if source_paths:
                     break
 
-        if not source_paths and issue_pid:
+            if source_paths:
+                for source_path in source_paths:
+                    logging.info(f"Source: {source_path}")
+                    id_file_path = self.isis_commander.get_id_file_path(source_path)
+                    for doc_id, records in id2json3.pids_and_their_records(id_file_path, "artigo"):
+                        logging.info(f"issue_pid: {issue_pid}, doc_id: {doc_id}")
+                        yield doc_id, records
+                        found = True
+                return
+
+        if not found and issue_pid:
             funcs = (
                 article_db_path.get_db_from_bases_work_acron_id,
                 article_db_path.get_db_from_bases_work_acron,
@@ -161,7 +172,7 @@ class ClassicWebsite:
 
         if not source_paths:
             raise FileNotFoundError(
-                f"Unable to find document records of {acron} {issue_folder}"
+                f"Unable to find document records of {acron} {issue_folder} {issue_pid}"
             )
 
         for source_path in source_paths:
