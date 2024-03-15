@@ -136,6 +136,7 @@ class ClassicWebsite:
         issue_folder=None,
         issue_pid=None,
     ):
+        logging.info(f"ClassicWebsite.get_documents_pids_and_records {acron} {issue_folder} {issue_pid}")
         article_db_path = ArtigoRecordsPath(self.classic_website_paths, acron)
         source_paths = None
         found = False
@@ -158,7 +159,6 @@ class ClassicWebsite:
                         logging.info(f"issue_pid: {issue_pid}, doc_id: {doc_id}")
                         yield doc_id, records
                         found = True
-                return
 
         if not found and issue_pid:
             funcs = (
