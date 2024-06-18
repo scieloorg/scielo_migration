@@ -5,7 +5,6 @@ from lxml.etree import ParseError
 from lxml.html import fromstring, html_to_xhtml, iterlinks, rewrite_links, tostring
 
 from scielo_classic_website.htmlbody.html_code_utils import html_safe_decode
-from scielo_classic_website.utils.files_utils import read_file
 
 
 class UnableToGetHTMLTreeError(Exception):
@@ -16,8 +15,13 @@ class HTMLFile:
     """ """
 
     def __init__(self, file_path):
-        logging.info(f"HTMLFILE {file_path}")
-        self._html_content = HTMLContent(read_file(file_path, encoding="iso-8859-1"))
+        try:
+            with open(file_path, encoding="utf-8") as f:
+                text = f.read()
+        except Exception as e:
+            with open(file_path, encoding="iso-8859-1") as f:
+                text = f.read()
+        self._html_content = HTMLContent(text)
 
     @property
     def asset_path_fixes(self):
@@ -60,7 +64,7 @@ class HTMLContent:
     """
 
     def __init__(self, content=None):
-        self.tree = None
+        self._tree = None
         self._original = content
 
         # instancia tree com content
