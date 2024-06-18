@@ -8,6 +8,10 @@ from scielo_classic_website.htmlbody.html_code_utils import html_safe_decode
 from scielo_classic_website.utils.files_utils import read_file
 
 
+class UnableToGetHTMLTreeError(Exception):
+    ...
+
+
 class HTMLFile:
     """ """
 
@@ -56,26 +60,28 @@ class HTMLContent:
     """
 
     def __init__(self, content=None):
-        self._content = content
+        self.tree = None
+        self._original = content
+
+        # instancia tree com content
         self.tree = content
-        # if content != self.content:
-        #     logging.info(content)
-        #     logging.info(self.content)
 
     @property
     def body_content(self):
         if self.tree is None:
-            return self._content
+            return self._original
         try:
-            body = self.tree.find(".//body")
-            return html2xml(body)
-        except (AttributeError, TypeError):
-            return self.content
+            node = self.tree.find(".//body")
+            if not node:
+                node = self.tree
+            return html2xml(node)
+        except Exception as e:
+            return self._original
 
     @property
     def content(self):
         if self.tree is None:
-            return self._content
+            return self._original
         return html2xml(self.tree)
 
     @property
@@ -114,8 +120,13 @@ class HTMLContent:
     @tree.setter
     def tree(self, content):
         self._tree = None
-        if not content.strip():
-            content = "<span></span>"
+        original = content
+
+        # fix content
+        if not content.startswith("<") or not content.endswith(">"):
+            content = f"<span>{original}</span>"
+        content = content.replace(" w:", " namespece-w-")
+
         try:
             self._tree = fromstring(content)
             return
@@ -132,16 +143,20 @@ class HTMLContent:
         #     # logging.exception(f"Error 2 {type(e)} {e} {content}")
 
         try:
-            alt_content = (
-                f'<span data-bad-format="yes"><!-- {content} --></span>'
+            content = (
+                f'<span data-bad-format="yes"><!-- {original} --></span>'
             )
-            self._tree = fromstring(alt_content)
+            self._tree = fromstring(content)
             return
         except Exception as e:
-            pass
-            # logging.exception(f"Error 3 {type(e)} {e} {content}")
-
-        logging.error(f"HTMLContent {content}")
+            d = {
+                "class": "HTMLContent",
+                "method": "tree.setter",
+                "error": str(e),
+                "type": str(type(e)),
+                "original": original,
+            }
+            raise UnableToGetHTMLTreeError(str(d))
 
     @property
     def asset_path_fixes(self):
