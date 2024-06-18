@@ -129,7 +129,20 @@ class HTMLContent:
         # fix content
         if not content.startswith("<") or not content.endswith(">"):
             content = f"<span>{original}</span>"
+
         content = content.replace(" w:", " namespece-w-")
+
+        # evita tags de estilos mescladas
+        # ex.: <b><i>conteúdo</b></i> =>
+        # <span name="style_bold"><span name="style_italic">conteúdo</span></span>
+
+        for tag, style in zip(("b", "i", "u", "sup", "sub"), ("bold", "italic", "underline", "sup", "sub")):
+            content = content.replace(f"<{tag}>", f'<span name="style_{style}">')
+            content = content.replace(f"</{tag}>", '</span>')
+
+            tag = tag.upper()
+            content = content.replace(f"<{tag}>", f'<span name="style_{style}">')
+            content = content.replace(f"</{tag}>", '</span>')
 
         try:
             self._tree = fromstring(content)

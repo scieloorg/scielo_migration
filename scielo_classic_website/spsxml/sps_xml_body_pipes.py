@@ -103,9 +103,10 @@ def convert_html_to_xml_step_2(document):
         # RemoveCDATAPipe(),
         RemoveCommentPipe(),
         FontSymbolPipe(),
-        RemoveTagsPipe(),
+        RemoveHTMLTagsPipe(),
         RenameElementsPipe(),
         StylePipe(),
+        RemoveSpanTagsPipe(),
         OlPipe(),
         UlPipe(),
         TagsHPipe(),
@@ -564,8 +565,18 @@ class RemoveCommentPipe(plumber.Pipe):
         return data
 
 
-class RemoveTagsPipe(plumber.Pipe):
-    TAGS = ["font", "small", "big", "span", "s", "lixo", "center"]
+class RemoveHTMLTagsPipe(plumber.Pipe):
+    TAGS = ["font", "small", "big", "s", "lixo", "center"]
+
+    def transform(self, data):
+        raw, xml = data
+        ET.strip_tags(xml, self.TAGS)
+        _report(xml, func_name=type(self))
+        return data
+
+
+class RemoveSpanTagsPipe(plumber.Pipe):
+    TAGS = ["span", ]
 
     def transform(self, data):
         raw, xml = data
