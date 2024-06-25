@@ -823,11 +823,13 @@ class XRefFixPipe(plumber.Pipe):
     def parser_node(self, node, root, params):
         pkg_name = params.get("pkg_name")
         parent = node.getparent()
-        first_name = None
-        first_label = None
-        first_reftype = None
+        name = None
+        label_first_word = None
+        ref_type = None
         children = []
         for child in parent.xpath("xref[@fixme and @href]"):
+            previous_name = name
+            previous_ref_type = ref_type
             try:
                 href = child.attrib.pop("href")
             except KeyError:
@@ -839,35 +841,45 @@ class XRefFixPipe(plumber.Pipe):
 
             child.set("rid", rid)
 
-            label = child.text
-            if first_label is None:
-                first_label = label.split()[0]
-                if first_label.endswith("s"):
-                    first_label = first_label[:-1]
+            label = child.text.strip()
+            if label_first_word is None:
+                label_first_word = label.split()[0]
+                if label_first_word.endswith("s"):
+                    label_first_word = label_first_word[:-1]
+                else:
+                    label_first_word = None
             label_lower = label.lower()
+
             if label_lower[0] == "t":
                 name = "table-wrap"
                 child.set("ref-type", "table")
-                first_reftype = "table"
+                ref_type = "table"
+
             elif label_lower[0] == "f":
                 name = "fig"
                 child.set("ref-type", "fig")
-                first_reftype = "fig"
+                ref_type = "fig"
+
             elif label_lower[0] == "e":
                 name = "disp-formula"
                 child.set("ref-type", "disp-formula")
-                first_reftype = "disp-formula"
+                ref_type = "disp-formula"
+
             elif label_lower[0].isdigit():
-                name = first_name
-                label = f"{first_label} {label}"
-                if first_reftype:
-                    child.set("ref-type", first_reftype)
-            if first_name is None:
-                first_name = name
+                if previous_name and label_first_word and label:
+                    name = previous_name
+                    label = f"{label_first_word} {label}"
+                    child.set("ref-type", ref_type)
+            else:
+                name = None
 
             child.attrib.pop("fixme")
-            xpath = f"//{name}[@id='{rid}']"
-            if len(root.xpath(xpath)) == 0:
+            if not name:
+                continue
+
+            try:
+                found = root.xpath(f"//*[@id='{rid}']")[0]
+            except IndexError:
                 new_elem = ET.Element(name)
                 new_elem.set("id", rid)
 
@@ -877,6 +889,7 @@ class XRefFixPipe(plumber.Pipe):
 
                 g = ET.Element("graphic")
                 g.set("{http://www.w3.org/1999/xlink}href", href)
+
                 new_elem.append(g)
                 children.append(new_elem)
 
@@ -923,9 +936,11 @@ class InsertGraphicInFigPipe(plumber.Pipe):
 
         while True:
             grand_parent = parent.getparent()
+            if grand_parent is None:
+                break
             if grand_parent.tag == "body":
                 break
-            parent = parent.getparent()
+            parent = grand_parent
 
         sibling = parent.getnext()
         if sibling is None:
@@ -993,9 +1008,11 @@ class InsertGraphicInTableWrapPipe(plumber.Pipe):
 
         while True:
             grand_parent = parent.getparent()
+            if grand_parent is None:
+                break
             if grand_parent.tag == "body":
                 break
-            parent = parent.getparent()
+            parent = grand_parent
 
         sibling = parent.getnext()
         if sibling is None:
