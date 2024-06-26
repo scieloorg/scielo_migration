@@ -1016,7 +1016,7 @@ class InsertGraphicInTableWrapPipe(plumber.Pipe):
 
         sibling = parent.getnext()
         if sibling is None:
-            comment = etree.Comment("FIXME check whether element is table-wrap")
+            comment = ET.Comment("FIXME check whether element is table-wrap")
             node.insert(1, comment)
             logging.info(f"Unable to find graphic for {node.get('id')}")
             return
