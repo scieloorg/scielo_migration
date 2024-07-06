@@ -127,7 +127,7 @@ class XMLArticleMetaArticleCategoriesPipe(plumber.Pipe):
         subject_group.set("subj-group-type", "heading")
 
         subject = ET.Element("subject")
-        subject.text = raw.original_section
+        subject.text = raw.get_section_title(raw.original_language)
 
         subject_group.append(subject)
 
