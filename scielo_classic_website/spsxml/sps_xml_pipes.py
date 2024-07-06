@@ -78,6 +78,7 @@ def _process(document):
         XMLBackPipe(),
         XMLArticleMetaCitationsPipe(),
         XMLSubArticlePipe(),
+        XMLStylePipe(),
         XMLArticleMetaCountsPipe(),
         XMLNormalizeSpacePipe(),
         XMLClosePipe(),
@@ -336,7 +337,7 @@ class XMLSubArticlePipe(plumber.Pipe):
                 subjectgroup = ET.Element("subj-group")
                 subjectgroup.set("subj-group-type", "heading")
                 sbj = ET.Element("subject")
-                sbj.text = raw.get_section(language)
+                sbj.text = raw.get_section_title(language)
                 subjectgroup.append(sbj)
                 articlecategories.append(subjectgroup)
                 frontstub.append(articlecategories)
@@ -378,4 +379,16 @@ class XMLSubArticlePipe(plumber.Pipe):
                     kwd_group.append(kwd)
                 frontstub.append(kwd_group)
             subarticle.append(frontstub)
+        return data
+
+
+class XMLStylePipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+        for style in ("bold", "italic", "sup", "sub", "underline"):
+            xpath = f".//span[@name='style_{style}']"
+            for node in xml.xpath(xpath):
+                node.tag = style
+                node.attrib.pop("name")
+        _report(xml, func_name=type(self))
         return data

@@ -212,22 +212,18 @@ class Document:
     def elocation(self):
         return self.page.get("elocation")
 
-    def get_section(self, lang):
-        if not hasattr(self, "_sections") or not self._sections:
-            self._sections = {}
-            logging.info("issue %s" % type(self.issue))
-            logging.info("self.section_code %s" % self.section_code)
+    def get_sections(self):
+        items = {}
+        for item in self.issue.get_sections(self.section_code):
+            items[item["language"]] = item
+        return items
 
-            for item in self.issue.get_sections(self.section_code):
-                logging.info("lang %s" % item)
-                self._sections[item["language"]] = item
-
-        logging.info("get_section...")
-        logging.info("self._sections %s " % self._sections)
+    def get_section_title(self, lang):
         try:
-            return self._sections[lang]["text"]
+            section = self.get_sections(lang) or self.get_sections("en")
+            return section["text"]
         except KeyError:
-            return None
+            return f"{self.issue.get_sections(self.section_code)} {lang} {self.section_code}"
 
     def get_article_title(self, lang):
         if not hasattr(self, "_article_titles") or not self._article_titles:
