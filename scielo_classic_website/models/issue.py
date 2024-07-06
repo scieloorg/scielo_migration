@@ -64,6 +64,13 @@ class Issue:
         )
 
     def get_sections(self, code):
-        for item in self.sections:
-            if item["code"] == code:
-                yield item
+        return self.sections_by_code.get(code) or []
+
+    @property
+    def sections_by_code(self):
+        if not hasattr(self, '_sections_by_code') or not self._sections_by_code:
+            self._sections_by_code = {}
+            for item in self.sections:
+                self._sections_by_code.setdefault(item["code"], [])
+                self._sections_by_code[item["code"]].append(item)
+        return self._sections_by_code
