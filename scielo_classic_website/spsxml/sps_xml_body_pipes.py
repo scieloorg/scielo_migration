@@ -633,6 +633,7 @@ class StylePipe(plumber.Pipe):
             xpath = f".//span[@name='style_{style}']"
             for node in xml.xpath(xpath):
                 node.tag = style
+                node.attrib.pop("name")
         _report(xml, func_name=type(self))
         return data
 
