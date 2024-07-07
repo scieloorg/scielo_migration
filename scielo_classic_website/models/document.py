@@ -220,7 +220,8 @@ class Document:
 
     def get_section_title(self, lang):
         try:
-            section = self.get_sections(lang) or self.get_sections("en")
+            sections = self.get_sections()
+            section = sections.get(lang) or sections.get("en")
             return section["text"]
         except KeyError:
             return f"{self.issue.get_sections(self.section_code)} {lang} {self.section_code}"
