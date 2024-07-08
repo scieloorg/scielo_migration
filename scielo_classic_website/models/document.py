@@ -223,7 +223,7 @@ class Document:
             sections = self.get_sections()
             section = sections.get(lang) or sections.get("en")
             return section["text"]
-        except KeyError:
+        except (TypeError, ValueError, KeyError):
             return f"{self.issue.get_sections(self.section_code)} {lang} {self.section_code}"
 
     def get_article_title(self, lang):
