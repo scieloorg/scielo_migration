@@ -35,6 +35,20 @@ def fix_html_text(html_text):
     return text
 
 
+def create_node_with_fixed_html_text(element_name, html_text):
+    """
+    Remove tags b e troca tags i por italic
+    """
+
+    xml = f"<{element_name}>{html_text}</{element_name}>"
+    hc = HTMLContent(xml)
+    node = hc.tree.find(".")
+    ET.strip_tags(node, "b")
+    ET.strip_tags(node, "B")
+
+    return node
+
+
 def _create_date_element(element_name, attributes, date_text):
     # '<pub-date publication-format="electronic" date-type="pub">'
     if not date_text:
@@ -143,10 +157,8 @@ class XMLArticleMetaTitleGroupPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        article_title = ET.Element("article-title")
-
-        text = raw.original_title
-        article_title.text = fix_html_text(text)
+        article_title = create_node_with_fixed_html_text(
+            "article-title", raw.original_title)
 
         titlegroup = ET.Element("title-group")
         titlegroup.append(article_title)
@@ -167,10 +179,8 @@ class XMLArticleMetaTranslatedTitleGroupPipe(plumber.Pipe):
         raw, xml = data
 
         for item in raw.translated_titles:
-            trans_title = ET.Element("trans-title")
-
-            text = item["text"]
-            trans_title.text = fix_html_text(text)
+            trans_title = create_node_with_fixed_html_text(
+                "trans-title", item["text"])
 
             trans_titlegrp = ET.Element("trans-title-group")
             trans_titlegrp.set(
@@ -461,9 +471,7 @@ class XMLArticleMetaAbstractsPipe(plumber.Pipe):
         articlemeta = xml.find("./front/article-meta")
 
         if raw.original_abstract:
-            p = ET.Element("p")
-            text = raw.original_abstract
-            p.text = fix_html_text(text)
+            p = create_node_with_fixed_html_text("p", raw.original_abstract)
 
             abstract = ET.Element("abstract")
             abstract.append(p)
@@ -477,8 +485,7 @@ class XMLArticleMetaAbstractsPipe(plumber.Pipe):
                 if item["language"] in langs:
                     continue
 
-                p = ET.Element("p")
-                p.text = fix_html_text(item["text"])
+                p = create_node_with_fixed_html_text("p", item["text"])
 
                 abstract = ET.Element("trans-abstract")
                 abstract.set(
@@ -515,8 +522,7 @@ class XMLArticleMetaKeywordsPipe(plumber.Pipe):
             kwdgroup.set("kwd-group-type", "author-generated")
 
             for item in keywords:
-                kwd = ET.Element("kwd")
-                kwd.text = fix_html_text(item)
+                kwd = create_node_with_fixed_html_text("kwd", item)
                 kwdgroup.append(kwd)
             articlemeta.append(kwdgroup)
 
