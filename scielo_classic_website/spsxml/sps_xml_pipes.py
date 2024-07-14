@@ -81,6 +81,7 @@ def _process(document):
         XMLStylePipe(),
         XMLArticleMetaCountsPipe(),
         XMLNormalizeSpacePipe(),
+        XMLDeleteRepeatedElementWithId(),
         XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -114,6 +115,38 @@ class SetupArticlePipe(plumber.Pipe):
         except Exception as e:
             logging.exception(e)
             xml.set("dtd-version", "1.3")
+        return data, xml
+
+
+class XMLDeleteRepeatedElementWithId(plumber.Pipe):
+    def fix_id_and_rid(self, root):
+        subarticle_id = root.get("id")
+        items = []
+        for node in root.xpath(".//*[@id]"):
+            _id = node.get("id")
+            item = (node.tag, _id)
+            if item in items:
+                elem = ET.Element("EMPTYTAGTOSTRIP")
+                node.addnext(elem)
+                parent = node.getparent()
+                parent.remove(node)
+            else:
+                items.append(item)
+                if subarticle_id:
+                    new_id = f'{subarticle_id}{_id}'
+                else:
+                    new_id = _id
+                node.set("id", new_id)
+                for xref in root.xpath(f".//xref[@rid='{_id}']"):
+                    xref.set("rid", new_id)
+
+    def transform(self, data):
+        raw, xml = data
+
+        for subarticle in xml.xpath("sub-article[@article-type='translation']"):
+            self.fix_id_and_rid(subarticle)
+        self.fix_id_and_rid(xml.find("."))
+        ET.strip_tags(xml, "EMPTYTAGTOSTRIP")
         return data, xml
 
 
