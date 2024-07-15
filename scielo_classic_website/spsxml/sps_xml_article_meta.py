@@ -43,8 +43,11 @@ def create_node_with_fixed_html_text(element_name, html_text):
     xml = f"<{element_name}>{html_text}</{element_name}>"
     hc = HTMLContent(xml)
     node = hc.tree.find(".")
+    for n in node.xpath(".//span[@name='style_bold']"):
+        n.tag = "bold"
     ET.strip_tags(node, "b")
     ET.strip_tags(node, "B")
+    ET.strip_tags(node, "bold")
 
     return node
 
