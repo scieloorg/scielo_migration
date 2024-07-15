@@ -10,8 +10,31 @@ from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 
 
+REF_TYPES = {
+    "t": "table",
+    "f": "fig",
+    "e": "disp-formula",
+}
+
+
+ELEM_NAME = {
+    "t": "table-wrap",
+    "f": "fig",
+    "e": "disp-formula",
+}
+
+
 class XMLBodyAnBackConvertException(Exception):
     ...
+
+
+def delete_tags(root):
+    for node in root.xpath(f"//*[@delete]"):
+        parent = node.getparent()
+        node.addnext(ET.Element("EMPTYTAGTOSTRIP"))
+        parent.remove(node)
+
+    ET.strip_tags(root, "EMPTYTAGTOSTRIP")
 
 
 def _report(xml, func_name):
@@ -111,8 +134,8 @@ def convert_html_to_xml_step_2(document):
         UlPipe(),
         TagsHPipe(),
         ASourcePipe(),
-        AHrefPipe(),
         ANamePipe(),
+        AHrefPipe(),
         ImgSrcPipe(),
         RemoveEmptyPTagPipe(),
         EndPipe(),
@@ -142,7 +165,7 @@ def convert_html_to_xml_step_3(document):
     # logging.info("convert_html_to_xml - step 3")
     ppl = plumber.Pipeline(
         StartPipe(),
-        XRefFixPipe(),
+        XRefSpecialInternalLinkPipe(),
         XRefTypePipe(),
         InlineGraphicPipe(),
         # RemoveParentPTagOfGraphicPipe(),
@@ -729,9 +752,10 @@ class AHrefPipe(plumber.Pipe):
         node.tag = "xref"
         node.set("rid", node.attrib.pop("href")[1:])
 
-    def _create_special_internal_link(self, node):
+    def _create_internal_link_to_asset_html_page(self, node):
+        logging.info(f"_create_internal_link_to_asset_html_page: {ET.tostring(node)}")
         node.tag = "xref"
-        node.set("fixme", "true")
+        node.set("is_internal_link_to_asset_html_page", "true")
 
     def parser_node(self, node):
         href = node.get("href") or ""
@@ -751,7 +775,7 @@ class AHrefPipe(plumber.Pipe):
             return self._create_internal_link(node)
 
         if "img/revistas/" in href or ".." in href:
-            return self._create_special_internal_link(node)
+            return self._create_internal_link_to_asset_html_page(node)
 
         if ":" in href:
             return self._create_ext_link(node)
@@ -771,14 +795,40 @@ class AHrefPipe(plumber.Pipe):
 
 
 class ANamePipe(plumber.Pipe):
-    def parser_node(self, node):
-        node.tag = "div"
-        node.set("id", node.attrib.pop("name"))
+    def remove_top_and_back(self, root):
+
+        for node in root.xpath(".//a[@name]"):
+            name = node.get("name")
+            if name.startswith("top") or name.startswith("back"):
+                node.set("delete", "true")
+
+                for ahref in root.xpath(f".//a[@href='#{name}']"):
+                    ahref.set("delete", "true")
+        delete_tags(root)
+        # else:
+        #     node.tag = "div"
+        #     node.set("id", node.attrib.pop("name"))
+
+    def remove_multiplicity(self, root):
+        items = []
+        for node in root.xpath(".//a[@name]"):
+            name = node.get("name")
+            for item in root.xpath(f".//a[@name='{name}']"):
+                if name in items:
+                    node.set("delete", "true")
+                else:
+                    items.append(name)
+        delete_tags(root)
 
     def transform(self, data):
         raw, xml = data
-        _process(xml, "a[@name]", self.parser_node)
-        _report(xml, func_name=type(self))
+
+        self.remove_top_and_back(xml)
+        self.remove_multiplicity(xml)
+
+        for node in xml.xpath(".//a[@name]"):
+            node.tag = "div"
+            node.set("id", node.attrib.pop("name"))
         return data
 
 
@@ -797,21 +847,15 @@ class ImgSrcPipe(plumber.Pipe):
 
 
 class XRefTypePipe(plumber.Pipe):
+
     def parser_node(self, node):
         rid = node.get("rid")
-        rid_first_char = rid[0]
-        if rid_first_char == "t" and "top" not in rid:
-            value = None
-            for c in rid:
-                if c.isdigit():
-                    value = "table"
-                    break
-            if value:
-                node.set("ref-type", "table")
-        elif rid_first_char == "f":
-            node.set("ref-type", "fig")
-        elif rid_first_char == "e":
-            node.set("ref-type", "disp-formula")
+        if not rid:
+            logging.info(ET.tostring(node))
+        if rid[-1].isdigit():
+            ref_type = REF_TYPES.get(rid[0])
+            if ref_type:
+                node.set("ref-type", ref_type)
 
     def transform(self, data):
         raw, xml = data
@@ -820,68 +864,68 @@ class XRefTypePipe(plumber.Pipe):
         return data
 
 
-class XRefFixPipe(plumber.Pipe):
-    def parser_node(self, node, root, params):
-        pkg_name = params.get("pkg_name")
-        parent = node.getparent()
-        name = None
+class XRefSpecialInternalLinkPipe(plumber.Pipe):
+
+    def transform(self, data):
+        raw, xml = data
+
+        for xref_parent in xml.xpath(".//*[xref]"):
+            if xref_parent.xpath("xref[@is_internal_link_to_asset_html_page]"):
+                self.parser_xref_parent(
+                    xref_parent,
+                    xml,
+                    raw.filename_without_extension,
+                )
+        _report(xml, func_name=type(self))
+        return data
+
+    def parser_xref_parent(self, xref_parent, root, pkg_name):
+        previous_element_name = None
         label_first_word = None
-        ref_type = None
         children = []
-        for child in parent.xpath("xref[@fixme and @href]"):
-            previous_name = name
-            previous_ref_type = ref_type
+        for child in xref_parent.xpath("xref[@is_internal_link_to_asset_html_page and @href]"):
+
+            # Table 1
+            label = child.text.strip() or " ".join(child.xpath(".//text()")).strip()
+            if not label:
+                continue
             try:
                 href = child.attrib.pop("href")
             except KeyError:
                 continue
 
             basename = os.path.basename(href)
-            rid, ext = os.path.splitext(basename)
-            rid = rid.replace(pkg_name, "")
+            filename, ext = os.path.splitext(basename)
+            rid = filename.replace(pkg_name, "")
+            if not rid:
+                continue
 
             child.set("rid", rid)
+            element_name = ELEM_NAME.get(rid[0])
+            if not element_name:
+                continue
 
-            label = child.text.strip()
+            # Tables 1-3
             if label_first_word is None:
                 label_first_word = label.split()[0]
                 if label_first_word.endswith("s"):
+                    # Table
                     label_first_word = label_first_word[:-1]
                 else:
                     label_first_word = None
-            label_lower = label.lower()
 
-            if label_lower[0] == "t":
-                name = "table-wrap"
-                child.set("ref-type", "table")
-                ref_type = "table"
-
-            elif label_lower[0] == "f":
-                name = "fig"
-                child.set("ref-type", "fig")
-                ref_type = "fig"
-
-            elif label_lower[0] == "e":
-                name = "disp-formula"
-                child.set("ref-type", "disp-formula")
-                ref_type = "disp-formula"
-
-            elif label_lower[0].isdigit():
-                if previous_name and label_first_word and label:
-                    name = previous_name
+            if element_name and label[0].isdigit():
+                # <xref is_internal_link_to_asset_html_page="true" href="t2">2</xref>
+                if label_first_word and label:
+                    # Table 2
                     label = f"{label_first_word} {label}"
-                    child.set("ref-type", ref_type)
-            else:
-                name = None
 
-            child.attrib.pop("fixme")
-            if not name:
-                continue
+            child.attrib.pop("is_internal_link_to_asset_html_page")
 
             try:
                 found = root.xpath(f"//*[@id='{rid}']")[0]
             except IndexError:
-                new_elem = ET.Element(name)
+                new_elem = ET.Element(element_name)
                 new_elem.set("id", rid)
 
                 elem_label = ET.Element("label")
@@ -895,25 +939,9 @@ class XRefFixPipe(plumber.Pipe):
                 children.append(new_elem)
 
         for child in reversed(children):
-            node = ET.Element(parent.tag)
+            node = ET.Element(xref_parent.tag)
             node.append(child)
-            parent.addnext(node)
-
-    def transform(self, data):
-        raw, xml = data
-        try:
-            params = {"pkg_name": raw.filename_without_extension}
-        except AttributeError:
-            params = {}
-
-        _process_with_params(
-            xml,
-            "xref[@fixme]",
-            self.parser_node,
-            params,
-        )
-        _report(xml, func_name=type(self))
-        return data
+            xref_parent.addnext(node)
 
 
 class InsertGraphicInFigPipe(plumber.Pipe):
