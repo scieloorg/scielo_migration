@@ -82,6 +82,7 @@ def _process(document):
         XMLArticleMetaCountsPipe(),
         XMLNormalizeSpacePipe(),
         XMLDeleteRepeatedElementWithId(),
+        XMLFontFaceSymbolPipe(),
         XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -423,4 +424,63 @@ class XMLStylePipe(plumber.Pipe):
             for node in xml.xpath(xpath):
                 node.tag = style
                 node.attrib.pop("name")
+        return data
+
+
+class XMLFontFaceSymbolPipe(plumber.Pipe):
+    # https://www.alanwood.net/demos/symbol.html
+    FONTFACESYMBOL = {
+        '&': {"char": "&"},
+        '[': {"char": "["},
+        ']': {"char": "]"},
+        '´': {"char": "×"},
+        '¸': {"char": "÷"},
+        '&lt;': {"char": "&lt;"},
+        '&gt;': {"char": "&gt;"},
+        '±': {"char": "±"},
+        '×': {"char": "·"},
+        '÷': {"char": "¦"},
+        '¢': {"char": "′"},
+        '¤': {"char": "/"},
+        '°': {"char": "°"},
+        '·': {"char": "·"},
+        '¼': {"char": "…"},
+        '½': {"char": "⏐"},
+        '²': {"char": '"'},
+        'â': {"char": "®"},
+        'ä': {"char": "™"},
+        'ã': {"char": "©"},
+        'ç': {"char": "⎜"},
+        'ê': {"char": "⎢"},
+        'ï': {"char": "⎪"},
+        'Ó': {"char": "©"},
+        'Ò': {"char": "®"},
+        'Ô': {"char": "™"},
+        'ô': {"char": "⎮"},
+        'ú': {"char": "⎥"},
+        'Ù': {"char": "∧"},
+        'Û': {"char": "⇔"},
+        'Ü': {"char": "≤"},
+        '«': {"char": "↔"},
+        '»': {"char": "≈"},
+        '£': {"char": "≤"},
+        '¬': {"char": "←"},
+        '®': {"char": "→"},
+        '¾': {"char": "⎯"},
+        '³': {"char": "≥"},
+    }
+
+    def transform(self, data):
+        raw, xml = data
+
+        for node in xml.xpath(".//font-face-symbol"):
+            try:
+                item = FONTFACESYMBOL[node.text]
+            except KeyError:
+                item = None
+            else:
+                node.text = item["char"]
+                node.tag = "REMOVEFONTFACESYMBOL"
+
+        ET.strip_tags(xml, "REMOVEFONTFACESYMBOL")
         return data
