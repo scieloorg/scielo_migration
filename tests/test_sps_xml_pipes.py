@@ -7,6 +7,7 @@ from scielo_classic_website.spsxml.sps_xml_pipes import (
     SetupArticlePipe,
     XMLClosePipe,
     get_xml_rsps,
+    XMLFontFaceSymbolPipe,
 )
 
 
@@ -146,3 +147,50 @@ class TestXMLClosePipe(TestCase):
             "<article/>"
         ).encode("utf-8")
         self.assertEqual(expected, _xml)
+
+class TestXMLFontFaceSymbolPipe(TestCase):
+    def test_XMLFontFaceSymbolPipe(self):
+        data = etree.fromstring(
+            '<article>'
+            '<font-face-symbol face="Symbol">£</font-face-symbol>'
+            '<font-face-symbol face="Symbol">¨</font-face-symbol>'
+            '<font-face-symbol face="Symbol">!</font-face-symbol>'
+            '</article>'
+        )
+        
+        _xml = XMLFontFaceSymbolPipe().transform(data=data)
+        expected = etree.fromstring(
+            '<article>'
+            '≤'
+            '♦'
+            '!'
+            '</article>'
+        )
+        
+        self.assertEqual(etree.tostring(expected), etree.tostring(_xml))
+
+    def test_XMLFontFaceSymbolPipe_no_replacements(self):
+        data = etree.fromstring(
+            '<article>'
+            '<font-face-symbol face="Symbol">!</font-face-symbol>'
+            '</article>'
+        )
+        
+        _xml = XMLFontFaceSymbolPipe().transform(data=data)
+        
+        expected = etree.fromstring(
+            '<article>'
+            '!'
+            '</article>'
+        )
+        
+        self.assertEqual(etree.tostring(expected), etree.tostring(_xml))
+
+    def test_XMLFontFaceSymbolPipe_empty(self):
+        data = etree.fromstring('<article></article>')
+        
+        _xml = XMLFontFaceSymbolPipe().transform(data=data)
+        
+        expected = etree.fromstring('<article></article>')
+        
+        self.assertEqual(etree.tostring(expected), etree.tostring(_xml))
