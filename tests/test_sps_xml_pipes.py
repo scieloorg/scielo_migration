@@ -150,7 +150,7 @@ class TestXMLClosePipe(TestCase):
 
 class TestXMLFontFaceSymbolPipe(TestCase):
     def test_XMLFontFaceSymbolPipe(self):
-        data = etree.fromstring(
+        data = None, etree.fromstring(
             '<article>'
             '<font-face-symbol face="Symbol">£</font-face-symbol>'
             '<font-face-symbol face="Symbol">¨</font-face-symbol>'
@@ -158,7 +158,7 @@ class TestXMLFontFaceSymbolPipe(TestCase):
             '</article>'
         )
         
-        _xml = XMLFontFaceSymbolPipe().transform(data=data)
+        _raw, _xml = XMLFontFaceSymbolPipe().transform(data=data)
         expected = etree.fromstring(
             '<article>'
             '≤'
@@ -170,13 +170,13 @@ class TestXMLFontFaceSymbolPipe(TestCase):
         self.assertEqual(etree.tostring(expected), etree.tostring(_xml))
 
     def test_XMLFontFaceSymbolPipe_no_replacements(self):
-        data = etree.fromstring(
+        data = None, etree.fromstring(
             '<article>'
             '<font-face-symbol face="Symbol">!</font-face-symbol>'
             '</article>'
         )
         
-        _xml = XMLFontFaceSymbolPipe().transform(data=data)
+        _raw, _xml = XMLFontFaceSymbolPipe().transform(data=data)
         
         expected = etree.fromstring(
             '<article>'
@@ -187,9 +187,9 @@ class TestXMLFontFaceSymbolPipe(TestCase):
         self.assertEqual(etree.tostring(expected), etree.tostring(_xml))
 
     def test_XMLFontFaceSymbolPipe_empty(self):
-        data = etree.fromstring('<article></article>')
+        data = None, etree.fromstring('<article></article>')
         
-        _xml = XMLFontFaceSymbolPipe().transform(data=data)
+        _raw, _xml = XMLFontFaceSymbolPipe().transform(data=data)
         
         expected = etree.fromstring('<article></article>')
         
