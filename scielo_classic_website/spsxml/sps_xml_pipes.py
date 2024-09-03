@@ -610,7 +610,7 @@ class XMLFontFaceSymbolPipe(plumber.Pipe):
     }
 
     def transform(self, data):
-        xml = data
+        raw, xml = data
 
         for node in xml.xpath(".//font-face-symbol"):
             item = self.FONTFACESYMBOL.get(node.text)
