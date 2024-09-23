@@ -23,6 +23,7 @@ from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLArticleMetaTitleGroupPipe,
     XMLArticleMetaTranslatedTitleGroupPipe,
     XMLNormalizeSpacePipe,
+    create_node_with_fixed_html_text,
 )
 from scielo_classic_website.spsxml.sps_xml_attributes import (
     get_article_type,
@@ -379,25 +380,16 @@ class XMLSubArticlePipe(plumber.Pipe):
             # ARTICLE TITLE
             if raw.translated_titles:
                 titlegroup = ET.Element("title-group")
-                articletitle = ET.Element("article-title")
-                articletitle.set("{http://www.w3.org/XML/1998/namespace}lang", language)
                 title = raw.get_article_title(language)
-                if "&" in title:
-                    articletitle.text = ET.CDATA(title)
-                else:
-                    articletitle.text = title
+                articletitle = create_node_with_fixed_html_text("article-title", title)
+                articletitle.set("{http://www.w3.org/XML/1998/namespace}lang", language)
                 titlegroup.append(articletitle)
                 frontstub.append(titlegroup)
 
             # ABSTRACT
             if raw.translated_abstracts:
-                p = ET.Element("p")
                 text = raw.get_abstract(language)
-                if "&" in text:
-                    p.text = ET.CDATA(text)
-                else:
-                    p.text = text
-                abstract = ET.Element("abstract")
+                abstract = create_node_with_fixed_html_text("p", text)
                 abstract.set("{http://www.w3.org/XML/1998/namespace}lang", language)
                 abstract.append(p)
                 frontstub.append(abstract)
@@ -408,9 +400,7 @@ class XMLSubArticlePipe(plumber.Pipe):
                 kwd_group = ET.Element("kwd-group")
                 kwd_group.set("{http://www.w3.org/XML/1998/namespace}lang", language)
                 for item in keywords_group:
-                    kwd = ET.Element("kwd")
-                    kwd.text = ET.CDATA(item) if "&" in item else item
-                    kwd_group.append(kwd)
+                    kwd_group.append(create_node_with_fixed_html_text("kwd", item))
                 frontstub.append(kwd_group)
             subarticle.append(frontstub)
         return data
