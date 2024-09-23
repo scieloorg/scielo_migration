@@ -389,8 +389,9 @@ class XMLSubArticlePipe(plumber.Pipe):
             # ABSTRACT
             if raw.translated_abstracts:
                 text = raw.get_abstract(language)
-                abstract = create_node_with_fixed_html_text("p", text)
+                abstract = ET.Element("abstract")
                 abstract.set("{http://www.w3.org/XML/1998/namespace}lang", language)
+                p = create_node_with_fixed_html_text("p", text)
                 abstract.append(p)
                 frontstub.append(abstract)
 
