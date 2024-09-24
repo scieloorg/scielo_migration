@@ -160,6 +160,7 @@ class XMLClosePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
+        xml.find(".").insert(1, ET.Comment(f"HTML 2 XML {datetime.utcnow().isoformat()}"))
         try:
             doctype = raw.params_for_xml_creation["doctype"]
         except (KeyError, AttributeError):
