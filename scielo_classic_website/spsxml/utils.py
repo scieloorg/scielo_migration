@@ -1,3 +1,6 @@
+from lxml import etree
+
+
 def convert_ahref_to_extlink(xml_etree):
     """
     This methods receives an etree node and replace all "a href" elements to
@@ -40,3 +43,23 @@ def convert_all_html_tags_to_jats(xml_etree):
     xml_etree = convert_html_tags_to_jats(xml_etree)
 
     return xml_etree
+
+
+def handle_bad_text(node, text):
+    try:
+        node.text = text
+    except Exception as e:
+        node.append(etree.Comment(str(e)))
+        node.text = handle_bad_characters(text)
+
+
+def handle_bad_characters(text):
+    chars = []
+    temporary = etree.Element("temporary")
+    for c in text:
+        try:
+            temporary.text = c
+            chars.append(c)
+        except Exception as exc:
+            chars.append('?')
+    return ''.join(chars)
