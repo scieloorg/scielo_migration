@@ -77,9 +77,7 @@ class XMLArticleMetaCitationsPipe(plumber.Pipe):
                                 ref.insert(0, mixed_citation)
                     refs.append(ref)
             except Exception as e:
-                logging.info(f"citation number: {i}")
-                logging.exception(e)
-                raise e
+                refs.append(ET.Comment(str({"data": citation, "error": str(e), "error_type": str(type(e))})))
         back.replace(reflist, refs)
         return data
 
@@ -170,7 +168,7 @@ class XMLCitation(object):
             raw, xml = data
             articletitle = ET.Element("article-title")
 
-            articletitle.text = raw.article_title
+            utils.handle_bad_text(articletitle, raw.article_title)
 
             xml.find("./element-citation").append(articletitle)
 
@@ -189,7 +187,7 @@ class XMLCitation(object):
 
             articletitle = ET.Element("chapter-title")
 
-            articletitle.text = raw.chapter_title
+            utils.handle_bad_text(articletitle, raw.chapter_title)
 
             xml.find("./element-citation").append(articletitle)
 
@@ -231,7 +229,7 @@ class XMLCitation(object):
 
             source = ET.Element("source")
 
-            source.text = raw.source
+            utils.handle_bad_text(source, raw.source)
 
             xml.find("./element-citation").append(source)
 
@@ -589,15 +587,15 @@ class XMLCitation(object):
             name = ET.Element("name")
             if author.get("surname"):
                 elem = ET.Element("surname")
-                elem.text = author.get("surname")
+                utils.handle_bad_text(elem, author.get("surname"))
                 name.append(elem)
             if author.get("given_names"):
                 elem = ET.Element("given-names")
-                elem.text = author.get("given_names")
+                utils.handle_bad_text(elem, author.get("given_names"))
                 name.append(elem)
             if author.get("anonymous"):
                 elem = ET.Element("anonymous")
-                elem.text = author.get("given_names")
+                utils.handle_bad_text(elem, author.get("given_names"))
                 name.append(elem)
             if name.getchildren():
                 return name
@@ -617,11 +615,14 @@ class XMLCitation(object):
                 return group
 
         def build_collab(self, author):
-            text = [author.get("name"), author.get("division")]
+            text = [
+                utils.handle_bad_characters(author.get("name")),
+                utils.handle_bad_characters(author.get("division")),
+            ]
             text = ", ".join([item for item in text if item])
             if text:
                 elem = ET.Element("collab")
-                elem.text = text
+                utils.handle_bad_text(elem, text)
                 return elem
 
         def build_institutional_authors(self, authors):
