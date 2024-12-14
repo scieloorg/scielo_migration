@@ -141,10 +141,8 @@ def issue_id(data):
                 _get_value(data, "v036")[4:].zfill(4),
             ]
         )
-    except:
-        print("issue_id")
-        print(data)
-        raise
+    except Exception as e:
+        raise Exception(f"Unable to return issue_id for {data}: {e} {type(e)}")
 
 
 def article_id(data):
@@ -161,8 +159,7 @@ def article_id(data):
             # pode-se agrupar os registros pelo v702 (path do XML ou HTML)
             return _get_value(data, "v702")
     except Exception as e:
-        logging.exception(e)
-        raise
+        raise Exception(f"Unable to return article_id for {data}: {e} {type(e)}")
 
 
 def _get_fields_and_their_content(content):
