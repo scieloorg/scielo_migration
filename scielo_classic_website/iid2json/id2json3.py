@@ -218,6 +218,10 @@ def _join_id_file_rows_and_return_records(id_file_rows):
 
                 # inicia um novo grupo de linhas de registro
                 record_rows = []
+        elif not row.startswith("!v"):
+            # trata quebra de linha dentro de campo
+            if record_rows:
+                record_rows[-1] += " " + row.strip()
         else:
             # adiciona linhas ao registro
             record_rows.append(row.strip())
