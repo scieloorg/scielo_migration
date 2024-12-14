@@ -30,6 +30,14 @@ to JSON
 import logging
 
 
+class IssueIdError(Exception):
+    ...
+
+
+class ArticleIdError(Exception):
+    ...
+
+
 def get_id_function(db_type):
     id_function = article_id
     if db_type == "title":
@@ -141,10 +149,8 @@ def issue_id(data):
                 _get_value(data, "v036")[4:].zfill(4),
             ]
         )
-    except:
-        print("issue_id")
-        print(data)
-        raise
+    except Exception as e:
+        raise IssueIdError(f"Unable to return issue_id for {data}: {e} {type(e)}")
 
 
 def article_id(data):
@@ -161,8 +167,7 @@ def article_id(data):
             # pode-se agrupar os registros pelo v702 (path do XML ou HTML)
             return _get_value(data, "v702")
     except Exception as e:
-        logging.exception(e)
-        raise
+        raise ArticleIdError(f"Unable to return article_id for {data}: {e} {type(e)}")
 
 
 def _get_fields_and_their_content(content):
@@ -218,6 +223,10 @@ def _join_id_file_rows_and_return_records(id_file_rows):
 
                 # inicia um novo grupo de linhas de registro
                 record_rows = []
+        elif not row.startswith("!v"):
+            # trata quebra de linha dentro de campo
+            if record_rows:
+                record_rows[-1] += " " + row.strip()
         else:
             # adiciona linhas ao registro
             record_rows.append(row.strip())
@@ -242,8 +251,8 @@ def _get_id_and_json_records(records, get_id_function):
     -------
     list of strings
     """
-    _id = None
-    _id_records = []
+    item_id = None
+    item_records = []
     for record_content in records:
         if not record_content:
             continue
@@ -251,19 +260,20 @@ def _get_id_and_json_records(records, get_id_function):
         data = _build_record(fields)
         if not data:
             continue
-        _next_id = get_id_function(data)
-        if _id and _next_id != _id:
-            # _id changed
 
-            # returns current _id, _id_records
-            yield (_id, _id_records)
+        new_id = get_id_function(data)
+
+        if item_id and new_id != item_id:
+            # item_id changed
+
+            # returns current _id, item_records
+            yield (item_id, item_records)
 
             # init a new group of records
-            _id_records = []
+            item_records = []
 
-        # update `_id` with `_next_id`
-        _id = _next_id
-        # add `data` to `_id_records`
-        _id_records.append(data)
-    # returns current _id, _id_records
-    yield (_id, _id_records)
+        item_id = new_id
+        # add `data` to `item_records`
+        item_records.append(data)
+    # returns item_id, item_records
+    yield (item_id, item_records)
