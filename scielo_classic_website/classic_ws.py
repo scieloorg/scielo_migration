@@ -233,9 +233,13 @@ class ClassicWebsite:
         issues = {}
         source_paths = self.get_source_paths( acron, issue_folder, issue_pid)
         for item_id, records in self.get_document_records(source_paths):
-            record_type = id2json3._get_value(records[0], "v706")
+            record_type = None
+            
+            if records:
+                record_type = id2json3._get_value(records[0], "v706")
+
             if record_type == "i":
-                issues[item_id] = records
+                issues[item_id] = records[0]
             elif record_type == "o":
                 if len(item_id) == 23:
                     i_id = item_id[1:18]
