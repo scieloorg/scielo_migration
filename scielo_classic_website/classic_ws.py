@@ -183,3 +183,64 @@ class ClassicWebsite:
                 if issue_pid in doc_id:
                     logging.info("found records")
                     yield doc_id, records
+
+    def get_source_paths(
+        self,
+        acron,
+        issue_folder=None,
+        issue_pid=None,
+    ):
+        logging.info(f"ClassicWebsite.get_source_paths {acron} {issue_folder} {issue_pid}")
+        article_db_path = ArtigoRecordsPath(self.classic_website_paths, acron)
+        source_paths = None
+        found = False
+        if issue_folder:
+            funcs = (
+                article_db_path.get_db_from_serial_base_xml_dir,
+                article_db_path.get_db_from_bases_work_acron_subset,
+                article_db_path.get_db_from_serial_base_dir,
+            )
+            for func in funcs:
+                source_paths = func(issue_folder)
+                if source_paths:
+                    return source_paths
+
+        if not found and issue_pid:
+            funcs = (
+                article_db_path.get_db_from_bases_work_acron_id,
+                article_db_path.get_db_from_bases_work_acron,
+            )
+            for func in funcs:
+                source_paths = func(issue_folder)
+                if source_paths:
+                    return source_paths
+
+    def get_document_records(
+        self,
+        source_paths,
+    ):
+        for source_path in source_paths:
+            logging.info(f"ClassicWebsite.get_document_records: {source_path}")
+            id_file_path = self.isis_commander.get_id_file_path(source_path)
+            yield from id2json3.pids_and_their_records(id_file_path, "artigo")
+
+    def get_issue_doc_records(
+        self,
+        acron,
+        issue_folder=None,
+        issue_pid=None,
+    ):
+        issues = {}
+        source_paths = self.get_source_paths( acron, issue_folder, issue_pid)
+        for item_id, records in self.get_document_records(source_paths):
+            record_type = id2json3._get_value(records[0], "v706")
+            if record_type == "i":
+                issues[item_id] = records
+            elif record_type == "o":
+                if len(item_id) == 23:
+                    i_id = item_id[1:18]
+                    yield {"issue_id": i_id, "doc_id": item_id, "issue": issues.get(i_id), "article": records}
+                else:
+                    yield {"invalid_records": True, "id": item_id, "records": records}
+            else:
+                yield {"invalid_records": True, "id": item_id, "records": records}
