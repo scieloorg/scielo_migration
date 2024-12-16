@@ -61,18 +61,17 @@ def pids_and_their_records(id_file_path, db_type):
 
 
 def get_doc_records(id_file_path):
-    issues = {}
     for item_id, records in pids_and_their_records(id_file_path, "artigo"):
         record_type = None
         if records:
             record_type = _get_value(records[0], "v706")
 
         if record_type == "i":
-            issues[item_id] = records[0]
+            yield {"issue_id": item_id, "issue_data": records[0]}
         elif record_type == "o":
             if len(item_id) == 23:
                 i_id = item_id[1:18]
-                yield {"issue_id": i_id, "doc_id": item_id, "issue": issues.get(i_id), "article": records}
+                yield {"doc_id": item_id, "doc_data": records, "i_id": i_id}
             else:
                 yield {"invalid_records": True, "item_id": item_id, "records": records}
         else:
