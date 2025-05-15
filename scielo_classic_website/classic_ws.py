@@ -9,6 +9,7 @@ from scielo_classic_website.models.issue_files import (
     ArtigoDBPath,
     ArtigoRecordsPath,
     IssueFiles,
+    _get_classic_website_rel_path
 )
 from scielo_classic_website.models.journal import Journal
 
@@ -77,6 +78,7 @@ class ClassicWebsite:
         cisis_path,
         title_path,
         issue_path,
+        alternative_paths=None,
     ):
         self.classic_website_paths = ClassicWebsitePaths(
             bases_path,
@@ -90,6 +92,7 @@ class ClassicWebsite:
             title_path,
             issue_path,
         )
+        self.alternative_paths = alternative_paths
         self.isis_commander = ISISCommader(self.classic_website_paths)
         self.data = {}
 
@@ -99,7 +102,59 @@ class ClassicWebsite:
 
     def get_issue_files_and_exceptions(self, acron, issue_folder):
         issue_files = IssueFiles(acron, issue_folder, self.classic_website_paths)
-        return {"files": issue_files.files, "exceptions": issue_files.exceptions}
+        files = set(issue_files.files or [])
+        exceptions = list(issue_files.exceptions or [])
+
+        for alt_path in self.alternative_paths or []:
+            items = self.get_issue_files_from_alternative_path(acron, issue_folder, alt_path)
+            files.update(items["files"])
+            exceptions.extend(items["exceptions"])
+
+        items = self.get_issue_files_from_alternative_path(acron, issue_folder)
+        files.update(items["files"])
+        exceptions.extend(items["exceptions"])
+
+        return {"files": files, "exceptions": exceptions}
+
+    def get_issue_files_from_alternative_path(self, acron, issue_folder, alternative_path=None):
+        if alternative_path:
+            paths = glob.glob(
+                os.path.join(
+                    alternative_path,
+                    acron,
+                    issue_folder,
+                    "*",
+                )
+            )
+        else:
+            htdocs_img_revistas_path = self.classic_website_paths.htdocs_img_revistas_path
+            htdocs_img_path = os.path.dirname(htdocs_img_revistas_path)
+            paths = glob.glob(
+                os.path.join(
+                    htdocs_img_path,
+                    "fbpe",
+                    acron,
+                    issue_folder,
+                    "*",
+                )
+            )
+        files = []
+        exceptions = []
+        for path in paths:
+            if not os.path.isfile(path):
+                continue
+            try:
+                files.append(
+                    {
+                        "type": "asset",
+                        "path": path,
+                        "relative_path": _get_classic_website_rel_path(path),
+                        "name": os.path.basename(path),
+                    }
+                )
+            except Exception as e:
+                exceptions.append({"path": path, "exception": str(e), "exception_type": str(type(e))})
+        return {"files": files, "exceptions": exceptions}
 
     def get_journals_pids_and_records(self):
         id_file_path = self.isis_commander.get_id_file_path(
