@@ -22,10 +22,6 @@ RECORD = dict(
     p=ParagraphRecord,
 )
 
-class GenerateFullXMLError(Exception):
-    ...
-
-
 class GenerateBodyAndBackFromHTMLError(Exception):
     ...
 
