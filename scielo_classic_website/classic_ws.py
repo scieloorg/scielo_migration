@@ -1,5 +1,6 @@
 import logging
 import os
+import glob
 
 from scielo_classic_website.iid2json import id2json3
 from scielo_classic_website.isisdb.isis_cmd import ISISCommader
