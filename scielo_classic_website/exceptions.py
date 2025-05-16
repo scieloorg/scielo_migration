@@ -1,3 +1,7 @@
+class GetSectionTitleException(Exception):
+    ...
+
+
 class MissingCisisPathEnvVarError(Exception):
     ...
 
