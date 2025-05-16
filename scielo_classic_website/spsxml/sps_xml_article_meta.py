@@ -8,7 +8,7 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
     get_contrib_type,
     get_attribute_value,
 )
-from scielo_classic_website.models.document import GetSectionTitleException
+from scielo_classic_website.exceptions import GetSectionTitleException
 
 
 def fix_html_text(html_text):
