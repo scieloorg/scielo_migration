@@ -10,6 +10,8 @@ from scielo_classic_website.models.journal import Journal
 from scielo_classic_website.models.reference import Reference
 from scielo_classic_website.spsxml import sps_xml_body_pipes
 from scielo_classic_website.spsxml.sps_xml_pipes import get_xml_rsps
+from scielo_classic_website.exceptions import GetSectionTitleException
+
 
 RECORD = dict(
     o=DocumentRecord,
