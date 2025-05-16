@@ -144,8 +144,15 @@ class XMLArticleMetaArticleCategoriesPipe(plumber.Pipe):
         subject_group.set("subj-group-type", "heading")
 
         subject = ET.Element("subject")
-        subject.text = raw.get_section_title(raw.original_language)
-
+        try:
+            subject.text = raw.get_section_title(raw.original_language)
+        except Exception as e:
+            comment = ET.Comment(str(e))
+            subject.append(comment)
+            try:
+                subject.text = raw.get_sections()[0]["text"]
+            except Exception:
+                pass
         subject_group.append(subject)
 
         article_categories = ET.Element("article-categories")

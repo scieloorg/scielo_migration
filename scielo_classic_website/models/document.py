@@ -221,10 +221,10 @@ class Document:
     def get_section_title(self, lang):
         try:
             sections = self.get_sections()
-            section = sections.get(lang) or sections.get("en") or sections.values()[0]
+            section = sections.get(lang)
             return section["text"]
         except (TypeError, ValueError, KeyError):
-            return f"Not registered: {self.section_code} {lang}. Registered: {self.issue.get_sections(self.section_code)}"
+            raise f"Not registered: {self.section_code} {lang}. Registered: {self.issue.sections}"
 
     def get_article_title(self, lang):
         if not hasattr(self, "_article_titles") or not self._article_titles:
