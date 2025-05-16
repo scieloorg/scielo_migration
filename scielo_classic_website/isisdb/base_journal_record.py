@@ -569,7 +569,7 @@ class BaseJournalRecord(MetaRecord):
 
                 if lang == item.get("language") and last_row_has_language:
                     if languages:
-                        lang = languages.pop(0)
+                        mission_lang = languages.pop(0)
 
             missions = []
             for k, v in _missions.items():
