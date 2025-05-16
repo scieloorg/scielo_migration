@@ -102,16 +102,16 @@ class ClassicWebsite:
 
     def get_issue_files_and_exceptions(self, acron, issue_folder):
         issue_files = IssueFiles(acron, issue_folder, self.classic_website_paths)
-        files = set(issue_files.files or [])
+        files = list(issue_files.files or [])
         exceptions = list(issue_files.exceptions or [])
 
         for alt_path in self.alternative_paths or []:
             items = self.get_issue_files_from_alternative_path(acron, issue_folder, alt_path)
-            files.update(items["files"])
+            files.extend(items["files"])
             exceptions.extend(items["exceptions"])
 
         items = self.get_issue_files_from_alternative_path(acron, issue_folder)
-        files.update(items["files"])
+        files.extend(items["files"])
         exceptions.extend(items["exceptions"])
 
         return {"files": files, "exceptions": exceptions}
