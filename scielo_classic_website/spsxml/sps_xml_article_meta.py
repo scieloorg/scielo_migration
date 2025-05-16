@@ -8,6 +8,7 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
     get_contrib_type,
     get_attribute_value,
 )
+from scielo_classic_website.models.document import GetSectionTitleException
 
 
 def fix_html_text(html_text):
@@ -146,12 +147,12 @@ class XMLArticleMetaArticleCategoriesPipe(plumber.Pipe):
         subject = ET.Element("subject")
         try:
             subject.text = raw.get_section_title(raw.original_language)
-        except Exception as e:
+        except GetSectionTitleException as e:
             comment = ET.Comment(str(e))
             subject.append(comment)
             try:
                 subject.text = raw.get_sections()[0]["text"]
-            except Exception:
+            except (IndexError, KeyError):
                 pass
         subject_group.append(subject)
 
