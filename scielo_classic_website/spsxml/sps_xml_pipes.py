@@ -31,6 +31,7 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
     country_name,
 )
 from scielo_classic_website.spsxml.sps_xml_refs import XMLArticleMetaCitationsPipe
+from scielo_classic_website.spsxml.sps_xml_utils import set_subject_text
 
 
 def get_xml_rsps(document):
@@ -374,7 +375,7 @@ class XMLSubArticlePipe(plumber.Pipe):
                 subjectgroup = ET.Element("subj-group")
                 subjectgroup.set("subj-group-type", "heading")
                 sbj = ET.Element("subject")
-                sbj.text = raw.get_section_title(language)
+                set_subject_text(sbj, raw, language)
                 subjectgroup.append(sbj)
                 articlecategories.append(subjectgroup)
                 frontstub.append(articlecategories)
