@@ -547,25 +547,29 @@ class BaseJournalRecord(MetaRecord):
         ) or []
         languages = [item["language"] for item in missions if item.get("language")]
 
-        if len(languages) == len(missions) or not missions:
+        if len(languages) == len(missions) or not missions or not languages:
             return missions
 
         try:
             # Missão contém quebra de linhas
 
             # a última linha contém o idioma
-            last_has_lang = bool(missions[-1].get("language"))
+            last_row_has_language = bool(missions[-1].get("language"))
+
+            mission_lang = None
+            if languages:
+                mission_lang = languages.pop(0)
 
             # une linhas de missão de cada idioma
             _missions = {}
-            lang = None
             for item in missions:
-                lang = item.get("language") or lang or languages.pop(0)
+                lang = item.get("language") or mission_lang
                 _missions.setdefault(lang, [])
                 _missions[lang].append(item.get("text"))
 
-                if lang == item.get("language") and last_has_lang:
-                    lang = languages.pop(0)
+                if lang == item.get("language") and last_row_has_language:
+                    if languages:
+                        lang = languages.pop(0)
 
             missions = []
             for k, v in _missions.items():
