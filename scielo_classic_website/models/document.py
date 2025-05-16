@@ -20,6 +20,9 @@ RECORD = dict(
     p=ParagraphRecord,
 )
 
+class GetSectionTitleException(Exception):
+    ...
+
 
 class GenerateFullXMLError(Exception):
     ...
@@ -224,7 +227,7 @@ class Document:
             section = sections.get(lang)
             return section["text"]
         except (TypeError, ValueError, KeyError):
-            raise f"Not registered: {self.section_code} {lang}. Registered: {self.issue.sections}"
+            raise GetSectionTitleException(f"Not registered: {self.section_code} {lang}. Registered: {self.issue.sections}")
 
     def get_article_title(self, lang):
         if not hasattr(self, "_article_titles") or not self._article_titles:
