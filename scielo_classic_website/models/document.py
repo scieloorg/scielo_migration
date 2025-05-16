@@ -22,10 +22,6 @@ RECORD = dict(
     p=ParagraphRecord,
 )
 
-class GetSectionTitleException(Exception):
-    ...
-
-
 class GenerateFullXMLError(Exception):
     ...
 
