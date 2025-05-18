@@ -757,7 +757,7 @@ class AHrefPipe(plumber.Pipe):
         node.tag = "xref"
         node.set("is_internal_link_to_asset_html_page", "true")
 
-    def parser_node(self, node):
+    def parser_node(self, node, acron_issue_folder):
         href = node.get("href") or ""
         if href.count('"') == 2:
             node.set("href", href.replace('"', ""))
@@ -777,6 +777,9 @@ class AHrefPipe(plumber.Pipe):
         if "img/revistas/" in href or ".." in href:
             return self._create_internal_link_to_asset_html_page(node)
 
+        if acron_issue_folder and acron_issue_folder in href:
+            return self._create_internal_link_to_asset_html_page(node)
+
         if ":" in href:
             return self._create_ext_link(node)
         if "www" in href:
@@ -789,7 +792,13 @@ class AHrefPipe(plumber.Pipe):
 
     def transform(self, data):
         raw, xml = data
-        _process(xml, "a[@href]", self.parser_node)
+
+        for node in xml.xpath(".//a[@href]"):
+            try:
+                acron_issue_folder = f"/{raw.journal.acronym}/{raw.issue.issue_label}/"
+            except Exception:
+                acron_issue_folder = None
+            self.parser_node(node, acron_issue_folder)
         _report(xml, func_name=type(self))
         return data
 
