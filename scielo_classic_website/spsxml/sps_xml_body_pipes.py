@@ -171,7 +171,7 @@ def convert_html_to_xml_step_3(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         XRefSpecialInternalLinkPipe(),
-        XRefTypePipe(),
+        # XRefTypePipe(),
         InlineGraphicPipe(),
         # RemoveParentPTagOfGraphicPipe(),
         EndPipe(),
@@ -200,6 +200,7 @@ def convert_html_to_xml_step_4(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         DivIdToAssetPipe(),
+        XRefTypePipe(),
         InsertGraphicInFigPipe(),
         RemoveEmptyPTagPipe(),
         InsertGraphicInTableWrapPipe(),
