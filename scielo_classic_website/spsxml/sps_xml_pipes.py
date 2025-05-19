@@ -85,6 +85,7 @@ def _process(document):
         XMLArticleMetaCountsPipe(),
         XMLNormalizeSpacePipe(),
         XMLDeleteRepeatedElementWithId(),
+        XMLDeleteRepeatedTranslations(),
         XMLFontFaceSymbolPipe(),
         XMLClosePipe(),
     )
@@ -151,6 +152,37 @@ class XMLDeleteRepeatedElementWithId(plumber.Pipe):
             self.fix_id_and_rid(subarticle)
         self.fix_id_and_rid(xml.find("."))
         ET.strip_tags(xml, "EMPTYTAGTOSTRIP")
+        return data, xml
+
+
+class XMLDeleteRepeatedTranslations(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+
+        to_delete = []
+        articlemeta_node = xml.find("./article-meta")
+        for subarticle in xml.xpath(".//sub-article[@article-type='translation']"):
+
+            lang = subarticle.get("{http://www.w3.org/XML/1998/namespace}lang")
+
+            namespaces = {"xml": "http://www.w3.org/XML/1998/namespace"}
+            nodes = articlemeta_node.xpath(
+                f"//*[@xml:lang='{lang}']", namespaces=namespaces
+            )
+
+            for node in nodes:
+                parent = node.getparent()
+                if parent is not None:
+                    try:
+                        parent.remove(node)
+                    except Exception as e:
+                        logging.exception(e)
+                        to_delete.append((parent, node))
+
+        for parent, node in to_delete:
+            if parent is not None:
+                parent.remove(node)
+
         return data, xml
 
 
