@@ -822,11 +822,10 @@ class ANamePipe(plumber.Pipe):
         items = []
         for node in root.xpath(".//a[@name]"):
             name = node.get("name")
-            for item in root.xpath(f".//a[@name='{name}']"):
-                if name in items:
-                    node.set("delete", "true")
-                else:
-                    items.append(name)
+            if name in items:
+                node.set("delete", "true")
+            else:
+                items.append(name)
         delete_tags(root)
 
     def transform(self, data):
