@@ -167,7 +167,7 @@ class XMLDeleteRepeatedTranslations(plumber.Pipe):
 
             namespaces = {"xml": "http://www.w3.org/XML/1998/namespace"}
             nodes = articlemeta_node.xpath(
-                f"//*[@xml:lang='{lang}']", namespaces=namespaces
+                f".//*[@xml:lang='{lang}']", namespaces=namespaces
             )
 
             for node in nodes:
