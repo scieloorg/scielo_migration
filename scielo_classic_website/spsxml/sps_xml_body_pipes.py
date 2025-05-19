@@ -24,6 +24,11 @@ ELEM_NAME = {
 }
 
 
+ELEM_AND_REF_TYPE = {
+    "table-wrap": "table",
+}
+
+
 class XMLBodyAnBackConvertException(Exception):
     ...
 
@@ -856,19 +861,22 @@ class ImgSrcPipe(plumber.Pipe):
 
 class XRefTypePipe(plumber.Pipe):
 
-    def parser_node(self, node):
+    def parser_node(self, node, xml):
         rid = node.get("rid")
-        if not rid:
+        if not rid or node.get("ref-type"):
             logging.info(ET.tostring(node))
-        if rid[-1].isdigit():
-            ref_type = REF_TYPES.get(rid[0])
-            if ref_type:
-                node.set("ref-type", ref_type)
+            return
+
+        related = xml.find(f".//*[@id='{rid}']")
+        node.set("ref-type", ELEM_AND_REF_TYPE.get(related.tag) or related.tag)
 
     def transform(self, data):
         raw, xml = data
-        _process(xml, "xref", self.parser_node)
-        _report(xml, func_name=type(self))
+        for xref in xml.xpath(".//xref"):
+            ref_type = xref.get("ref-type")
+            if ref_type:
+                continue
+            self.parser_node(xref, xml)
         return data
 
 
