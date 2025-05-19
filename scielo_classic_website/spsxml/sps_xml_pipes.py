@@ -160,7 +160,7 @@ class XMLDeleteRepeatedTranslations(plumber.Pipe):
         raw, xml = data
 
         to_delete = []
-        articlemeta_node = xml.find("./article-meta")
+        articlemeta_node = xml.find(".//article-meta")
         for subarticle in xml.xpath(".//sub-article[@article-type='translation']"):
 
             lang = subarticle.get("{http://www.w3.org/XML/1998/namespace}lang")
