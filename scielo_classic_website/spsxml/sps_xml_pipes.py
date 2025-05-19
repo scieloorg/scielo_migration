@@ -440,7 +440,7 @@ class XMLSubArticlePipe(plumber.Pipe):
                 for item in keywords_group:
                     kwd_group.append(create_node_with_fixed_html_text("kwd", item))
                 frontstub.append(kwd_group)
-            subarticle.append(frontstub)
+            subarticle.insert(0, frontstub)
         return data
 
 
