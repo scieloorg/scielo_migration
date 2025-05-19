@@ -643,11 +643,13 @@ class XMLArticleMetaCountsPipe(plumber.Pipe):
         for subart in xml.findall("./sub-article"):
             frontstub = subart.find("front-stub")
             if frontstub is None:
-                subart.append(ET.Element("front-stub"))
+                frontstub = ET.Element("front-stub")
+                subart.insert(0, frontstub)
 
             counts = subart.find("front-stub/counts")
             if counts is None:
                 counts = ET.Element("counts")
+                frontstub.append(counts)
 
             body_node = xml.find("./body")
             if body_node is not None:
@@ -672,8 +674,6 @@ class XMLArticleMetaCountsPipe(plumber.Pipe):
                         count_elem = ET.Element(elem_name)
                     count_elem.set("count", str(count))
                     counts.append(count_elem)
-
-            frontstub.append(counts)
         return data
 
 
