@@ -54,6 +54,8 @@ def handle_bad_text(node, text):
 
 
 def handle_bad_characters(text):
+    if not text:
+        return None
     chars = []
     temporary = etree.Element("temporary")
     for c in text:
