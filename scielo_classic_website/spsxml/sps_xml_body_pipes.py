@@ -515,12 +515,12 @@ class TranslatedHTMLPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        back = xml.find(".//back")
+        article = xml.find(".")
         for lang, texts in raw.translated_html_by_lang.items():
             sub_article = ET.Element("sub-article")
             sub_article.set("article-type", "translation")
             sub_article.set("{http://www.w3.org/XML/1998/namespace}lang", lang)
-            back.append(sub_article)
+            article.append(sub_article)
 
             body = ET.Element("body")
 
