@@ -77,7 +77,12 @@ class XMLArticleMetaCitationsPipe(plumber.Pipe):
                                 ref.insert(0, mixed_citation)
                     refs.append(ref)
             except Exception as e:
-                refs.append(ET.Comment(str({"data": citation, "error": str(e), "error_type": str(type(e))})))
+                logging.exception(e)
+                try:
+                    logging.info(citation._record)
+                except:
+                    logging.info(dir(citation))
+                refs.append(ET.Comment(str({"data": citation._record, "error": str(e), "error_type": str(type(e))})))
         back.replace(reflist, refs)
         return data
 
