@@ -160,14 +160,14 @@ class XMLDeleteRepeatedTranslations(plumber.Pipe):
         raw, xml = data
 
         to_delete = []
-        articlemeta_node = xml.find("./article-meta")
+        articlemeta_node = xml.find(".//article-meta")
         for subarticle in xml.xpath(".//sub-article[@article-type='translation']"):
 
             lang = subarticle.get("{http://www.w3.org/XML/1998/namespace}lang")
 
             namespaces = {"xml": "http://www.w3.org/XML/1998/namespace"}
             nodes = articlemeta_node.xpath(
-                f"//*[@xml:lang='{lang}']", namespaces=namespaces
+                f".//*[@xml:lang='{lang}']", namespaces=namespaces
             )
 
             for node in nodes:
@@ -440,7 +440,7 @@ class XMLSubArticlePipe(plumber.Pipe):
                 for item in keywords_group:
                     kwd_group.append(create_node_with_fixed_html_text("kwd", item))
                 frontstub.append(kwd_group)
-            subarticle.append(frontstub)
+            subarticle.insert(0, frontstub)
         return data
 
 
