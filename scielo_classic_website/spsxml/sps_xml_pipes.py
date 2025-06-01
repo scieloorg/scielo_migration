@@ -145,7 +145,7 @@ class XMLDeleteRepeatedElementWithId(plumber.Pipe):
                 parent = node.getparent()
                 parent.remove(node)
             items.add(_id)
-            
+
     def transform(self, data):
         raw, xml = data
         for subarticle in xml.xpath("sub-article[@article-type='translation']"):

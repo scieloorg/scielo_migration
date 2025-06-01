@@ -29,8 +29,7 @@ ELEM_AND_REF_TYPE = {
 }
 
 
-class XMLBodyAnBackConvertException(Exception):
-    ...
+class XMLBodyAnBackConvertException(Exception): ...
 
 
 def delete_tags(root):
@@ -282,6 +281,7 @@ class StartPipe(plumber.Pipe):
     Esta etapa pega o resultado da última conversão feita
     e aplica novas conversões
     """
+
     def precond(data):
         raw = data
         try:
@@ -516,7 +516,9 @@ class RemoveHTMLTagsPipe(plumber.Pipe):
 
 
 class RemoveSpanTagsPipe(plumber.Pipe):
-    TAGS = ["span", ]
+    TAGS = [
+        "span",
+    ]
 
     def transform(self, data):
         raw, xml = data
@@ -811,7 +813,9 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         previous_element_name = None
         label_first_word = None
         children = []
-        for child in xref_parent.xpath("xref[@is_internal_link_to_asset_html_page and @href]"):
+        for child in xref_parent.xpath(
+            "xref[@is_internal_link_to_asset_html_page and @href]"
+        ):
 
             # Table 1
             label = child.text.strip() or " ".join(child.xpath(".//text()")).strip()
