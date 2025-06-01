@@ -124,33 +124,33 @@ class SetupArticlePipe(plumber.Pipe):
 
 
 class XMLDeleteRepeatedElementWithId(plumber.Pipe):
-    def fix_id_and_rid(self, root):
+    def fix_subarticle_id_and_rid(self, root):
         subarticle_id = root.get("id")
         items = []
         for node in root.xpath(".//*[@id]"):
             _id = node.get("id")
-            item = (node.tag, _id)
-            if item in items:
-                elem = ET.Element("EMPTYTAGTOSTRIP")
-                node.addnext(elem)
-                parent = node.getparent()
-                parent.remove(node)
-            else:
-                items.append(item)
-                if subarticle_id:
-                    new_id = f"{subarticle_id}{_id}"
-                else:
-                    new_id = _id
+            if not _id.startswith(subarticle_id):
+                new_id = f"{subarticle_id}{_id}"
                 node.set("id", new_id)
                 for xref in root.xpath(f".//xref[@rid='{_id}']"):
                     xref.set("rid", new_id)
 
+    def remove_multiplicity(self, root):
+        items = set()
+        for node in root.xpath(".//*[@id]"):
+            _id = node.get("id")
+            if _id in items:
+                elem = ET.Element("EMPTYTAGTOSTRIP")
+                node.addnext(elem)
+                parent = node.getparent()
+                parent.remove(node)
+            items.add(_id)
+
     def transform(self, data):
         raw, xml = data
-
         for subarticle in xml.xpath("sub-article[@article-type='translation']"):
-            self.fix_id_and_rid(subarticle)
-        self.fix_id_and_rid(xml.find("."))
+            self.fix_subarticle_id_and_rid(subarticle)
+        self.remove_multiplicity(xml.find("."))
         ET.strip_tags(xml, "EMPTYTAGTOSTRIP")
         return data, xml
 
@@ -173,11 +173,7 @@ class XMLDeleteRepeatedTranslations(plumber.Pipe):
             for node in nodes:
                 parent = node.getparent()
                 if parent is not None:
-                    try:
-                        parent.remove(node)
-                    except Exception as e:
-                        logging.exception(e)
-                        to_delete.append((parent, node))
+                    to_delete.append((parent, node))
 
         for parent, node in to_delete:
             if parent is not None:
@@ -357,7 +353,7 @@ class XMLBodyPipe(plumber.Pipe):
         raw, xml = data
 
         converted_html_body = ET.fromstring(raw.xml_body)
-        body = deepcopy(converted_html_body.find(".//body"))
+        body = converted_html_body.find(".//body")
         body.set("specific-use", "quirks-mode")
         xml.append(body)
         return data
@@ -377,7 +373,7 @@ class XMLBackPipe(plumber.Pipe):
         converted_html_body = ET.fromstring(raw.xml_body)
         back = converted_html_body.find(".//back")
         if back is not None:
-            xml.append(deepcopy(back))
+            xml.append(back)
         return data
 
 
@@ -393,8 +389,7 @@ class XMLSubArticlePipe(plumber.Pipe):
         raw, xml = data
 
         converted_html_body = ET.fromstring(raw.xml_body)
-        for subart in converted_html_body.findall(".//sub-article"):
-            subarticle = deepcopy(subart)
+        for subarticle in converted_html_body.findall(".//sub-article"):
             xml.append(subarticle)
 
             language = subarticle.get("{http://www.w3.org/XML/1998/namespace}lang")
