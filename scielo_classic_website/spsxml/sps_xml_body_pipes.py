@@ -406,98 +406,6 @@ class MainHTMLPipe(plumber.Pipe):
         _report(xml, func_name=type(self))
         return data
 
-        # class MainHTMLPipe(plumber.Pipe):
-        #     """
-        #     O texto completo principal é dividido em 3 partes
-        #     - 'before references': antes das referências bibliográficas
-        #     - 'references': referências bibliográficas
-        #     - 'after references': após das referências bibliográficas
-
-        #     Esta etapa espera que exista `raw.main_html_paragraphs` que é
-        #     um dict com chaves: `before references`, `references`, `after references`.
-        #     Os valores de `before references`, `references`, `after references`
-        #     são listas de dict com chaves text, index, reference_index, part.
-
-        #     A partir do raw.main_html_paragraphs, são preenchidos os elementos
-        #     article/body, article/back e article/ref-list
-        #     """
-
-        #     def transform(self, data):
-        #         raw, xml = data
-
-        #         body = xml.find(".//body")
-
-        #         # trata do bloco anterior às referências
-        #         for item in raw.main_html_paragraphs["before references"] or []:
-        #             # item.keys() = (text, index, reference_index, part)
-        #             # cria o elemento `p` com conteúdo de `item['text']`,
-        #             # envolvido por CDATA e adiciona em body
-
-        #             # O CDATA evita que o seu conteúdo seja "parseado" e, assim não
-        #             # acusará erro de má formação do XML. O conteúdo do CDATA será
-        #             # tratado em uma etapa futura
-        #             logging.info("MainHTMLPipe")
-        #             logging.info(item)
-        #             p = ET.Element("p")
-        #             p.text = ET.CDATA(item["text"])
-        #             body.append(p)
-
-        #         # trata do bloco das referências
-        #         references = ET.Element("ref-list")
-        #         for i, item in enumerate(raw.main_html_paragraphs["references"] or []):
-        #             # item.keys() = (text, index, reference_index, part)
-        #             # cria o elemento `ref` com conteúdo de `item['text']`,
-
-        #             logging.info("MainHTMLPipe")
-        #             logging.info(item)
-
-        #             ref = ET.Element("ref")
-        #             try:
-        #                 ref_index = item["reference_index"]
-        #             except KeyError:
-        #                 ref_index = i + 1
-        #             # cria o atributo ref/@id
-        #             ref.set("id", f"B{ref_index}")
-
-        #             # cria o elemento mixed-citation que contém o texto da referência
-        #             # bibliográfica mantendo as pontuação
-        #             mixed_citation = ET.Element("mixed-citation")
-
-        #             # O CDATA evita que o seu conteúdo seja "parseado" e, assim não
-        #             # acusará erro de má formação do XML. O conteúdo do CDATA será
-        #             # tratado em uma etapa futura
-        #             mixed_citation.text = ET.CDATA(item["text"])
-
-        #             # adiciona o elemento que contém o texto da referência
-        #             # bibliográfica ao elemento `ref`
-        #             ref.append(mixed_citation)
-
-        #             # adiciona `ref` ao `ref-list`
-        #             references.append(ref)
-
-        #         # busca o elemento `back`
-        #         back = xml.find(".//back")
-        #         back.append(references)
-        #         for item in raw.main_html_paragraphs["after references"] or []:
-        #             # item.keys() = (text, index, reference_index, part)
-
-        #             # elementos aceitos em `back`
-        #             # (ack | app-group | bio | fn-group | glossary | notes | sec)
-        #             # uso de sec por ser mais genérico
-
-        #             # cria o elemento `sec` para cada item do bloco de 'after references'
-        #             # com conteúdo de `item['text']`
-        #             sec = ET.Element("sec")
-        #             sec.text = ET.CDATA(item["text"])
-
-        #             # adiciona ao elemento `back`
-        #             back.append(sec)
-
-        #         # print("back/sec %i" % len(back.findall("sec")))
-
-        _report(xml, func_name=type(self))  #
-        return data
-
 
 class TranslatedHTMLPipe(plumber.Pipe):
     """
@@ -516,8 +424,11 @@ class TranslatedHTMLPipe(plumber.Pipe):
         raw, xml = data
 
         article = xml.find(".")
+        idx = 0
         for lang, texts in raw.translated_html_by_lang.items():
+            idx += 1
             sub_article = ET.Element("sub-article")
+            sub_article.set("id", f"s0{idx}")
             sub_article.set("article-type", "translation")
             sub_article.set("{http://www.w3.org/XML/1998/namespace}lang", lang)
             article.append(sub_article)
@@ -738,9 +649,9 @@ class AHrefPipe(plumber.Pipe):
         email_from_node_text = None
 
         node.tag = "email"
+        href = (node.get("href") or "").strip()
         node.attrib.clear()
 
-        href = (node.get("href") or "").strip()
         texts = href.replace("mailto:", "")
         for text in texts.split():
             if "@" in text:
