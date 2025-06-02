@@ -103,67 +103,32 @@ class ClassicWebsite:
 
     def get_issue_files_and_exceptions(self, acron, issue_folder):
         issue_files = IssueFiles(acron, issue_folder, self.classic_website_paths)
-        files = list(issue_files.files or [])
-        exceptions = list(issue_files.exceptions or [])
+        response = {"files": list(issue_files.files)}
 
-        for alt_path in self.alternative_paths or []:
-            items = self.get_issue_files_from_alternative_path(
-                acron, issue_folder, alt_path
-            )
-            files.extend(items["files"])
-            exceptions.extend(items["exceptions"])
+        htdocs_path = os.path.dirname(
+            os.path.dirname(self.classic_website_paths.htdocs_img_revistas_path)
+        )
+        fbpe_paths = self._find_fbpe_paths(htdocs_path, acron, issue_folder)
 
-        items = self.get_issue_files_from_alternative_path(acron, issue_folder)
-        files.extend(items["files"])
-        exceptions.extend(items["exceptions"])
+        for fbpe_path in fbpe_paths:
+            fbpe_files = issue_files.get_files_from_path(
+                fbpe_path, file_type="asset", exception_key="alternative image paths"
+            )
+            response["files"].extend(fbpe_files)
 
-        return {"files": files, "exceptions": exceptions}
+        return response
 
-    def get_issue_files_from_alternative_path(
-        self, acron, issue_folder, alternative_path=None
-    ):
-        if alternative_path:
-            paths = glob.glob(
-                os.path.join(
-                    alternative_path,
-                    acron,
-                    issue_folder,
-                    "*",
-                )
-            )
-        else:
-            htdocs_img_revistas_path = (
-                self.classic_website_paths.htdocs_img_revistas_path
-            )
-            htdocs_img_path = os.path.dirname(htdocs_img_revistas_path)
-            paths = glob.glob(
-                os.path.join(
-                    htdocs_img_path,
-                    "fbpe",
-                    acron,
-                    issue_folder,
-                    "*",
-                )
-            )
-        files = []
-        exceptions = []
-        for path in paths:
-            if not os.path.isfile(path):
-                continue
-            try:
-                files.append(
-                    {
-                        "type": "asset",
-                        "path": path,
-                        "relative_path": _get_classic_website_rel_path(path),
-                        "name": os.path.basename(path),
-                    }
-                )
-            except Exception as e:
-                exceptions.append(
-                    {"path": path, "exception": str(e), "exception_type": str(type(e))}
-                )
-        return {"files": files, "exceptions": exceptions}
+    def _find_fbpe_paths(self, root_path, acron, issue_folder):
+        """
+        Procura por caminhos que terminam com acron/issue_folder e que contenham 'fbpe'
+        em algum ponto do caminho entre root_path e o destino final
+        """
+        if not os.path.exists(root_path):
+            return
+
+        # Padrão otimizado: busca diretamente por fbpe seguido de qualquer estrutura que termine em acron/issue_folder
+        pattern = os.path.join(root_path, "**", "fbpe", "**", acron, issue_folder)
+        yield from glob.glob(pattern, recursive=True)
 
     def get_journals_pids_and_records(self):
         id_file_path = self.isis_commander.get_id_file_path(
