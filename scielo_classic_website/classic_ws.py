@@ -10,7 +10,7 @@ from scielo_classic_website.models.issue_files import (
     ArtigoDBPath,
     ArtigoRecordsPath,
     IssueFiles,
-    _get_classic_website_rel_path
+    _get_classic_website_rel_path,
 )
 from scielo_classic_website.models.journal import Journal
 
@@ -107,7 +107,9 @@ class ClassicWebsite:
         exceptions = list(issue_files.exceptions or [])
 
         for alt_path in self.alternative_paths or []:
-            items = self.get_issue_files_from_alternative_path(acron, issue_folder, alt_path)
+            items = self.get_issue_files_from_alternative_path(
+                acron, issue_folder, alt_path
+            )
             files.extend(items["files"])
             exceptions.extend(items["exceptions"])
 
@@ -117,7 +119,9 @@ class ClassicWebsite:
 
         return {"files": files, "exceptions": exceptions}
 
-    def get_issue_files_from_alternative_path(self, acron, issue_folder, alternative_path=None):
+    def get_issue_files_from_alternative_path(
+        self, acron, issue_folder, alternative_path=None
+    ):
         if alternative_path:
             paths = glob.glob(
                 os.path.join(
@@ -128,7 +132,9 @@ class ClassicWebsite:
                 )
             )
         else:
-            htdocs_img_revistas_path = self.classic_website_paths.htdocs_img_revistas_path
+            htdocs_img_revistas_path = (
+                self.classic_website_paths.htdocs_img_revistas_path
+            )
             htdocs_img_path = os.path.dirname(htdocs_img_revistas_path)
             paths = glob.glob(
                 os.path.join(
@@ -154,7 +160,9 @@ class ClassicWebsite:
                     }
                 )
             except Exception as e:
-                exceptions.append({"path": path, "exception": str(e), "exception_type": str(type(e))})
+                exceptions.append(
+                    {"path": path, "exception": str(e), "exception_type": str(type(e))}
+                )
         return {"files": files, "exceptions": exceptions}
 
     def get_journals_pids_and_records(self):
@@ -192,7 +200,9 @@ class ClassicWebsite:
         issue_folder=None,
         issue_pid=None,
     ):
-        logging.info(f"ClassicWebsite.get_documents_pids_and_records {acron} {issue_folder} {issue_pid}")
+        logging.info(
+            f"ClassicWebsite.get_documents_pids_and_records {acron} {issue_folder} {issue_pid}"
+        )
         article_db_path = ArtigoRecordsPath(self.classic_website_paths, acron)
         source_paths = None
         found = False
@@ -211,7 +221,9 @@ class ClassicWebsite:
                 for source_path in source_paths:
                     logging.info(f"Source: {source_path}")
                     id_file_path = self.isis_commander.get_id_file_path(source_path)
-                    for doc_id, records in id2json3.pids_and_their_records(id_file_path, "artigo"):
+                    for doc_id, records in id2json3.pids_and_their_records(
+                        id_file_path, "artigo"
+                    ):
                         logging.info(f"issue_pid: {issue_pid}, doc_id: {doc_id}")
                         yield doc_id, records
                         found = True
@@ -234,7 +246,9 @@ class ClassicWebsite:
         for source_path in source_paths:
             logging.info(f"Source: {source_path}")
             id_file_path = self.isis_commander.get_id_file_path(source_path)
-            for doc_id, records in id2json3.pids_and_their_records(id_file_path, "artigo"):
+            for doc_id, records in id2json3.pids_and_their_records(
+                id_file_path, "artigo"
+            ):
                 logging.info(f"issue_pid: {issue_pid}, doc_id: {doc_id}")
                 if issue_pid in doc_id:
                     logging.info("found records")
@@ -246,7 +260,9 @@ class ClassicWebsite:
         issue_folder=None,
         issue_pid=None,
     ):
-        logging.info(f"ClassicWebsite.get_source_paths {acron} {issue_folder} {issue_pid}")
+        logging.info(
+            f"ClassicWebsite.get_source_paths {acron} {issue_folder} {issue_pid}"
+        )
         article_db_path = ArtigoRecordsPath(self.classic_website_paths, acron)
         source_paths = None
         found = False
@@ -287,10 +303,10 @@ class ClassicWebsite:
         issue_pid=None,
     ):
         issues = {}
-        source_paths = self.get_source_paths( acron, issue_folder, issue_pid)
+        source_paths = self.get_source_paths(acron, issue_folder, issue_pid)
         for item_id, records in self.get_document_records(source_paths):
             record_type = None
-            
+
             if records:
                 record_type = id2json3._get_value(records[0], "v706")
 
@@ -299,7 +315,12 @@ class ClassicWebsite:
             elif record_type == "o":
                 if len(item_id) == 23:
                     i_id = item_id[1:18]
-                    yield {"issue_id": i_id, "doc_id": item_id, "issue": issues.get(i_id), "article": records}
+                    yield {
+                        "issue_id": i_id,
+                        "doc_id": item_id,
+                        "issue": issues.get(i_id),
+                        "article": records,
+                    }
                 else:
                     yield {"invalid_records": True, "id": item_id, "records": records}
             else:

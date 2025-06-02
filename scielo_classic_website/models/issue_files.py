@@ -199,7 +199,9 @@ class IssueFiles:
                                 {
                                     "type": "asset",
                                     "path": path,
-                                    "relative_path": _get_classic_website_rel_path(path),
+                                    "relative_path": _get_classic_website_rel_path(
+                                        path
+                                    ),
                                     "name": os.path.basename(path),
                                 }
                             )
@@ -216,12 +218,16 @@ class IssueFiles:
                                     {
                                         "type": "asset",
                                         "path": item,
-                                        "relative_path": _get_classic_website_rel_path(item),
+                                        "relative_path": _get_classic_website_rel_path(
+                                            item
+                                        ),
                                         "name": os.path.basename(item),
                                     }
                                 )
                             except Exception as e:
-                                self._exceptions.setdefault("htdocs_img_revistas_files", [])
+                                self._exceptions.setdefault(
+                                    "htdocs_img_revistas_files", []
+                                )
                                 self._exceptions["htdocs_img_revistas_files"].append(
                                     {"message": e.message, "type": str(type(e))}
                                 )
@@ -391,7 +397,7 @@ class ArtigoRecordsPath:
             "base",
         )
         path = os.path.join(_serial_path, issue_folder)
-        if os.path.isfile(path+".mst"):
+        if os.path.isfile(path + ".mst"):
             yield path
 
     def get_db_from_bases_work_acron_id(self):
