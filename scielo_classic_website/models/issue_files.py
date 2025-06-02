@@ -99,7 +99,7 @@ class IssueFiles:
                 except Exception as e:
                     self._exceptions.setdefault("bases_translation_files", [])
                     self._exceptions["bases_translation_files"].append(
-                        {"message": e.message, "type": str(type(e))}
+                        {"message": str(e), "type": type(e).__name__}
                     )
             self._bases_translation_files = files
         return self._bases_translation_files
@@ -158,7 +158,7 @@ class IssueFiles:
                 except Exception as e:
                     self._exceptions.setdefault("bases_pdf_files", [])
                     self._exceptions["bases_pdf_files"].append(
-                        {"message": e.message, "type": str(type(e))}
+                        {"message": str(e), "type": type(e).__name__}
                     )
             self._bases_pdf_files = files
         return self._bases_pdf_files
@@ -172,67 +172,73 @@ class IssueFiles:
 
         Returns
         -------
-        dict
-            zip_file_path
-            files (original paths):
-                {
-                    path_completo_original: basename,
-                    path_completo_original: basename,
-                    path_completo_original: basename,
-                    path_completo_original: basename,
-                }
+        list: Lista de arquivos encontrados
         """
         if self._htdocs_img_revistas_files is None:
-            paths = glob.glob(
-                os.path.join(
-                    self._classic_website_paths.htdocs_img_revistas_path,
-                    self._subdir_acron_issue,
-                    "*",
-                )
+            self._htdocs_img_revistas_files = self.get_files_from_path(
+                self._classic_website_paths.htdocs_img_revistas_path,
+                file_type="asset",
+                exception_key="htdocs_img_revistas_files",
             )
-            files = []
-            for path in paths:
-                try:
-                    if os.path.isfile(path):
-                        try:
+        return self._htdocs_img_revistas_files
+
+    def get_files_from_path(self, base_path, file_type="asset", exception_key=None):
+        """
+        Método genérico para buscar arquivos em um caminho específico.
+        Busca arquivos em base_path/acron/issue_folder/* e subdiretórios.
+
+        Args:
+            base_path: Caminho base onde buscar
+            file_type: Tipo de arquivo para o campo "type" no resultado
+            exception_key: Chave para armazenar exceções no dict _exceptions
+
+        Returns:
+            list: Lista de arquivos encontrados
+        """
+        if not base_path or not os.path.exists(base_path):
+            return []
+
+        files = []
+        if base_path.endswith(self._subdir_acron_issue):
+            paths = glob.glob(os.path.join(base_path, "*"))
+        else:
+            paths = glob.glob(os.path.join(base_path, self._subdir_acron_issue, "*"))
+
+        for path in paths:
+            try:
+                if os.path.isfile(path):
+                    # Arquivo direto
+                    files.append(
+                        {
+                            "type": file_type,
+                            "path": path,
+                            "relative_path": _get_classic_website_rel_path(path),
+                            "name": os.path.basename(path),
+                        }
+                    )
+                elif os.path.isdir(path):
+                    # Diretório - busca arquivos dentro
+                    for item in glob.glob(os.path.join(path, "*")):
+                        if os.path.isfile(item):
                             files.append(
                                 {
-                                    "type": "asset",
-                                    "path": path,
-                                    "relative_path": _get_classic_website_rel_path(path),
-                                    "name": os.path.basename(path),
+                                    "type": file_type,
+                                    "path": item,
+                                    "relative_path": _get_classic_website_rel_path(
+                                        item
+                                    ),
+                                    "name": os.path.basename(item),
                                 }
                             )
-                        except Exception as e:
-                            self._exceptions.setdefault("htdocs_img_revistas_files", [])
-                            self._exceptions["htdocs_img_revistas_files"].append(
-                                {"message": e.message, "type": str(type(e))}
-                            )
 
-                    elif os.path.isdir(path):
-                        for item in glob.glob(os.path.join(path, "*")):
-                            try:
-                                files.append(
-                                    {
-                                        "type": "asset",
-                                        "path": item,
-                                        "relative_path": _get_classic_website_rel_path(item),
-                                        "name": os.path.basename(item),
-                                    }
-                                )
-                            except Exception as e:
-                                self._exceptions.setdefault("htdocs_img_revistas_files", [])
-                                self._exceptions["htdocs_img_revistas_files"].append(
-                                    {"message": e.message, "type": str(type(e))}
-                                )
-                except Exception as e:
-                    self._exceptions.setdefault("htdocs_img_revistas_files", [])
-                    self._exceptions["htdocs_img_revistas_files"].append(
-                        {"message": e.message, "type": str(type(e))}
+            except Exception as e:
+                if exception_key:
+                    self._exceptions.setdefault(exception_key, [])
+                    self._exceptions[exception_key].append(
+                        {"path": path, "message": str(e), "type": type(e).__name__}
                     )
 
-            self._htdocs_img_revistas_files = files
-        return self._htdocs_img_revistas_files
+        return files
 
     @property
     def bases_xml_files(self):
@@ -261,7 +267,7 @@ class IssueFiles:
                 except Exception as e:
                     self._exceptions.setdefault("bases_xml_files", [])
                     self._exceptions["bases_xml_files"].append(
-                        {"message": e.message, "type": str(type(e))}
+                        {"message": str(e), "type": type(e).__name__}
                     )
             self._bases_xml_files = files
         return self._bases_xml_files
@@ -391,7 +397,7 @@ class ArtigoRecordsPath:
             "base",
         )
         path = os.path.join(_serial_path, issue_folder)
-        if os.path.isfile(path+".mst"):
+        if os.path.isfile(path + ".mst"):
             yield path
 
     def get_db_from_bases_work_acron_id(self):
