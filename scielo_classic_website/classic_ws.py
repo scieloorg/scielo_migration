@@ -12,6 +12,7 @@ from scielo_classic_website.models.issue_files import (
     IssueFiles,
     _get_classic_website_rel_path,
 )
+from scielo_classic_website.models.issue_folder import IssueFolder
 from scielo_classic_website.models.journal import Journal
 
 
@@ -96,6 +97,9 @@ class ClassicWebsite:
         self.alternative_paths = alternative_paths
         self.isis_commander = ISISCommader(self.classic_website_paths)
         self.data = {}
+
+    def get_issue_folder_content(self, acron, issue_folder):
+        return IssueFolder(acron, issue_folder, self.classic_website_paths).files
 
     def get_issue_files(self, acron, issue_folder):
         classic_ws_fs = IssueFiles(acron, issue_folder, self.classic_website_paths)
