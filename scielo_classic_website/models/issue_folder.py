@@ -1,9 +1,18 @@
 import glob
 import logging
 import os
+from datetime import datetime
 
 from scielo_classic_website.htmlbody.html_body import HTMLFile
 from scielo_classic_website.isisdb.isis_cmd import get_documents_by_issue_folder
+
+
+def modified_date(file_path):
+    try:
+        stat = os.stat(file_path)
+        return datetime.fromtimestamp(stat.st_mtime).isoformat()
+    except Exception as e:
+        return None
 
 
 def _get_classic_website_rel_path(file_path):
@@ -19,15 +28,14 @@ def _get_classic_website_rel_path(file_path):
 def fixed_glob(patterns, file_type, recursive):
     for pattern in patterns:
         for path in glob.glob(pattern, recursive=recursive):
-            item = {
-                "pattern": pattern,
-                "type": file_type,
-            }
             try:
+                item = {
+                    "type": file_type,
+                }
                 item["original"] = path
                 with open(path, "rb") as f:
                     item["content"] = f.read()
-                item["fixed"] = path
+                item["modified_date"] = modified_date(path)
             except Exception as e:
                 item["error"] = str(e)
                 item["error_type"] = type(e).__name__
