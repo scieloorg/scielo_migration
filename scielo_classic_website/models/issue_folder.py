@@ -7,6 +7,17 @@ from scielo_classic_website.htmlbody.html_body import HTMLFile
 from scielo_classic_website.isisdb.isis_cmd import get_documents_by_issue_folder
 
 
+def try_to_fix_encoding(nome_original):
+    try:
+        nome_bytes = nome_original.encode("utf-8", errors="surrogateescape")
+        return (
+            nome_bytes.decode("cp1252") if isinstance(nome_bytes, bytes) else nome_bytes
+        )
+    except Exception as exc:
+        logging.exception(exc)
+        return nome_original
+
+
 def modified_date(file_path):
     try:
         stat = os.stat(file_path)
@@ -33,6 +44,7 @@ def fixed_glob(patterns, file_type, recursive):
                     "type": file_type,
                 }
                 item["original"] = path
+                item["fixed"] = try_to_fix_encoding(path)
                 with open(path, "rb") as f:
                     item["content"] = f.read()
                 item["modified_date"] = modified_date(path)
@@ -49,22 +61,23 @@ def get_files(patterns, file_type, recursive=False):
                 yield item
                 continue
             path = item["original"]
-            basename = os.path.basename(item["fixed"])
+            fixed_path = item["fixed"]
+            basename = os.path.basename(fixed_path)
             name, ext = os.path.splitext(basename)
             with open(path, "rb") as fp:
                 content = fp.read()
 
             yield {
                 "type": file_type,
-                "original": item["original"],
-                "path": item["fixed"],
+                "fixed": fixed_path,
+                "path": path,
                 "key": name,
                 "name": basename,
                 "extension": ext,
-                "relative_path": _get_classic_website_rel_path(item["fixed"]),
+                "relative_path": _get_classic_website_rel_path(fixed_path),
                 "content": content,
             }
-        
+
         except Exception as e:
             yield {"type": file_type, "error": str(e), "error_type": type(e).__name__}
 
@@ -130,11 +143,13 @@ class IssueFolder:
                 item["lang"] = lang
                 item["part"] = part
                 try:
-                    item["replacements"] = HTMLFile(item.pop("original")).asset_path_fixes
+                    item["replacements"] = HTMLFile(
+                        item.pop("original")
+                    ).asset_path_fixes
                 except KeyError:
-                    item["replacements"] =  {}
+                    item["replacements"] = {}
                 yield item
-            
+
             except Exception as e:
                 yield {"type": "html", "error": str(e), "error_type": type(e).__name__}
 
@@ -195,9 +210,7 @@ class IssueFolder:
         file_type = "asset"
         htdocs_img_revistas_path = self._classic_website_paths.htdocs_img_revistas_path
 
-        htdocs_path = os.path.dirname(
-            os.path.dirname(htdocs_img_revistas_path)
-        )
+        htdocs_path = os.path.dirname(os.path.dirname(htdocs_img_revistas_path))
 
         patterns = [
             os.path.join(htdocs_path, "**", self._subdir_acron_issue, "*.*"),
