@@ -44,7 +44,6 @@ def fixed_glob(patterns, file_type, recursive):
                     "type": file_type,
                 }
                 item["path"] = path
-                item["fixed"] = try_to_fix_encoding(path)
                 with open(path, "rb") as f:
                     item["content"] = f.read()
                 item["modified_date"] = modified_date(path)
@@ -61,20 +60,18 @@ def get_files(patterns, file_type, recursive=False):
                 yield item
                 continue
             path = item["path"]
-            fixed_path = item["fixed"]
-            basename = os.path.basename(fixed_path)
+            basename = os.path.basename(path)
             name, ext = os.path.splitext(basename)
             with open(path, "rb") as fp:
                 content = fp.read()
 
             yield {
                 "type": file_type,
-                "fixed": fixed_path,
                 "path": path,
                 "key": name,
                 "name": basename,
                 "extension": ext,
-                "relative_path": _get_classic_website_rel_path(fixed_path),
+                "relative_path": _get_classic_website_rel_path(path),
                 "content": content,
             }
 
