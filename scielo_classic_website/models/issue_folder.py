@@ -43,7 +43,7 @@ def fixed_glob(patterns, file_type, recursive):
                 item = {
                     "type": file_type,
                 }
-                item["original"] = path
+                item["path"] = path
                 item["fixed"] = try_to_fix_encoding(path)
                 with open(path, "rb") as f:
                     item["content"] = f.read()
@@ -60,7 +60,7 @@ def get_files(patterns, file_type, recursive=False):
             if item.get("error"):
                 yield item
                 continue
-            path = item["original"]
+            path = item["path"]
             fixed_path = item["fixed"]
             basename = os.path.basename(fixed_path)
             name, ext = os.path.splitext(basename)
@@ -144,7 +144,7 @@ class IssueFolder:
                 item["part"] = part
                 try:
                     item["replacements"] = HTMLFile(
-                        item.pop("original")
+                        item["path"]
                     ).asset_path_fixes
                 except KeyError:
                     item["replacements"] = {}
@@ -222,8 +222,7 @@ class IssueFolder:
                 yield item
                 continue
             try:
-                path = item.pop("original")
-                if os.path.isfile(path):
+                if os.path.isfile(item["path"]):
                     # Arquivo direto
                     yield item
             except Exception as e:
