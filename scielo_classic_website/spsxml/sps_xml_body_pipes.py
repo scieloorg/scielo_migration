@@ -1,3 +1,5 @@
+import traceback
+import sys
 import logging
 import os
 from copy import deepcopy
@@ -74,14 +76,18 @@ def convert_html_to_xml(document):
         # convert_html_to_xml_step_6,
         # convert_html_to_xml_step_7,
     )
+    document.exceptions = []
     document.xml_body_and_back = []
-    try:
-        for i, call_ in enumerate(calls, start=1):
+    for i, call_ in enumerate(calls, start=1):
+        try:
             document.xml_body_and_back.append(call_(document))
-    except Exception as e:
-        raise XMLBodyAnBackConvertException(
-            f"convert_html_to_xml (step {i}): {type(e)} {e}"
-        )
+        except Exception as e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            document.exceptions.append({
+                "error_type": str(type(e)),
+                "error_message": str(e),
+                "exc_traceback": traceback.format_exc()
+            })
 
 
 def convert_html_to_xml_step_1(document):
@@ -777,18 +783,21 @@ class XRefTypePipe(plumber.Pipe):
 
     def parser_node(self, node, xml):
         rid = node.get("rid")
-        if not rid or node.get("ref-type"):
-            logging.info(ET.tostring(node))
+        if not rid:
+            logging.warning("Missing rid: {}".format(ET.tostring(node)))
             return
 
         related = xml.find(f".//*[@id='{rid}']")
+        if related is None:
+            logging.warning("Missing id={}".format(rid))
+            return
+
         node.set("ref-type", ELEM_AND_REF_TYPE.get(related.tag) or related.tag)
 
     def transform(self, data):
         raw, xml = data
         for xref in xml.xpath(".//xref"):
-            ref_type = xref.get("ref-type")
-            if ref_type:
+            if xref.get("ref-type"):
                 continue
             self.parser_node(xref, xml)
         return data
