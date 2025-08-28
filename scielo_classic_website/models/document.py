@@ -60,6 +60,7 @@ class Document:
         self._document_records = None
         self.xml_body_and_back = None
         self.xml_body = None
+        self.exceptions = None
 
         self.data = {}
         try:
@@ -302,16 +303,6 @@ class Document:
 
         if main_text or translations:
             sps_xml_body_pipes.convert_html_to_xml(self)
-
-            if not self.xml_body_and_back:
-                raise GenerateBodyAndBackFromHTMLError(
-                    f"XML body and back were not generated"
-                )
-        else:
-            raise GenerateBodyAndBackFromHTMLError(
-                "XML body and back were not generated "
-                "because there is no main text and no translations"
-            )
 
     def generate_full_xml(self, selected_xml_body=None):
         """
