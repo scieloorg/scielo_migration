@@ -157,6 +157,56 @@ def convert_html_to_xml_step_2(document):
         ImgSrcPipe(),
         RemoveEmptyPTagPipe(),
         RemoveEmptyRefTagPipe(),
+        RemoveExcedingBreakTagPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_2(document):
+    """
+    Converte o XML obtido no passo 1,
+    converte as tags HTML nas XML correspondentes
+    sem preocupação em manter a hierarquia exigida no XML
+
+    Parameters
+    ----------
+    document: Document
+
+    ((address | alternatives | answer | answer-set | array |
+    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
+    fig | fig-group | graphic | media | preformat | question | question-wrap |
+    question-wrap-group | supplementary-material | table-wrap |
+    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
+    tex-math | mml:math | p | related-article | related-object | disp-quote |
+    speech | statement | verse-group)*, (sec)*, sig-block?)
+    """
+    # logging.info("convert_html_to_xml - step 2")
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        XMLNormalizeSpacePipe(),
+        # RemoveCDATAPipe(),
+        RemoveCommentPipe(),
+        FontSymbolPipe(),
+        FixMissingParagraphsPipe(),
+        ReplaceBrByPPipe(),
+        CreateStyleTagFromAttributePipe(),
+        RemoveHTMLTagsPipe(),
+        RenameElementsPipe(),
+        StylePipe(),
+        RemoveSpanTagsPipe(),
+        ReplaceBrByPPipe(),
+        OlPipe(),
+        UlPipe(),
+        TagsHPipe(),
+        ASourcePipe(),
+        ANamePipe(),
+        AHrefPipe(),
+        ImgSrcPipe(),
+        RemoveEmptyPTagPipe(),
+        RemoveEmptyRefTagPipe(),
+        RemoveExcedingBreakTagPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -649,6 +699,20 @@ class FontSymbolPipe(plumber.Pipe):
             if face and "SYMBOL" in face.upper():
                 node.tag = "font-face-symbol"
         _report(xml, func_name=type(self))
+        return data
+
+
+class CreateStyleTagFromAttributePipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+        for node in xml.xpath(".//*[@style]"):
+            if not node.get("style"):
+                continue
+            for style in ("italic", "sup", "sub", "bold", "underline"):
+                if style in node.get("style"):
+                    node.tag = style
+                    node.attrib.pop("style")
+                    break
         return data
 
 
@@ -1183,6 +1247,29 @@ class RemoveEmptyRefTagPipe(plumber.Pipe):
             if not text:
                 parent = item.getparent()
                 parent.remove(item)
+        return data
+
+
+class RemoveExcedingBreakTagPipe(plumber.Pipe):
+    """
+    Remove parágrafo vazio, ou que contenha somente espaços em branco.
+
+    Ex: <p> </p>
+    """
+
+    def transform(self, data):
+        raw, xml = data
+
+        for parent in xml.xpath(".//p[break]"):
+            for item in parent.xpath("break"):
+                if (item.tail or "").strip():
+                    continue
+                if item.getnext() is not None:
+                    continue
+                parent.remove(item)
+
+        for parent in xml.xpath(".//mixed-citation[break]"):
+            ET.strip_tags(parent, "break")
         return data
 
 
