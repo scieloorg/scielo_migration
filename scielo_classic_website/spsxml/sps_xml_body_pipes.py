@@ -83,11 +83,13 @@ def convert_html_to_xml(document):
             document.xml_body_and_back.append(call_(document))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            document.exceptions.append({
-                "error_type": str(type(e)),
-                "error_message": str(e),
-                "exc_traceback": traceback.format_exc()
-            })
+            document.exceptions.append(
+                {
+                    "error_type": str(type(e)),
+                    "error_message": str(e),
+                    "exc_traceback": traceback.format_exc(),
+                }
+            )
 
 
 def convert_html_to_xml_step_1(document):
@@ -136,6 +138,7 @@ def convert_html_to_xml_step_2(document):
         # RemoveCDATAPipe(),
         RemoveCommentPipe(),
         FontSymbolPipe(),
+        FixMissingParagraphsPipe(),
         RemoveHTMLTagsPipe(),
         RenameElementsPipe(),
         StylePipe(),
@@ -559,6 +562,17 @@ class RenameElementsPipe(plumber.Pipe):
             for node in xml.findall(xpath):
                 node.tag = new
         _report(xml, func_name=type(self))
+        return data
+
+
+class FixMissingParagraphsPipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+
+        for body in xml.xpath(".//body"):
+            if not body.xpath(".//p"):
+                for child in body.getchildren():
+                    child.tag = "p"
         return data
 
 
