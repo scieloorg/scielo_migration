@@ -139,6 +139,7 @@ def convert_html_to_xml_step_2(document):
         RemoveCommentPipe(),
         FontSymbolPipe(),
         FixMissingParagraphsPipe(),
+        ReplaceBrByPPipe(),
         RemoveHTMLTagsPipe(),
         RenameElementsPipe(),
         StylePipe(),
@@ -570,9 +571,58 @@ class FixMissingParagraphsPipe(plumber.Pipe):
         raw, xml = data
 
         for body in xml.xpath(".//body"):
-            if not body.xpath(".//p"):
-                for child in body.getchildren():
-                    child.tag = "p"
+            if body.xpath(".//p"):
+                continue
+
+            for child in body.getchildren():
+                child.tag = "p"
+
+
+class ReplaceBrByPPipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+        for body in xml.xpath(".//body"):
+            for br_parent in body.xpath("*[br]"):
+                if len(child.xpath("br")) == 1:
+                    continue
+                # Coletar o conteúdo e criar novos parágrafos
+                new_elements = []
+                p = ET.Element("p")
+
+                # Adicionar texto inicial se existir
+                if br_parent.text:
+                    p.text = br_parent.text
+                    br_parent.text = None
+
+                # Processar cada filho
+                for (
+                    child
+                ) in (
+                    br_parent.getchildren()
+                ):  # usar list() para evitar modificar durante iteração
+                    if child.tag == "br":
+                        # Adicionar parágrafo atual se tiver conteúdo
+                        if p.text or len(p):
+                            new_elements.append(p)
+                        # Criar novo parágrafo
+                        p = ET.Element("p")
+                        if child.tail:
+                            p.text = child.tail
+                    else:
+                        # Adicionar elemento não-break ao parágrafo atual
+                        p.append(child)
+
+                # Adicionar último parágrafo se tiver conteúdo
+                if p.text or len(p):
+                    new_elements.append(p)
+
+                # Limpar o parent original
+                br_parent.clear()
+
+                # Adicionar os novos elementos
+                for elem in new_elements:
+                    br_parent.addprevious(elem)
+
         return data
 
 
