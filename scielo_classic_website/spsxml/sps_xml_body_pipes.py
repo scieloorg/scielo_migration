@@ -413,12 +413,16 @@ class MainHTMLPipe(plumber.Pipe):
         )
         if text.strip():
             node = text_to_node(text)
-            for child in node.getchildren():
+            if node.find(".//p") is None:
                 sec = ET.Element("sec")
-                sec.append(child)
+                for child in node.getchildren():
+                    p = ET.Element("p")
+                    p.append(child)
+                    sec.append(p)
                 back.append(sec)
-
-            logging.info(f"back {node.tag}")
+            else:
+                node.tag = "sec"
+                back.append(node)
 
         _report(xml, func_name=type(self))
         return data
