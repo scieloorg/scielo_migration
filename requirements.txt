@@ -1,3 +1,8 @@
 lxml
 picles.plumber==0.11
 black==23.3.0
+Levenshtein==0.27.1
+python-Levenshtein==0.27.1
+rapidfuzz==3.14.0
+thefuzz==0.22.1
+unidecode==1.4.0
