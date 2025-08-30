@@ -7,9 +7,9 @@ from io import StringIO
 
 import plumber
 from lxml import etree as ET
-
 from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
+from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
 
 
 REF_TYPES = {
@@ -73,6 +73,7 @@ def convert_html_to_xml(document):
         convert_html_to_xml_step_2,
         convert_html_to_xml_step_3,
         convert_html_to_xml_step_4,
+        convert_html_to_xml_step_fix_body,
         # convert_html_to_xml_step_5,
         # convert_html_to_xml_step_6,
         # convert_html_to_xml_step_7,
@@ -110,54 +111,6 @@ def convert_html_to_xml_step_1(document):
         SetupPipe(),
         MainHTMLPipe(),
         TranslatedHTMLPipe(),
-        EndPipe(),
-    )
-    transformed_data = ppl.run(document, rewrap=True)
-    return next(transformed_data)
-
-
-def convert_html_to_xml_step_2(document):
-    """
-    Converte o XML obtido no passo 1,
-    converte as tags HTML nas XML correspondentes
-    sem preocupação em manter a hierarquia exigida no XML
-
-    Parameters
-    ----------
-    document: Document
-
-    ((address | alternatives | answer | answer-set | array |
-    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
-    fig | fig-group | graphic | media | preformat | question | question-wrap |
-    question-wrap-group | supplementary-material | table-wrap |
-    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
-    tex-math | mml:math | p | related-article | related-object | disp-quote |
-    speech | statement | verse-group)*, (sec)*, sig-block?)
-    """
-    # logging.info("convert_html_to_xml - step 2")
-    ppl = plumber.Pipeline(
-        StartPipe(),
-        XMLNormalizeSpacePipe(),
-        # RemoveCDATAPipe(),
-        RemoveCommentPipe(),
-        FontSymbolPipe(),
-        FixMissingParagraphsPipe(),
-        ReplaceBrByPPipe(),
-        RemoveHTMLTagsPipe(),
-        RenameElementsPipe(),
-        StylePipe(),
-        RemoveSpanTagsPipe(),
-        ReplaceBrByPPipe(),
-        OlPipe(),
-        UlPipe(),
-        TagsHPipe(),
-        ASourcePipe(),
-        ANamePipe(),
-        AHrefPipe(),
-        ImgSrcPipe(),
-        RemoveEmptyPTagPipe(),
-        RemoveEmptyRefTagPipe(),
-        RemoveExcedingBreakTagPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -320,6 +273,16 @@ def convert_html_to_xml_step_7(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         AlternativesGraphicPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_fix_body(document):
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        WrapPwithSecPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -648,7 +611,6 @@ class ReplaceBrByPPipe(plumber.Pipe):
 
     def replace_tag_by_p(self, body, break_tag):
         for br_parent in body.xpath(f"*[{break_tag}]"):
-            logging.info(ET.tostring(br_parent))
             if len(br_parent.xpath(break_tag)) == 1:
                 continue
             # Coletar o conteúdo e criar novos parágrafos
@@ -966,25 +928,19 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
     def _extract_rid(self, href, pkg_name, label):
         """
         Extrai o rid a partir do href e nome do pacote.
-
+        
         Args:
             href: String com o caminho href
             pkg_name: Nome do pacote
-
+            
         Returns:
             String com o rid ou None
         """
-        logging.info("XRefSpecialInternalLinkPipe._extract_rid")
-        logging.info(f"label={label}")
-        logging.info(f"href={href}")
-        logging.info(f"pkg_name={pkg_name}")
-
         basename = os.path.basename(href)
         filename, _ = os.path.splitext(basename)
 
         rid = filename.replace(pkg_name, "")
         if filename != rid:
-            logging.info(f"(1) rid={rid}")
             return rid
 
         greater_pos = -1
@@ -996,17 +952,14 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                 greater_pos = position
         if rid:
             rid = filename[greater_pos:]
-            logging.info(f"(2) rid={rid}")
             return rid
 
-        try:
+        try: 
             rid = label[0].lower() + label.split()[-1]
-            logging.info(f"(3) rid={rid}")
             return rid
         except Exception as e:
             logging.exception(e)
 
-        logging.info(f"(4) rid={filename}")
         return filename
 
     def get_label(self, xref_text, label_text):
@@ -1030,12 +983,8 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             "xref[@is_internal_link_to_asset_html_page and @href]"
         ):
 
-            logging.info("......")
-            logging.info(f"pkg_name={pkg_name}")
-            logging.info(ET.tostring(child))
             # Table 1
             xref_text = self._extract_xref_text(child)
-            logging.info(f"xref_text={xref_text}")
             if not xref_text:
                 logging.error("XRefSpecialInternalLinkPipe - no xref_text found")
                 continue
@@ -1046,7 +995,6 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                 continue
 
             rid = self._extract_rid(href, pkg_name, xref_text)
-            logging.info(f"rid={rid}")
             if not rid:
                 logging.error("XRefSpecialInternalLinkPipe - no href found")
                 continue
@@ -1238,10 +1186,9 @@ class RemoveEmptyRefTagPipe(plumber.Pipe):
 
     Ex: <p> </p>
     """
-
     def transform(self, data):
         raw, xml = data
-
+        
         for item in xml.xpath(".//ref"):
             text = "".join(item.xpath(".//text()")).strip()
             if not text:
@@ -1256,10 +1203,9 @@ class RemoveExcedingBreakTagPipe(plumber.Pipe):
 
     Ex: <p> </p>
     """
-
     def transform(self, data):
         raw, xml = data
-
+        
         for parent in xml.xpath(".//p[break]"):
             for item in parent.xpath("break"):
                 if (item.tail or "").strip():
@@ -1580,3 +1526,61 @@ class AlternativesGraphicPipe(plumber.Pipe):
         _process(xml, "a[graphic]", self.parser_node)
         _report(xml, func_name=type(self))
         return data
+
+
+class WrapPwithSecPipe(plumber.Pipe):
+    
+    def transform(self, data):
+        raw, xml = data
+        for body in xml.xpath(".//body"):
+            self.replace_bold_by_title(body)
+            self.fix_sec(body)
+
+            back = body.getnext()
+            if back is not None and back.xpath("ref-list[not(title)]"):
+                try:
+                    sec_node = body.xpath("sec[not(p) and title]")[-1]
+                except IndexError:
+                    pass
+                else:
+                    reflist = back.find("ref-list")
+                    reflist.insert(0, sec_node.find("title"))
+                    body.remove(sec_node)
+        return data
+
+    def replace_bold_by_title(self, body):
+        for bold in body.xpath(".//bold"):
+            if bold.text is None and len(bold.getchildren()) == 0:
+                parent = bold.getparent()
+                parent.remove(bold)
+        for p_node in body.xpath(f"p[bold]"):
+            p_text = "".join(p_node.xpath(".//text()")).strip()
+            bold_node = p_node.find(".//bold")
+            bold_text = "".join(bold_node.xpath(".//text()")).strip()
+            if p_text == bold_text:
+                bold_node.tag = "title"
+                sec_type = get_sectype(bold_text.lower())
+                if sec_type:
+                    p_node.set("sec-type", sec_type)
+                p_node.tag = "sec"
+                if p_node.getchildren()[0].tag != "title":
+                    p_node.remove(p_node.getchildren()[0])
+
+    def fix_sec(self, body):
+        if body.find("sec") is None:
+            return
+
+        sec_node = None
+        for body_child in body.getchildren():
+            if body_child.tag == "sec":
+                sec_node = body_child
+                continue
+
+            if sec_node is None:
+                sec_node = ET.Element("sec")
+                body_child.addprevious(sec_node)
+                
+            sec_node.append(body_child)
+        
+        for body_child in body.xpath("p"):
+            body.remove(body_child)
