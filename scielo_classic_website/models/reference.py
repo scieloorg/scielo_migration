@@ -33,10 +33,10 @@ class Reference:
         if self._reference_record.publication_type:
             return self._reference_record.publication_type
 
-        if self.reference_record.patent:
+        if self._reference_record.patent:
             return "patent"
 
-        if self.reference_record.conference:
+        if self._reference_record.conferences:
             return "confproc"
 
         if self._reference_record.thesis_degree:

@@ -183,8 +183,13 @@ class XMLCitation(object):
         def precond(data):
             raw, xml = data
 
-            if not raw.chapter_title:
-                raise plumber.UnmetPrecondition()
+            try:
+                if raw.chapter_title:
+                    return
+            except AttributeError:
+                if raw.article_title:
+                    return
+            raise plumber.UnmetPrecondition()
 
         @plumber.precondition(precond)
         def transform(self, data):
@@ -192,8 +197,11 @@ class XMLCitation(object):
 
             articletitle = ET.Element("chapter-title")
 
-            utils.handle_bad_text(articletitle, raw.chapter_title)
-
+            try:
+                utils.handle_bad_text(articletitle, raw.chapter_title)
+            except AttributeError:
+                utils.handle_bad_text(articletitle, raw.article_title)
+                
             xml.find("./element-citation").append(articletitle)
 
             return data

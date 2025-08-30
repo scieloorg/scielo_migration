@@ -7,9 +7,9 @@ from io import StringIO
 
 import plumber
 from lxml import etree as ET
-
 from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
+from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
 
 
 REF_TYPES = {
@@ -23,6 +23,7 @@ ELEM_NAME = {
     "t": "table-wrap",
     "f": "fig",
     "e": "disp-formula",
+    "c": "table-wrap",
 }
 
 
@@ -72,6 +73,7 @@ def convert_html_to_xml(document):
         convert_html_to_xml_step_2,
         convert_html_to_xml_step_3,
         convert_html_to_xml_step_4,
+        convert_html_to_xml_step_fix_body,
         # convert_html_to_xml_step_5,
         # convert_html_to_xml_step_6,
         # convert_html_to_xml_step_7,
@@ -80,9 +82,11 @@ def convert_html_to_xml(document):
     document.xml_body_and_back = []
     for i, call_ in enumerate(calls, start=1):
         try:
+            logging.info(f"converting {i}")
             document.xml_body_and_back.append(call_(document))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
+            logging.exception(e)
             document.exceptions.append(
                 {
                     "error_type": str(type(e)),
@@ -140,10 +144,12 @@ def convert_html_to_xml_step_2(document):
         FontSymbolPipe(),
         FixMissingParagraphsPipe(),
         ReplaceBrByPPipe(),
+        CreateStyleTagFromAttributePipe(),
         RemoveHTMLTagsPipe(),
         RenameElementsPipe(),
         StylePipe(),
         RemoveSpanTagsPipe(),
+        ReplaceBrByPPipe(),
         OlPipe(),
         UlPipe(),
         TagsHPipe(),
@@ -152,6 +158,8 @@ def convert_html_to_xml_step_2(document):
         AHrefPipe(),
         ImgSrcPipe(),
         RemoveEmptyPTagPipe(),
+        RemoveEmptyRefTagPipe(),
+        RemoveExcedingBreakTagPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -180,7 +188,7 @@ def convert_html_to_xml_step_3(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         XRefSpecialInternalLinkPipe(),
-        # XRefTypePipe(),
+        XRefTypePipe(),
         InlineGraphicPipe(),
         # RemoveParentPTagOfGraphicPipe(),
         EndPipe(),
@@ -265,6 +273,16 @@ def convert_html_to_xml_step_7(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         AlternativesGraphicPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_fix_body(document):
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        WrapPwithSecPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -408,10 +426,16 @@ class MainHTMLPipe(plumber.Pipe):
         )
         if text.strip():
             node = text_to_node(text)
-            for child in node.getchildren():
+            if node.find(".//p") is None:
                 sec = ET.Element("sec")
-                sec.append(child)
+                for child in node.getchildren():
+                    p = ET.Element("p")
+                    p.append(child)
+                    sec.append(p)
                 back.append(sec)
+            else:
+                node.tag = "sec"
+                back.append(node)
 
         _report(xml, func_name=type(self))
         return data
@@ -569,61 +593,63 @@ class RenameElementsPipe(plumber.Pipe):
 class FixMissingParagraphsPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
-
         for body in xml.xpath(".//body"):
             if body.xpath(".//p"):
                 continue
-
             for child in body.getchildren():
                 child.tag = "p"
+        return data
 
 
 class ReplaceBrByPPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
         for body in xml.xpath(".//body"):
-            for br_parent in body.xpath("*[br]"):
-                if len(child.xpath("br")) == 1:
-                    continue
-                # Coletar o conteúdo e criar novos parágrafos
-                new_elements = []
-                p = ET.Element("p")
-
-                # Adicionar texto inicial se existir
-                if br_parent.text:
-                    p.text = br_parent.text
-                    br_parent.text = None
-
-                # Processar cada filho
-                for (
-                    child
-                ) in (
-                    br_parent.getchildren()
-                ):  # usar list() para evitar modificar durante iteração
-                    if child.tag == "br":
-                        # Adicionar parágrafo atual se tiver conteúdo
-                        if p.text or len(p):
-                            new_elements.append(p)
-                        # Criar novo parágrafo
-                        p = ET.Element("p")
-                        if child.tail:
-                            p.text = child.tail
-                    else:
-                        # Adicionar elemento não-break ao parágrafo atual
-                        p.append(child)
-
-                # Adicionar último parágrafo se tiver conteúdo
-                if p.text or len(p):
-                    new_elements.append(p)
-
-                # Limpar o parent original
-                br_parent.clear()
-
-                # Adicionar os novos elementos
-                for elem in new_elements:
-                    br_parent.addprevious(elem)
-
+            self.replace_tag_by_p(body, "br")
+            self.replace_tag_by_p(body, "break")
         return data
+
+    def replace_tag_by_p(self, body, break_tag):
+        for br_parent in body.xpath(f"*[{break_tag}]"):
+            if len(br_parent.xpath(break_tag)) == 1:
+                continue
+            # Coletar o conteúdo e criar novos parágrafos
+            new_elements = []
+            p = ET.Element("p")
+
+            # Adicionar texto inicial se existir
+            if br_parent.text:
+                p.text = br_parent.text
+                br_parent.text = None
+
+            # Processar cada filho
+            for (
+                child
+            ) in (
+                br_parent.getchildren()
+            ):  # usar list() para evitar modificar durante iteração
+                if child.tag == break_tag:
+                    # Adicionar parágrafo atual se tiver conteúdo
+                    if p.text or len(p):
+                        new_elements.append(p)
+                    # Criar novo parágrafo
+                    p = ET.Element("p")
+                    if child.tail:
+                        p.text = child.tail
+                else:
+                    # Adicionar elemento não-break ao parágrafo atual
+                    p.append(child)
+
+            # Adicionar último parágrafo se tiver conteúdo
+            if p.text or len(p):
+                new_elements.append(p)
+
+            # Limpar o parent original
+            br_parent.clear()
+
+            # Adicionar os novos elementos
+            for elem in new_elements:
+                br_parent.addprevious(elem)
 
 
 class FontSymbolPipe(plumber.Pipe):
@@ -635,6 +661,20 @@ class FontSymbolPipe(plumber.Pipe):
             if face and "SYMBOL" in face.upper():
                 node.tag = "font-face-symbol"
         _report(xml, func_name=type(self))
+        return data
+
+
+class CreateStyleTagFromAttributePipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+        for node in xml.xpath(".//*[@style]"):
+            if not node.get("style"):
+                continue
+            for style in ("italic", "sup", "sub", "bold", "underline"):
+                if style in node.get("style"):
+                    node.tag = style
+                    node.attrib.pop("style")
+                    break
         return data
 
 
@@ -882,51 +922,87 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         _report(xml, func_name=type(self))
         return data
 
+    def _extract_xref_text(self, xref_element):
+        return " ".join(xref_element.xpath(".//text()")).strip()
+
+    def _extract_rid(self, href, pkg_name, label):
+        """
+        Extrai o rid a partir do href e nome do pacote.
+        
+        Args:
+            href: String com o caminho href
+            pkg_name: Nome do pacote
+            
+        Returns:
+            String com o rid ou None
+        """
+        basename = os.path.basename(href)
+        filename, _ = os.path.splitext(basename)
+
+        rid = filename.replace(pkg_name, "")
+        if filename != rid:
+            return rid
+
+        greater_pos = -1
+        rid = None
+        for k, v in ELEM_NAME.items():
+            position = filename.rfind(k)
+            if position > greater_pos:
+                rid = k
+                greater_pos = position
+        if rid:
+            rid = filename[greater_pos:]
+            return rid
+
+        try: 
+            rid = label[0].lower() + label.split()[-1]
+            return rid
+        except Exception as e:
+            logging.exception(e)
+
+        return filename
+
+    def get_label(self, xref_text, label_text):
+        # Tables 1-3
+        if not label_text:
+            parts = xref_text.split()
+            label_text = parts[0]
+            label_number = parts[-1]
+            return label_text, xref_text
+
+        if label_text and xref_text[0].isdigit():
+            # <xref is_internal_link_to_asset_html_page="true" href="t2">2</xref>
+            # Table 2
+            return "", f"{label_text} {xref_text}"
+
     def parser_xref_parent(self, xref_parent, root, pkg_name):
-        previous_element_name = None
-        label_first_word = None
+        label_text = None
         children = []
+
         for child in xref_parent.xpath(
             "xref[@is_internal_link_to_asset_html_page and @href]"
         ):
 
             # Table 1
-            label = child.text.strip() or " ".join(child.xpath(".//text()")).strip()
-            if not label:
+            xref_text = self._extract_xref_text(child)
+            if not xref_text:
+                logging.error("XRefSpecialInternalLinkPipe - no xref_text found")
                 continue
             try:
                 href = child.attrib.pop("href")
             except KeyError:
+                logging.error("XRefSpecialInternalLinkPipe - no href found")
                 continue
 
-            basename = os.path.basename(href)
-            filename, ext = os.path.splitext(basename)
-            rid = filename.replace(pkg_name, "")
+            rid = self._extract_rid(href, pkg_name, xref_text)
             if not rid:
+                logging.error("XRefSpecialInternalLinkPipe - no href found")
                 continue
 
             child.set("rid", rid)
-            element_name = ELEM_NAME.get(rid[0])
-            if not element_name:
-                continue
+            element_name = ELEM_NAME.get(rid[0]) or "fig"
 
-            # Tables 1-3
-            if label_first_word is None:
-                label_first_word = label.split()[0]
-                if label_first_word.endswith("s"):
-                    # Table
-                    label_first_word = label_first_word[:-1]
-                else:
-                    label_first_word = None
-
-            if element_name and label[0].isdigit():
-                # <xref is_internal_link_to_asset_html_page="true" href="t2">2</xref>
-                if label_first_word and label:
-                    # Table 2
-                    label = f"{label_first_word} {label}"
-
-            child.attrib.pop("is_internal_link_to_asset_html_page")
-
+            label_text, label = self.get_label(xref_text, label_text)
             try:
                 found = root.xpath(f"//*[@id='{rid}']")[0]
             except IndexError:
@@ -934,7 +1010,6 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                 new_elem.set("id", rid)
 
                 elem_label = ET.Element("label")
-                elem_label.text = label
                 new_elem.append(elem_label)
 
                 g = ET.Element("graphic")
@@ -943,6 +1018,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                 new_elem.append(g)
                 children.append(new_elem)
 
+            child.attrib.pop("is_internal_link_to_asset_html_page")
         for child in reversed(children):
             node = ET.Element(xref_parent.tag)
             node.append(child)
@@ -1101,6 +1177,45 @@ class RemoveEmptyPTagPipe(plumber.Pipe):
         _process(xml, "p", self.parser_node)
         _process(xml, "sec", self.parser_node)
         _report(xml, func_name=type(self))
+        return data
+
+
+class RemoveEmptyRefTagPipe(plumber.Pipe):
+    """
+    Remove parágrafo vazio, ou que contenha somente espaços em branco.
+
+    Ex: <p> </p>
+    """
+    def transform(self, data):
+        raw, xml = data
+        
+        for item in xml.xpath(".//ref"):
+            text = "".join(item.xpath(".//text()")).strip()
+            if not text:
+                parent = item.getparent()
+                parent.remove(item)
+        return data
+
+
+class RemoveExcedingBreakTagPipe(plumber.Pipe):
+    """
+    Remove parágrafo vazio, ou que contenha somente espaços em branco.
+
+    Ex: <p> </p>
+    """
+    def transform(self, data):
+        raw, xml = data
+        
+        for parent in xml.xpath(".//p[break]"):
+            for item in parent.xpath("break"):
+                if (item.tail or "").strip():
+                    continue
+                if item.getnext() is not None:
+                    continue
+                parent.remove(item)
+
+        for parent in xml.xpath(".//mixed-citation[break]"):
+            ET.strip_tags(parent, "break")
         return data
 
 
@@ -1411,3 +1526,61 @@ class AlternativesGraphicPipe(plumber.Pipe):
         _process(xml, "a[graphic]", self.parser_node)
         _report(xml, func_name=type(self))
         return data
+
+
+class WrapPwithSecPipe(plumber.Pipe):
+    
+    def transform(self, data):
+        raw, xml = data
+        for body in xml.xpath(".//body"):
+            self.replace_bold_by_title(body)
+            self.fix_sec(body)
+
+            back = body.getnext()
+            if back is not None and back.xpath("ref-list[not(title)]"):
+                try:
+                    sec_node = body.xpath("sec[not(p) and title]")[-1]
+                except IndexError:
+                    pass
+                else:
+                    reflist = back.find("ref-list")
+                    reflist.insert(0, sec_node.find("title"))
+                    body.remove(sec_node)
+        return data
+
+    def replace_bold_by_title(self, body):
+        for bold in body.xpath(".//bold"):
+            if bold.text is None and len(bold.getchildren()) == 0:
+                parent = bold.getparent()
+                parent.remove(bold)
+        for p_node in body.xpath(f"p[bold]"):
+            p_text = "".join(p_node.xpath(".//text()")).strip()
+            bold_node = p_node.find(".//bold")
+            bold_text = "".join(bold_node.xpath(".//text()")).strip()
+            if p_text == bold_text:
+                bold_node.tag = "title"
+                sec_type = get_sectype(bold_text.lower())
+                if sec_type:
+                    p_node.set("sec-type", sec_type)
+                p_node.tag = "sec"
+                if p_node.getchildren()[0].tag != "title":
+                    p_node.remove(p_node.getchildren()[0])
+
+    def fix_sec(self, body):
+        if body.find("sec") is None:
+            return
+
+        sec_node = None
+        for body_child in body.getchildren():
+            if body_child.tag == "sec":
+                sec_node = body_child
+                continue
+
+            if sec_node is None:
+                sec_node = ET.Element("sec")
+                body_child.addprevious(sec_node)
+                
+            sec_node.append(body_child)
+        
+        for body_child in body.xpath("p"):
+            body.remove(body_child)
