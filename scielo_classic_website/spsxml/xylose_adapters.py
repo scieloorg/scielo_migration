@@ -13,6 +13,8 @@ def warn_future_deprecation(old, new, details=""):
 
 
 def format_institution(institution, sep=", "):
+    if not institution:
+        return None
     org = [
         institution.get("name"),
         institution.get("division"),
@@ -21,10 +23,12 @@ def format_institution(institution, sep=", "):
 
 
 def format_institutions(institutions, sep=" | "):
-    return sep.join([format_institution(inst) for inst in organizations])
+    return sep.join([format_institution(inst) for inst in organizations if inst])
 
 
 def format_location(city_and_state, country):
+    if not city_and_state:
+        return None
     items = [
         city_and_state.get("city"),
         city_and_state.get("state"),
@@ -46,13 +50,12 @@ class ReferenceXyloseAdapter:
     def __getattr__(self, name):
         # desta forma Reference não precisa herdar de ReferenceRecord
         # fica menos acoplado
-        # logging.info("getting attribute %s %s" % (type(self._reference), name))
         if hasattr(self._reference, name):
             return getattr(self._reference, name)
-        # logging.info("getting attribute %s %s" % (type(self._reference_record), name))
         if hasattr(self._reference_record, name):
             return getattr(self._reference_record, name)
-        # logging.info("getting attribute %s %s" % (type(self), name))
+        logging.info("ReferenceXyloseAdapter %s has no %s" % (type(self._reference), name))
+        logging.info("ReferenceXyloseAdapter %s has no %s" % (type(self._reference_record), name))
         raise AttributeError(f"ReferenceXyloseAdapter has no attribute {name}")
 
     @property
@@ -87,19 +90,23 @@ class ReferenceXyloseAdapter:
         If it is a conference citation, this method retrieves the conference sponsor, if it exists.
         The conference sponsor is presented like it is in the citation. (v52)
         """
-        if self.publication_type == "confproc":
-            return format_institution(self._reference_record.conference_organization)
+        try:
+            if self.publication_type == "confproc":
+                return format_institution(self._reference_record.conference_organization)
+        except Exception as e:
+            logging.exception(e)
+            raise
 
-    @property
-    def conference_location(self):
-        """
-        If it is a conference citation, this method retrieves the conference location, if it exists.
-        The conference location is presented like it is in the citation. (v56)
-        """
-        return format_location(
-            self._reference_record.conference_location,
-            self._reference_record.conference_country,
-        )
+    # @property
+    # def conference_location(self):
+    #     """
+    #     If it is a conference citation, this method retrieves the conference location, if it exists.
+    #     The conference location is presented like it is in the citation. (v56)
+    #     """
+    #     return format_location(
+    #         self._reference_record.conference_location,
+    #         self._reference_record.conference_country,
+    #     )
 
     @property
     def link(self):
@@ -132,8 +139,10 @@ class ReferenceXyloseAdapter:
             self._reference_record.monographic_corporative_authors or []
         )
         institutions.extend(self._reference_record.serial_corporative_authors or [])
-        institutions.extend(self._reference_record.thesis_organization or [])
-        institutions.extend(self._reference_record.conference_organization or [])
+        if self.thesis_institution:
+            institutions.append(self.thesis_institution)
+        if self.conference_sponsor:
+            institutions.append(self.conference_sponsor)
         for inst in institutions:
             yield format_institution(inst)
 
@@ -193,7 +202,7 @@ class ReferenceXyloseAdapter:
         it exists.
         """
         if self._reference_record.thesis_organization:
-            yield format_institution(self._reference_record.thesis_organization)
+            return format_institution(self._reference_record.thesis_organization)
 
     @property
     def comment(self):

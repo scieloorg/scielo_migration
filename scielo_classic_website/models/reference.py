@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 
 from scielo_classic_website.htmlbody import html_style_fixer
 from scielo_classic_website.isisdb.c_record import ReferenceRecord
@@ -26,49 +27,43 @@ class Reference:
         return self._reference_record.record
 
     @property
+    @lru_cache(maxsize=1)
     def publication_type(self):
         """
         This method retrieves the publication type of the citation.
         """
-        if self._reference_record.publication_type:
-            return self._reference_record.publication_type
+        return self._reference_record.publication_type
 
-        if self._reference_record.patent:
-            return "patent"
-
-        if self._reference_record.conferences:
-            return "confproc"
-
-        if self._reference_record.thesis_degree:
-            return "thesis"
-
-        if self._reference_record.monographic_title:
-            return "book"
-
-        if self._reference_record.article_title:
-            return "journal"
-
-        if self._reference_record.ext_link:
-            return "webpage"
-
+    @lru_cache(maxsize=1)
     def _get_pages(self):
-        self._elocation = None
+        """
+        Internal method to process pages information.
+        Returns a tuple with (start_page, end_page, elocation, pages_range)
+        """
+        elocation = None
+        start_page = None
+        end_page = None
+        pages_range = None
+        
         for page in self._reference_record.pages:
-            self._start_page = page.get("first")
-            self._end_page = page.get("last")
-            self._elocation = page.get("elocation")
-            self._pages_range = page.get("range")
-            return
+            start_page = page.get("first")
+            end_page = page.get("last")
+            elocation = page.get("elocation")
+            pages_range = page.get("range")
+            return (start_page, end_page, elocation, pages_range)
 
-        pages_range = self._reference_record.pages_range
-        self._elocation = self._elocation or pages_range.get("elocation")
-        self._pages_range = pages_range.get("range")
-        if self._pages_range:
-            self._start_page = self._pages_range.split("-")[0]
-            self._end_page = self._pages_range.split("-")[-1]
+        pages_range_data = self._reference_record.pages_range
+        elocation = elocation or pages_range_data.get("elocation")
+        pages_range = pages_range_data.get("range")
+        
+        if pages_range:
+            start_page = pages_range.split("-")[0]
+            end_page = pages_range.split("-")[-1]
         else:
-            self._start_page = None
-            self._end_page = None
+            start_page = None
+            end_page = None
+            
+        return (start_page, end_page, elocation, pages_range)
 
     @property
     def start_page(self):
@@ -76,9 +71,7 @@ class Reference:
         This method retrieves the start page of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        if not hasattr(self, "_start_page"):
-            self._get_pages()
-        return self._start_page
+        return self._get_pages()[0]
 
     @property
     def end_page(self):
@@ -86,9 +79,7 @@ class Reference:
         This method retrieves the end page of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        if not hasattr(self, "_end_page"):
-            self._get_pages()
-        return self._end_page
+        return self._get_pages()[1]
 
     @property
     def elocation(self):
@@ -96,9 +87,7 @@ class Reference:
         This method retrieves the e-location of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        if not hasattr(self, "_elocation"):
-            self._get_pages()
-        return self._elocation
+        return self._get_pages()[2]
 
     @property
     def pages(self):
@@ -107,11 +96,10 @@ class Reference:
         separeted by hipen.
         This method deals with the legacy fields (514 and 14).
         """
-        if not hasattr(self, "_pages_range"):
-            self._get_pages()
-        return self._pages_range
+        return self._get_pages()[3]
 
     @property
+    @lru_cache(maxsize=1)
     def source(self):
         """
         This method retrieves the citation source title. Ex:
@@ -125,6 +113,7 @@ class Reference:
         )
 
     @property
+    @lru_cache(maxsize=1)
     def journal_title(self):
         """
         This method retrieves the citation source title. Ex:
@@ -137,24 +126,31 @@ class Reference:
         )
 
     @property
+    @lru_cache(maxsize=1)
     def article_title(self):
         """
         If it is an article citation, this method retrieves the article title, if it exists.
         """
-        return (
-            self._reference_record.article_title
-            and self._reference_record.article_title.get("text")
-        )
+        if self.publication_type != "book":
+            return (
+                self._reference_record.article_title
+                and self._reference_record.article_title.get("text")
+            )
 
     @property
+    @lru_cache(maxsize=1)
     def chapter_title(self):
         """
         If it is an book citation, this method retrieves the chapter title, if it exists.
         """
         if self.publication_type == "book":
-            return self._reference_record.article_title.get("text")
+            return (
+                self._reference_record.article_title
+                and self._reference_record.article_title.get("text")
+            )
 
     @property
+    @lru_cache(maxsize=1)
     def data_title(self):
         """
         If it is an data citation, this method retrieves the data title, if it exists.
@@ -163,6 +159,7 @@ class Reference:
             return self._reference_record.article_title.get("text")
 
     @property
+    @lru_cache(maxsize=1)
     def date(self):
         """
         This method retrieves the date, if it is exists, according to the
@@ -177,9 +174,10 @@ class Reference:
             return self._reference_record.access_date_iso
         if self.publication_type == "patent":
             return self.patent_application_date_iso
-        return self._reference_record.conference_date_iso
+        return self._reference_record.publication_date_iso
 
     @property
+    @lru_cache(maxsize=1)
     def publication_date(self):
         """
         This method retrieves the publication date, if it is exists.
@@ -195,6 +193,7 @@ class Reference:
         )
 
     @property
+    @lru_cache(maxsize=1)
     def patent_application_date(self):
         try:
             return self._reference_record.patent.get("date")
@@ -202,6 +201,7 @@ class Reference:
             return None
 
     @property
+    @lru_cache(maxsize=1)
     def patent_application_date_iso(self):
         try:
             return self._reference_record.patent.get("date_iso")
@@ -209,19 +209,23 @@ class Reference:
             return None
 
     @property
+    @lru_cache(maxsize=1)
     def patent_country(self):
         country = self._reference_record.patent.get("country")
         return country if country != "nd" else None
 
     @property
+    @lru_cache(maxsize=1)
     def patent_organization(self):
         return self._reference_record.patent.get("organization")
 
     @property
+    @lru_cache(maxsize=1)
     def patent_id(self):
         return self._reference_record.patent.get("id")
 
     @property
+    @lru_cache(maxsize=1)
     def mixed_citation(self):
         if self.paragraph_text:
             return html_style_fixer.get_mixed_citation_node(self.paragraph_text)
