@@ -32,7 +32,7 @@ def _get_classic_website_rel_path(file_path):
         "htdocs",
     ):
         if folder in file_path:
-            path = file_path[file_path.find(folder) + len(folder) :]
+            path = file_path[file_path.find(folder):]
             return path
 
 
@@ -48,6 +48,7 @@ def fixed_glob(patterns, file_type, recursive):
                     item["content"] = f.read()
                 item["modified_date"] = modified_date(path)
             except Exception as e:
+                logging.exception(e)
                 item["error"] = str(e)
                 item["error_type"] = type(e).__name__
             yield item
@@ -56,24 +57,13 @@ def fixed_glob(patterns, file_type, recursive):
 def get_files(patterns, file_type, recursive=False):
     for item in fixed_glob(patterns, file_type, recursive):
         try:
-            if item.get("error"):
-                yield item
-                continue
-            path = item["path"]
-            basename = os.path.basename(path)
-            name, ext = os.path.splitext(basename)
-            with open(path, "rb") as fp:
-                content = fp.read()
-
-            yield {
-                "type": file_type,
-                "path": path,
-                "key": name,
-                "name": basename,
-                "extension": ext,
-                "relative_path": _get_classic_website_rel_path(path),
-                "content": content,
-            }
+            if not item.get("error"):
+                path = item["path"]
+                item["name"] = os.path.basename(path)
+                item["key"], item["extension"] = os.path.splitext(item["name"])
+                item["type"] = file_type
+                item["relative_path"] = _get_classic_website_rel_path(path)
+            yield  item
 
         except Exception as e:
             yield {"type": file_type, "error": str(e), "error_type": type(e).__name__}
