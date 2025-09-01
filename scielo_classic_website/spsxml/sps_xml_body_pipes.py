@@ -782,7 +782,6 @@ class AHrefPipe(plumber.Pipe):
         node.set("rid", node.attrib.pop("href")[1:])
 
     def _create_internal_link_to_asset_html_page(self, node):
-        logging.info(f"_create_internal_link_to_asset_html_page: {ET.tostring(node)}")
         node.tag = "xref"
         node.set("is_internal_link_to_asset_html_page", "true")
 
@@ -925,7 +924,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
     def _extract_xref_text(self, xref_element):
         return " ".join(xref_element.xpath(".//text()")).strip()
 
-    def _extract_rid(self, href, pkg_name, label):
+    def _extract_rid(self, href, pkg_name, label_text, label_number):
         """
         Extrai o rid a partir do href e nome do pacote.
         
@@ -936,12 +935,18 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         Returns:
             String com o rid ou None
         """
+        if label_text and label_number:
+            try:
+                return ELEM_NAME.get(label_text[0].lower()) + str(label_number)
+            except (IndexError, AttributeError, ValueError):
+                pass
+
         basename = os.path.basename(href)
         filename, _ = os.path.splitext(basename)
-
-        rid = filename.replace(pkg_name, "")
-        if filename != rid:
-            return rid
+        if filename.startswith(pkg_name):
+            rid = filename.replace(pkg_name, "")
+            if rid:
+                return rid
 
         greater_pos = -1
         rid = None
@@ -953,27 +958,22 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         if rid:
             rid = filename[greater_pos:]
             return rid
-
-        try: 
-            rid = label[0].lower() + label.split()[-1]
-            return rid
-        except Exception as e:
-            logging.exception(e)
-
         return filename
 
-    def get_label(self, xref_text, label_text):
+    def parse_xref_text(self, xref_text, label_text):
         # Tables 1-3
-        if not label_text:
-            parts = xref_text.split()
-            label_text = parts[0]
-            label_number = parts[-1]
-            return label_text, xref_text
+        parts = xref_text.split(" ")
 
-        if label_text and xref_text[0].isdigit():
-            # <xref is_internal_link_to_asset_html_page="true" href="t2">2</xref>
-            # Table 2
-            return "", f"{label_text} {xref_text}"
+        if len(parts) == 1 and parts[0][0].isdigit():
+            return label_text, parts[0]
+
+        if len(parts) == 1:
+            return label_text, "01"
+
+        if len(parts) == 2 and parts[-1][0].isdigit():
+            return parts[0], parts[-1]
+
+        return None, None
 
     def parser_xref_parent(self, xref_parent, root, pkg_name):
         label_text = None
@@ -994,15 +994,10 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                 logging.error("XRefSpecialInternalLinkPipe - no href found")
                 continue
 
-            rid = self._extract_rid(href, pkg_name, xref_text)
-            if not rid:
-                logging.error("XRefSpecialInternalLinkPipe - no href found")
-                continue
+            label_text, label_number = self.parse_xref_text(xref_text, label_text)
 
-            child.set("rid", rid)
+            rid = self._extract_rid(href, pkg_name, label_text, label_number)
             element_name = ELEM_NAME.get(rid[0]) or "fig"
-
-            label_text, label = self.get_label(xref_text, label_text)
             try:
                 found = root.xpath(f"//*[@id='{rid}']")[0]
             except IndexError:
@@ -1019,10 +1014,13 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                 children.append(new_elem)
 
             child.attrib.pop("is_internal_link_to_asset_html_page")
+
+        logging.info(ET.tostring(xref_parent))
         for child in reversed(children):
             node = ET.Element(xref_parent.tag)
             node.append(child)
             xref_parent.addnext(node)
+            logging.info(ET.tostring(node))
 
 
 class InsertGraphicInFigPipe(plumber.Pipe):
@@ -1535,17 +1533,8 @@ class WrapPwithSecPipe(plumber.Pipe):
         for body in xml.xpath(".//body"):
             self.replace_bold_by_title(body)
             self.fix_sec(body)
-
-            back = body.getnext()
-            if back is not None and back.xpath("ref-list[not(title)]"):
-                try:
-                    sec_node = body.xpath("sec[not(p) and title]")[-1]
-                except IndexError:
-                    pass
-                else:
-                    reflist = back.find("ref-list")
-                    reflist.insert(0, sec_node.find("title"))
-                    body.remove(sec_node)
+            self.complete_ref_list_title(body)
+            self.fix_body_begin(body)
         return data
 
     def replace_bold_by_title(self, body):
@@ -1584,3 +1573,23 @@ class WrapPwithSecPipe(plumber.Pipe):
         
         for body_child in body.xpath("p"):
             body.remove(body_child)
+
+    def complete_ref_list_title(self, body):
+        back = body.getnext()
+        if back is not None and back.xpath("ref-list[not(title)]"):
+            try:
+                sec_node = body.xpath("sec[not(p) and title]")[-1]
+            except IndexError:
+                pass
+            else:
+                reflist = back.find("ref-list")
+                reflist.insert(0, sec_node.find("title"))
+                body.remove(sec_node)
+
+    def fix_body_begin(self, body):
+        if body.xpath("sec[@sec-type='intro']"):
+            for item in body.xpath("sec"):
+                if item.get("sec-type") != "intro":
+                    body.remove(item)
+                    continue
+                break
