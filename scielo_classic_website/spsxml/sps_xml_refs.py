@@ -36,7 +36,7 @@ def parse_yyyymmdd(yyyymmdd):
 
 def iso_8601_date(yyyymmdd):
     parsed_yyyymmdd = parse_yyyymmdd(yyyymmdd)
-    return "-".join([item for item in list(parsed_yyyymmdd) if item])
+    return "-".join([str(item) for item in list(parsed_yyyymmdd) if item])
 
 
 class XMLArticleMetaCitationsPipe(plumber.Pipe):
@@ -101,7 +101,7 @@ class XMLCitation(object):
             self.SourcePipe(),
             self.ConferencePipe(),
             self.ThesisPipe(),
-            self.PatentPipe(),
+            # self.PatentPipe(),
             self.VolumePipe(),
             self.IssuePipe(),
             self.SupplementPipe(),
@@ -718,10 +718,10 @@ class XMLCitation(object):
             conf_loc = ET.Element("conf-loc")
             if raw.conference_location:
                 for name in ("city", "state"):
-                    data = raw.conference_location.get(name)
-                    if data:
+                    location = raw.conference_location.get(name)
+                    if location:
                         elem = ET.Element(name)
-                        elem.text = data
+                        elem.text = location
                         conf_loc.append(elem)
 
             if raw.conference_country:
@@ -759,10 +759,10 @@ class XMLCitation(object):
             publisher_loc = ET.Element("publisher-loc")
             if raw.thesis_location:
                 for name in ("city", "state"):
-                    data = raw.thesis_location.get(name)
-                    if data:
+                    location = raw.thesis_location.get(name)
+                    if location:
                         elem = ET.Element(name)
-                        elem.text = data
+                        elem.text = location
                         publisher_loc.append(elem)
 
             if raw.thesis_country:
@@ -778,6 +778,7 @@ class XMLCitation(object):
                 elem.set("content-type", "degree")
                 elem.text = raw.thesis_degree
                 elementcitation.append(elem)
+
             return data
 
     class PublicationPipe(plumber.Pipe):
@@ -794,10 +795,10 @@ class XMLCitation(object):
             publisher_loc = ET.Element("publisher-loc")
             if raw.publisher_location:
                 for name in ("city", "state"):
-                    data = raw.publisher_location.get(name)
-                    if data:
+                    location = raw.publisher_location.get(name)
+                    if location:
                         elem = ET.Element(name)
-                        elem.text = data
+                        elem.text = location
                         publisher_loc.append(elem)
 
             if raw.publisher_country:
