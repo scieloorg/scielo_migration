@@ -11,6 +11,7 @@ from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
 
+CHECK = None
 
 REF_TYPES = {
     "t": "table",
@@ -80,9 +81,11 @@ def convert_html_to_xml(document):
     )
     document.exceptions = []
     document.xml_body_and_back = []
+    CHECK = []
     for i, call_ in enumerate(calls, start=1):
         try:
             logging.info(f"converting {i}")
+            CHECK.append(f"converting {i}")
             document.xml_body_and_back.append(call_(document))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -95,6 +98,8 @@ def convert_html_to_xml(document):
                     "exc_traceback": traceback.format_exc(),
                 }
             )
+    for item in CHECK:
+        logging.info(item)
 
 
 def convert_html_to_xml_step_1(document):
@@ -347,10 +352,11 @@ class EndPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        logging.info(f"EndPipe!!!!")
         for item in xml.xpath(".//xref[@rid]"):
-            if not item.tail.strip():
-                logging.info(f"xref: {ET.tostring(item)}")
+            tail = item.tail
+            if tail:
+                if tail[0].isalnum():
+                    CHECK.append(f"EndPipe - xref: {ET.tostring(item)}")
 
         data = ET.tostring(
             xml,
@@ -790,7 +796,6 @@ class AHrefPipe(plumber.Pipe):
     def _create_internal_link_to_asset_html_page(self, node):
         node.tag = "xref"
         node.set("is_internal_link_to_asset_html_page", "true")
-        logging.info(f"AHrefPipe {ET.tostring(node)}")
 
     def parser_node(self, node, journal_acron):
         href = node.get("href") or ""
@@ -991,7 +996,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         ):
             # Table 1
             if child.tail and child.tail[0] == " ":
-                logging.info(f"parser_xref_parent: child={ET.tostring(child)}")
+                CHECK.append(ET.tostring(child))
 
             xref_text = self._extract_xref_text(child)
             if not xref_text:
