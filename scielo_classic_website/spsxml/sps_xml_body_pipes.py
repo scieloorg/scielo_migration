@@ -89,6 +89,7 @@ def convert_html_to_xml(document):
             logging.exception(e)
             document.exceptions.append(
                 {
+                    "index": i,
                     "error_type": str(type(e)),
                     "error_message": str(e),
                     "exc_traceback": traceback.format_exc(),
@@ -997,6 +998,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             label_text, label_number = self.parse_xref_text(xref_text, label_text)
 
             rid = self._extract_rid(href, pkg_name, label_text, label_number)
+            child.set("rid", rid)
             element_name = ELEM_NAME.get(rid[0]) or "fig"
             try:
                 found = root.xpath(f"//*[@id='{rid}']")[0]
