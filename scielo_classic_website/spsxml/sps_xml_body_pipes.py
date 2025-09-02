@@ -936,9 +936,9 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         Returns:
             String com o rid ou None
         """
-        if label_text and label_number:
+        if label_text and label_number and label_number.isdigit():
             try:
-                return ELEM_NAME.get(label_text[0].lower()) + str(label_number)
+                return ELEM_NAME.get(label_text[0].lower())[0] + str(label_number)
             except (IndexError, AttributeError, ValueError):
                 pass
 
@@ -969,7 +969,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             return label_text, parts[0]
 
         if len(parts) == 1:
-            return label_text, "01"
+            return label_text, None
 
         if len(parts) == 2 and parts[-1][0].isdigit():
             return parts[0], parts[-1]
