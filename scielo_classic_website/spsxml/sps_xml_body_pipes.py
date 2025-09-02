@@ -11,7 +11,6 @@ from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
 
-CHECK = []
 
 REF_TYPES = {
     "t": "table",
@@ -194,7 +193,7 @@ def convert_html_to_xml_step_3(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         XRefSpecialInternalLinkPipe(),
-        XRefTypePipe(),
+        # XRefTypePipe(),
         InlineGraphicPipe(),
         # RemoveParentPTagOfGraphicPipe(),
         EndPipe(),
@@ -355,14 +354,13 @@ class EndPipe(plumber.Pipe):
         for item in xml.xpath(".//xref[@rid]"):
             tail = item.tail
             if tail:
-                if tail[0].isalnum():
-                    raw.CHECK.append(f"EndPipe - xref: {ET.tostring(item)}")
+                raw.CHECK.append(f"EndPipe - xref: {ET.tostring(item)}")
 
         data = ET.tostring(
             xml,
             encoding="utf-8",
             method="xml",
-            pretty_print=True,
+            # pretty_print=True,
         ).decode("utf-8")
 
         return data
@@ -931,8 +929,8 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                     raw.filename_without_extension,
                 )
                 for child in xref_parent.xpath("xref"):
-                    if child.tail and child.tail[0] == " ":
-                        raw.CHECK.append(ET.tostring(child))
+                    if child.tail:
+                        raw.CHECK.append(f"xref: {ET.tostring(child)}")
         _report(xml, func_name=type(self))
         return data
 
