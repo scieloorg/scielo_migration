@@ -349,7 +349,7 @@ class EndPipe(plumber.Pipe):
 
         logging.info(f"EndPipe!!!!")
         for item in xml.xpath(".//xref[@rid]"):
-            if item.tail.strip():
+            if not item.tail.strip():
                 logging.info(f"xref: {ET.tostring(item)}")
 
         data = ET.tostring(
@@ -986,12 +986,13 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         label_text = None
         children = []
 
-        logging.info("xref[@is_internal_link_to_asset_html_page and @href]")
         for child in xref_parent.xpath(
             "xref[@is_internal_link_to_asset_html_page and @href]"
         ):
-            logging.info(ET.tostring(child))
             # Table 1
+            if child.tail and child.tail[0] == " ":
+                logging.info(f"parser_xref_parent: child={ET.tostring(child)}")
+
             xref_text = self._extract_xref_text(child)
             if not xref_text:
                 logging.error("XRefSpecialInternalLinkPipe - no xref_text found")
@@ -1024,12 +1025,13 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
 
             child.attrib.pop("is_internal_link_to_asset_html_page")
 
-        logging.info(ET.tostring(xref_parent))
         for child in reversed(children):
             node = ET.Element(xref_parent.tag)
             node.append(child)
             xref_parent.addnext(node)
-            logging.info(ET.tostring(node))
+
+            if node.tail and node.tail[0] == " ":
+                logging.info(f"parser_xref_parent: xref={ET.tostring(node)}")
 
 
 class InsertGraphicInFigPipe(plumber.Pipe):
