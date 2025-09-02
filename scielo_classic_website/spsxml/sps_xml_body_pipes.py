@@ -84,11 +84,6 @@ def convert_html_to_xml(document):
         try:
             logging.info(f"converting {i}")
             document.xml_body_and_back.append(call_(document))
-
-            for item in xml.xpath(".//xref"):
-                if item.tail.strip():
-                    logging.info(f"??? {ET.tostring(item)}")
-
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logging.exception(e)
@@ -351,6 +346,11 @@ class SetupPipe(plumber.Pipe):
 class EndPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
+
+        logging.info(f"EndPipe!!!!")
+        for item in xml.xpath(".//xref[@rid]"):
+            if item.tail.strip():
+                logging.info(f"xref: {ET.tostring(item)}")
 
         data = ET.tostring(
             xml,
