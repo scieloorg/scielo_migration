@@ -200,7 +200,7 @@ class XMLArticleMetaContribGroupPipe(plumber.Pipe):
     def precond(data):
         raw, xml = data
 
-        if not raw.authors:
+        if not raw.authors and not raw.corporative_authors:
             raise plumber.UnmetPrecondition()
 
     @plumber.precondition(precond)
@@ -254,6 +254,15 @@ class XMLArticleMetaContribGroupPipe(plumber.Pipe):
 
             contrib_group.append(contrib)
 
+        if raw.corporative_authors:
+            collab = ET.Element("collab")
+            collab.text = raw.corporative_authors
+
+            # cria o elemento contrib e seu atributo contrib-type
+            contrib = ET.Element("contrib")
+            contrib.set("contrib-type", "author")
+            contrib.append(collab)
+            contrib_group.append(contrib)
         xml.find("./front/article-meta").append(contrib_group)
 
         return data
