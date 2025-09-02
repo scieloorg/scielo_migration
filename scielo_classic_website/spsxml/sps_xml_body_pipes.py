@@ -84,6 +84,11 @@ def convert_html_to_xml(document):
         try:
             logging.info(f"converting {i}")
             document.xml_body_and_back.append(call_(document))
+
+            for item in xml.xpath(".//xref"):
+                if item.tail.strip():
+                    logging.info(f"??? {ET.tostring(item)}")
+
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             logging.exception(e)
@@ -785,6 +790,7 @@ class AHrefPipe(plumber.Pipe):
     def _create_internal_link_to_asset_html_page(self, node):
         node.tag = "xref"
         node.set("is_internal_link_to_asset_html_page", "true")
+        logging.info(f"AHrefPipe {ET.tostring(node)}")
 
     def parser_node(self, node, journal_acron):
         href = node.get("href") or ""

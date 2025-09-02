@@ -256,14 +256,19 @@ class XMLArticleMetaContribGroupPipe(plumber.Pipe):
 
         if raw.corporative_authors:
             collab = ET.Element("collab")
-            collab.text = raw.corporative_authors
+            try:
+                collab.text = raw.corporative_authors[0]
+            except (IndexError, TypeError, ValueError):
+                pass
+            else:
+                # cria o elemento contrib e seu atributo contrib-type
+                contrib = ET.Element("contrib")
+                contrib.set("contrib-type", "author")
+                contrib.append(collab)
+                contrib_group.append(contrib)
 
-            # cria o elemento contrib e seu atributo contrib-type
-            contrib = ET.Element("contrib")
-            contrib.set("contrib-type", "author")
-            contrib.append(collab)
-            contrib_group.append(contrib)
-        xml.find("./front/article-meta").append(contrib_group)
+        if raw.authors or raw.corporative_authors:
+            xml.find("./front/article-meta").append(contrib_group)
 
         return data
 
