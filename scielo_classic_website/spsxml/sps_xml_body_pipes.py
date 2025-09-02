@@ -986,10 +986,11 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         label_text = None
         children = []
 
+        logging.info("xref[@is_internal_link_to_asset_html_page and @href]")
         for child in xref_parent.xpath(
             "xref[@is_internal_link_to_asset_html_page and @href]"
         ):
-
+            logging.info(ET.tostring(child))
             # Table 1
             xref_text = self._extract_xref_text(child)
             if not xref_text:
