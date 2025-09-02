@@ -81,10 +81,11 @@ def convert_html_to_xml(document):
     )
     document.exceptions = []
     document.xml_body_and_back = []
+    document.CHECK = []
     for i, call_ in enumerate(calls, start=1):
         try:
             logging.info(f"converting {i}")
-            CHECK.append(f"converting {i}")
+            document.CHECK.append(f"converting {i}")
             document.xml_body_and_back.append(call_(document))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -97,7 +98,7 @@ def convert_html_to_xml(document):
                     "exc_traceback": traceback.format_exc(),
                 }
             )
-    for item in CHECK:
+    for item in document.CHECK:
         logging.info(item)
 
 
@@ -355,7 +356,7 @@ class EndPipe(plumber.Pipe):
             tail = item.tail
             if tail:
                 if tail[0].isalnum():
-                    CHECK.append(f"EndPipe - xref: {ET.tostring(item)}")
+                    raw.CHECK.append(f"EndPipe - xref: {ET.tostring(item)}")
 
         data = ET.tostring(
             xml,
@@ -929,6 +930,9 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                     xml,
                     raw.filename_without_extension,
                 )
+                for child in xref_parent.xpath("xref"):
+                    if child.tail and child.tail[0] == " ":
+                        raw.CHECK.append(ET.tostring(child))
         _report(xml, func_name=type(self))
         return data
 
@@ -994,9 +998,6 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             "xref[@is_internal_link_to_asset_html_page and @href]"
         ):
             # Table 1
-            if child.tail and child.tail[0] == " ":
-                CHECK.append(ET.tostring(child))
-
             xref_text = self._extract_xref_text(child)
             if not xref_text:
                 logging.error("XRefSpecialInternalLinkPipe - no xref_text found")
