@@ -11,7 +11,7 @@ from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
 
-CHECK = None
+CHECK = []
 
 REF_TYPES = {
     "t": "table",
@@ -81,7 +81,6 @@ def convert_html_to_xml(document):
     )
     document.exceptions = []
     document.xml_body_and_back = []
-    CHECK = []
     for i, call_ in enumerate(calls, start=1):
         try:
             logging.info(f"converting {i}")
