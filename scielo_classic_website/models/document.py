@@ -61,7 +61,7 @@ class Document:
         self.xml_body_and_back = None
         self.xml_body = None
         self.exceptions = None
-
+        self.pretty_print = False
         self.data = {}
         try:
             self.data["article"] = data["article"]
