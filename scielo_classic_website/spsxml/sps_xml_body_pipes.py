@@ -344,7 +344,9 @@ class SetupPipe(plumber.Pipe):
 class EndPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
-
+        
+        logging.info(f"raw.pretty_print: {raw.pretty_print}")
+        
         data = ET.tostring(
             xml,
             encoding="utf-8",
