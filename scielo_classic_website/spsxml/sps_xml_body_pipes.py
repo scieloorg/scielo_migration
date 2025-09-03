@@ -80,11 +80,8 @@ def convert_html_to_xml(document):
     )
     document.exceptions = []
     document.xml_body_and_back = []
-    document.CHECK = []
     for i, call_ in enumerate(calls, start=1):
         try:
-            logging.info(f"converting {i}")
-            document.CHECK.append(f"converting {i}")
             document.xml_body_and_back.append(call_(document))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -97,8 +94,6 @@ def convert_html_to_xml(document):
                     "exc_traceback": traceback.format_exc(),
                 }
             )
-    for item in document.CHECK:
-        logging.info(item)
 
 
 def convert_html_to_xml_step_1(document):
@@ -193,7 +188,6 @@ def convert_html_to_xml_step_3(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         XRefSpecialInternalLinkPipe(),
-        # XRefTypePipe(),
         InlineGraphicPipe(),
         # RemoveParentPTagOfGraphicPipe(),
         EndPipe(),
@@ -351,16 +345,11 @@ class EndPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        for item in xml.xpath(".//xref[@rid]"):
-            tail = item.tail
-            if tail:
-                raw.CHECK.append(f"EndPipe - xref: {ET.tostring(item)}")
-
         data = ET.tostring(
             xml,
             encoding="utf-8",
             method="xml",
-            pretty_print=True,
+            pretty_print=raw.pretty_print,
         ).decode("utf-8")
 
         return data
@@ -928,9 +917,6 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                     xml,
                     raw.filename_without_extension,
                 )
-                for child in xref_parent.xpath("xref"):
-                    if child.tail:
-                        raw.CHECK.append(f"xref: {ET.tostring(child)}")
         _report(xml, func_name=type(self))
         return data
 
@@ -995,6 +981,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         for child in xref_parent.xpath(
             "xref[@is_internal_link_to_asset_html_page and @href]"
         ):
+
             # Table 1
             xref_text = self._extract_xref_text(child)
             if not xref_text:
@@ -1032,9 +1019,6 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             node = ET.Element(xref_parent.tag)
             node.append(child)
             xref_parent.addnext(node)
-
-            if node.tail and node.tail[0] == " ":
-                logging.info(f"parser_xref_parent: xref={ET.tostring(node)}")
 
 
 class InsertGraphicInFigPipe(plumber.Pipe):
