@@ -360,7 +360,7 @@ class EndPipe(plumber.Pipe):
             xml,
             encoding="utf-8",
             method="xml",
-            # pretty_print=True,
+            pretty_print=True,
         ).decode("utf-8")
 
         return data
