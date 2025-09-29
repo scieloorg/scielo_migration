@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 
-from scielo_classic_website.htmlbody.html_body import HTMLFile
+from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.isisdb.isis_cmd import get_documents_by_issue_folder
 
 
@@ -130,11 +130,11 @@ class IssueFolder:
                 item["lang"] = lang
                 item["part"] = part
                 try:
-                    item["replacements"] = HTMLFile(
-                        item["path"]
-                    ).asset_path_fixes
+                    hc = HTMLContent(item["content"])
+                    if hc.asset_path_fixes:
+                        item["content"] = hc.content
                 except KeyError:
-                    item["replacements"] = {}
+                    pass
                 yield item
 
             except Exception as e:
