@@ -42,7 +42,7 @@ def iso_8601_date(yyyymmdd):
 class XMLArticleMetaCitationsPipe(plumber.Pipe):
     def precond(data):
         raw, xml = data
-        if not raw.citations or not list(raw.citations):
+        if not raw.citations:
             raise plumber.UnmetPrecondition()
 
     @plumber.precondition(precond)
@@ -101,7 +101,7 @@ class XMLCitation(object):
             self.SourcePipe(),
             self.ConferencePipe(),
             self.ThesisPipe(),
-            # self.PatentPipe(),
+            self.PatentPipe(),
             self.VolumePipe(),
             self.IssuePipe(),
             self.SupplementPipe(),
@@ -571,16 +571,11 @@ class XMLCitation(object):
         """
         <patent country="US">United States patent US 6,980,855</patent>
         """
-
-        def precond(data):
+        def transform(self, data):
             raw, xml = data
 
             if not raw.patent:
-                raise plumber.UnmetPrecondition()
-
-        @plumber.precondition(precond)
-        def transform(self, data):
-            raw, xml = data
+                return data
 
             patent = ET.Element("patent")
             if raw.patent_country:

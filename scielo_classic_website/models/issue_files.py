@@ -2,7 +2,7 @@ import glob
 import logging
 import os
 
-from scielo_classic_website.htmlbody.html_body import HTMLFile
+from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.isisdb.isis_cmd import get_documents_by_issue_folder
 from scielo_classic_website.utils.files_utils import create_zip_file
 
@@ -93,7 +93,7 @@ class IssueFiles:
                             "relative_path": _get_classic_website_rel_path(path),
                             "lang": lang,
                             "part": label,
-                            "replacements": HTMLFile(path).asset_path_fixes,
+                            "replacements": HTMLContent.create(path).asset_path_fixes,
                         }
                     )
                 except Exception as e:

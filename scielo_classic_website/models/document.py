@@ -1,4 +1,5 @@
 import logging
+from functools import lru_cache
 
 from scielo_classic_website.htmlbody.html_body import BodyFromISIS
 from scielo_classic_website.isisdb.c_record import ReferenceRecord
@@ -135,20 +136,14 @@ class Document:
             logging.exception(e)
 
     @property
+    @lru_cache(maxsize=1)
     def p_records(self):
         return self.document_records.get_record("p")
 
     @property
-    def body_from_isis(self):
-        if not self._body_from_isis:
-            self._body_from_isis = BodyFromISIS(self.p_records)
-        return self._body_from_isis
-
-    @property
+    @lru_cache(maxsize=1)
     def main_html_paragraphs(self):
-        if not self._main_html_paragraphs:
-            self._main_html_paragraphs = self.body_from_isis.parts
-        return self._main_html_paragraphs
+        return BodyFromISIS(self.p_records).parts
 
     @property
     def translated_html_by_lang(self):
@@ -296,10 +291,9 @@ class Document:
 
         main_text = False
         for part_name, part_items in (self.main_html_paragraphs or {}).items():
-            for item in part_items:
-                if item["text"]:
-                    main_text = True
-                    break
+            if part_items:
+                main_text = True
+                break
 
         if main_text or translations:
             sps_xml_body_pipes.convert_html_to_xml(self)

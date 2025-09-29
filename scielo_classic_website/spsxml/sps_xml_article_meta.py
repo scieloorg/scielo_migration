@@ -41,9 +41,9 @@ def create_node_with_fixed_html_text(element_name, html_text):
     Remove tags b e troca tags i por italic
     """
 
-    xml = f"<{element_name}>{html_text}</{element_name}>"
+    xml = f"<{element_name}>{html_text or ''}</{element_name}>"
     hc = HTMLContent(xml)
-    node = hc.tree.find(".")
+    node = hc.tree.find(f".//{element_name}")
     for n in node.xpath(".//span[@name='style_bold']"):
         n.tag = "bold"
     ET.strip_tags(node, "b")
@@ -264,7 +264,7 @@ class XMLArticleMetaContribGroupPipe(plumber.Pipe):
                 # cria o elemento contrib e seu atributo contrib-type
                 contrib = ET.Element("contrib")
                 contrib.set("contrib-type", "author")
-                contrib.append(collab)
+                contrib.append(create_node_with_fixed_html_text(collab))
                 contrib_group.append(contrib)
 
         if raw.authors or raw.corporative_authors:
@@ -692,14 +692,66 @@ class XMLArticleMetaCountsPipe(plumber.Pipe):
 
 
 class XMLNormalizeSpacePipe(plumber.Pipe):
+    """
+    In [38]: xml = '<article><body><p><bold>texto bold</bold> texto pos bold</p><p2>texto in p<italic>iiiii</italic><br/>...</p2></body></article>'
+
+    In [39]: x = etree.fromstring(xml)
+
+    In [40]: x.xpath(".//*[text()]")
+    Out[40]:
+    [<Element p at 0x110aaf980>,
+     <Element bold at 0x1109fb380>,
+     <Element p2 at 0x1109fb500>,
+     <Element italic at 0x1109fb1c0>]
+
+    In [41]: x.xpath(".//*[following-sibling::text()[1]]")
+    Out[41]:
+    [<Element bold at 0x1109fb380>,
+     <Element italic at 0x1109fb1c0>,
+     <Element br at 0x1109f3880>]
+
+    In [43]: x.xpath(".//*[following-sibling::text()] | .//*[text()]")
+    Out[43]:
+    [<Element p at 0x110aaf980>,
+     <Element bold at 0x1109fb380>,
+     <Element p2 at 0x1109fb500>,
+     <Element italic at 0x1109fb1c0>,
+     <Element br at 0x1109f3880>]
+    """
     def transform(self, data):
         raw, xml = data
 
-        for node in xml.xpath(".//*"):
-            if node.text and '  ' in node.text:
-                node.text = " ".join(
-                    [word for word in node.text.split() if word.strip()])
-            if node.tail and '  ' in node.tail:
-                node.tail = " ".join(
-                    [word for word in node.tail.split() if word.strip()])
+        # seleciona nós que tem text e/ou tail
+        for node in xml.xpath(".//*[following-sibling::text()] | .//*[text()]"):
+            self.process_node_text(node)
+            self.process_node_tail(node)
         return data
+
+    def process_node_text(self, node):
+        if node.text:
+            previous_space = ""
+            posterior_space = ""
+            if not node.text[0].strip():
+                # há um caracter de espaço e deve ser preservado
+                previous_space = node.text[0]
+            if not node.text[-1].strip():
+                # há um caracter de espaço e deve ser preservado
+                posterior_space = node.text[-1]
+            node.text = self.normalize_space(node.text, previous_space, posterior_space)
+
+    def process_node_tail(self, node):
+        if node.tail:
+            previous_space = ""
+            posterior_space = ""
+            if not node.tail[0].strip():
+                # há um caracter de espaço e deve ser preservado
+                previous_space = node.tail[0]
+            if not node.tail[-1].strip():
+                # há um caracter de espaço e deve ser preservado
+                posterior_space = node.tail[-1]
+            node.tail = self.normalize_space(node.tail, previous_space, posterior_space)
+
+    def normalize_space(self, text, previous_space, posterior_space):
+        if not text:
+            return text
+        return previous_space + " ".join([word.strip() for word in text.split() if word.strip()]) + posterior_space

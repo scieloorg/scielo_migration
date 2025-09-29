@@ -10,6 +10,7 @@ from lxml import etree as ET
 from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
+from scielo_classic_website.htmlbody.name2number import fix_pre_loading
 
 
 REF_TYPES = {
@@ -58,10 +59,27 @@ def _report(xml, func_name):
     pass
 
 
-def text_to_node(children_data_as_text):
-    hc = HTMLContent(children_data_as_text)
-    tree = ET.fromstring(hc.content)
-    return tree.find(".")
+def text_to_node(element_name, children_data_as_text):
+    if not children_data_as_text:
+        return None
+    try:
+        fixed = fix_pre_loading(children_data_as_text)
+        if element_name == "body":
+            html_content = fixed
+        else:
+            html_content = f"<{element_name}>{fixed}</{element_name}>"
+        return ET.fromstring(html_content)
+    except Exception as e:
+        pass
+    try:
+        hc = HTMLContent(html_content)
+        return hc.tree.find(f".//{element_name}")
+    except Exception as e:
+        logging.exception(e)
+        logging.info(element_name)
+        logging.info(children_data_as_text)
+        
+        raise Exception(f"Error: text_to_node {element_name} {children_data_as_text}")
 
 
 def convert_html_to_xml(document):
@@ -344,9 +362,7 @@ class SetupPipe(plumber.Pipe):
 class EndPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
-        
-        logging.info(f"raw.pretty_print: {raw.pretty_print}")
-        
+
         data = ET.tostring(
             xml,
             encoding="utf-8",
@@ -373,60 +389,132 @@ class MainHTMLPipe(plumber.Pipe):
     article/body, article/back e article/ref-list
     """
 
-    def transform(self, data):
-        raw, xml = data
+    # def transform(self, data):
+    #     raw, xml = data
 
-        # trata do bloco anterior às referências
-        text = "".join(
-            [
-                item["text"]
-                for item in raw.main_html_paragraphs["before references"] or []
-            ]
-        )
-        node = text_to_node(text)
-        body = xml.find(".//body")
-        body.extend(node.getchildren())
+    #     # trata do bloco anterior às referências
+    #     text = "".join(
+    #         [
+    #             item["text"]
+    #             for item in raw.main_html_paragraphs["before references"] or []
+    #         ]
+    #     )
+    #     node = text_to_node(text)
+    #     body = xml.find(".//body")
+    #     body.extend(node.getchildren())
 
-        # trata do bloco das referências
+    #     # trata do bloco das referências
+    #     references = ET.Element("ref-list")
+    #     for i, item in enumerate(raw.main_html_paragraphs["references"] or []):
+    #         # item.keys() = (text, index, reference_index, part)
+    #         # cria o elemento `ref` com conteúdo de `item['text']`,
+    #         ref = ET.Element("ref")
+    #         try:
+    #             ref_index = item["reference_index"]
+    #         except KeyError:
+    #             ref_index = i + 1
+    #         # cria o atributo ref/@id
+    #         ref.set("id", f"B{ref_index}")
+
+    #         # cria o elemento mixed-citation que contém o texto da referência
+    #         # bibliográfica mantendo as pontuação
+    #         if item["text"].strip():
+    #             mixed_citation = text_to_node(item["text"])
+    #             mixed_citation.tag = "mixed-citation"
+    #         else:
+    #             mixed_citation = ET.Element("mixed-citation")
+
+    #         # adiciona o elemento que contém o texto da referência
+    #         # bibliográfica ao elemento `ref`
+    #         ref.append(mixed_citation)
+
+    #         # adiciona `ref` ao `ref-list`
+    #         references.append(ref)
+
+    #     # busca o elemento `back`
+    #     back = xml.find(".//back")
+    #     back.append(references)
+
+    #     text = "".join(
+    #         [
+    #             item["text"]
+    #             for item in raw.main_html_paragraphs["after references"] or []
+    #         ]
+    #     )
+    #     if text.strip():
+    #         node = text_to_node(text)
+    #         if node.find(".//p") is None:
+    #             sec = ET.Element("sec")
+    #             for child in node.getchildren():
+    #                 p = ET.Element("p")
+    #                 p.append(child)
+    #                 sec.append(p)
+    #             back.append(sec)
+    #         else:
+    #             node.tag = "sec"
+    #             back.append(node)
+
+    #     _report(xml, func_name=type(self))
+    #     return data
+
+    def _process_before_references(self, raw, xml):
+        text = raw.main_html_paragraphs["before references"]
+        if text:
+            node = text_to_node("body", text)
+            body = xml.find(".//body")
+            parent = body.getparent()
+            parent.replace(body, node)
+
+    def _process_references(self, raw, xml):
+        if not raw.main_html_paragraphs["references"]:
+            return
+
         references = ET.Element("ref-list")
+        
         for i, item in enumerate(raw.main_html_paragraphs["references"] or []):
             # item.keys() = (text, index, reference_index, part)
-            # cria o elemento `ref` com conteúdo de `item['text']`,
+            # cria o elemento `ref` com conteúdo de `item['text']`
             ref = ET.Element("ref")
+            
             try:
-                ref_index = item["reference_index"]
+                ref_index = item["reference_index"] or (i + 1)
             except KeyError:
                 ref_index = i + 1
+            
             # cria o atributo ref/@id
             ref.set("id", f"B{ref_index}")
-
+            
             # cria o elemento mixed-citation que contém o texto da referência
             # bibliográfica mantendo as pontuação
             if item["text"].strip():
-                mixed_citation = text_to_node(item["text"])
-                mixed_citation.tag = "mixed-citation"
+                mixed_citation = text_to_node("mixed-citation", item["text"])
             else:
                 mixed_citation = ET.Element("mixed-citation")
-
+            
             # adiciona o elemento que contém o texto da referência
             # bibliográfica ao elemento `ref`
             ref.append(mixed_citation)
-
+            
             # adiciona `ref` ao `ref-list`
             references.append(ref)
-
+        
         # busca o elemento `back`
         back = xml.find(".//back")
         back.append(references)
+        
+    def _process_after_references(self, raw, xml):
+        """
+        Processa o conteúdo após as referências bibliográficas.
+        
+        Args:
+            raw: Objeto contendo os parágrafos HTML estruturados
+            xml: Documento XML sendo construído
+        """
+        text = raw.main_html_paragraphs["after references"]
+        if text:
+            node = text_to_node("back", text)
+            back = xml.find(".//back")
 
-        text = "".join(
-            [
-                item["text"]
-                for item in raw.main_html_paragraphs["after references"] or []
-            ]
-        )
-        if text.strip():
-            node = text_to_node(text)
             if node.find(".//p") is None:
                 sec = ET.Element("sec")
                 for child in node.getchildren():
@@ -438,7 +526,22 @@ class MainHTMLPipe(plumber.Pipe):
                 node.tag = "sec"
                 back.append(node)
 
-        _report(xml, func_name=type(self))
+    def transform(self, data):
+        """
+        Método principal que orquestra a transformação do documento.
+        
+        Args:
+            data: Tupla contendo (raw, xml)
+            
+        Returns:
+            data: Tupla processada (raw, xml)
+        """
+        raw, xml = data
+        
+        # Processa cada seção do documento
+        self._process_before_references(raw, xml)
+        self._process_references(raw, xml)
+        self._process_after_references(raw, xml)        
         return data
 
 
@@ -468,31 +571,22 @@ class TranslatedHTMLPipe(plumber.Pipe):
             sub_article.set("{http://www.w3.org/XML/1998/namespace}lang", lang)
             article.append(sub_article)
 
-            body = ET.Element("body")
-
             # O CDATA evita que o seu conteúdo seja "parseado" e, assim não
             # acusará erro de má formação do XML. O conteúdo do CDATA será
             # tratado em uma etapa futura
 
             # texts['before references'] é str
-            node = text_to_node(texts["before references"])
-            body.extend(node.getchildren())
-            sub_article.append(body)
+            try:
+                body = text_to_node("body", texts["before references"])
+                sub_article.append(body)
+            except KeyError:
+                pass
 
-            if texts["after references"]:
-                back = ET.Element("back")
-
-                # O CDATA evita que o seu conteúdo seja "parseado" e, assim não
-                # acusará erro de má formação do XML. O conteúdo do CDATA será
-                # tratado em uma etapa futura
-
-                # texts['after references'] é str
-
-                node = text_to_node(texts["after references"])
-                back.extend(node.getchildren())
-
+            try:
+                back = text_to_node("back", texts["after references"])
                 sub_article.append(back)
-
+            except KeyError:
+                pass
         _report(xml, func_name=type(self))
         return data
 
@@ -502,6 +596,7 @@ class TranslatedHTMLPipe(plumber.Pipe):
 
 def remove_CDATA(old):
     logging.info(f"Remove CDATA {old.text}")
+    # FIXME html_body_tree não definido
     new = html_body_tree(old.text)
     if new:
         new.tag = old.tag
@@ -780,7 +875,12 @@ class AHrefPipe(plumber.Pipe):
 
     def _create_internal_link(self, node):
         node.tag = "xref"
-        node.set("rid", node.attrib.pop("href")[1:])
+        try:
+            xml = ET.tostring(node)
+            node.set("rid", node.attrib.pop("href")[1:].lower())
+        except (ValueError, TypeError, AttributeError, IndexError) as e:
+            logging.error(f"Unable to _create_internal_link for {xml}")
+            logging.exception(e)
 
     def _create_internal_link_to_asset_html_page(self, node):
         node.tag = "xref"
@@ -1576,15 +1676,25 @@ class WrapPwithSecPipe(plumber.Pipe):
 
     def complete_ref_list_title(self, body):
         back = body.getnext()
-        if back is not None and back.xpath("ref-list[not(title)]"):
-            try:
-                sec_node = body.xpath("sec[not(p) and title]")[-1]
-            except IndexError:
-                pass
-            else:
-                reflist = back.find("ref-list")
-                reflist.insert(0, sec_node.find("title"))
-                body.remove(sec_node)
+        if back is None:
+            return
+
+        ref_list_node = back.find("ref-list")
+        if ref_list_node is None:
+            return
+
+        if ref_list_node.find("title") is not None:
+            return
+        try:
+            node = body.getchildren()[-1]
+        except IndexError:
+            pass
+        else:
+            if node.tag != "sec":
+                return
+            if node.find("title") and node.find("p") is None:
+                ref_list_node.insert(0, node.find("title"))
+                body.remove(node)
 
     def fix_body_begin(self, body):
         if body.xpath("sec[@sec-type='intro']"):
