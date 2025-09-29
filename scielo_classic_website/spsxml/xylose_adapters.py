@@ -23,7 +23,7 @@ def format_institution(institution, sep=", "):
 
 
 def format_institutions(institutions, sep=" | "):
-    return sep.join([format_institution(inst) for inst in organizations if inst])
+    return sep.join([format_institution(inst) for inst in institutions if inst])
 
 
 def format_location(city_and_state, country):
