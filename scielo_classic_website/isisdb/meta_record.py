@@ -275,9 +275,7 @@ class MetaRecord:
         """
         data_dict = data_dict or self._data_dictionary
         if not data_dict:
-            d = {}
-            d.update(self._record)
-            return d
+            return dict(self._record)
 
         record = {}
         for tag in self._record.keys():
