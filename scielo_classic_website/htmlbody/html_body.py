@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from difflib import unified_diff
-from functools import lru_cache
+from functools import cached_property
 from datetime import datetime
 
 from lxml import etree
@@ -118,22 +118,19 @@ class BodyFromISIS:
         self.p_records = p_records or []
         self._identify_references_range()
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def before_references_paragraphs(self):
         if self.p_records and self.first_reference:
             return self.p_records[: self.first_reference]
         return self.p_records
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def references_paragraphs(self):
         if self.p_records and self.first_reference and self.last_reference:
             return self.p_records[self.first_reference : self.last_reference + 1]
         return []
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def after_references_paragraphs(self):
         if self.p_records and self.last_reference:
             return self.p_records[self.last_reference + 1 :]
