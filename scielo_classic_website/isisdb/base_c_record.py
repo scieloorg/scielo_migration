@@ -1,5 +1,5 @@
 import logging
-from functools import lru_cache
+from functools import cached_property
 
 from scielo_classic_website.isisdb.raw_record import RawRecord
 
@@ -8,8 +8,7 @@ class BaseReferenceRecord(RawRecord):
     def __init__(self, record):
         super().__init__(record)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def analytic_person_authors(self):
         """
         Analytic Anonymous
@@ -29,8 +28,7 @@ class BaseReferenceRecord(RawRecord):
             False,
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def analytic_corporative_authors(self):
         """
         Analytic Corporative Author
@@ -42,8 +40,7 @@ class BaseReferenceRecord(RawRecord):
             "v011", {"_": "name", "d": "division"}, False
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def article_title(self):
         """
         Article Title
@@ -55,8 +52,7 @@ class BaseReferenceRecord(RawRecord):
             "v012", {"_": "text", "l": "language"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def pages_range(self):
         """
         v014 {'_': 'range', 'e': 'elocation'}
@@ -67,8 +63,7 @@ class BaseReferenceRecord(RawRecord):
             "v014", {"_": "range", "e": "elocation"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def monographic_person_authors(self):
         """
         Monographic Anonymous
@@ -88,8 +83,7 @@ class BaseReferenceRecord(RawRecord):
             False,
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def monographic_corporative_authors(self):
         """
         Monographic Corporative Author
@@ -101,8 +95,7 @@ class BaseReferenceRecord(RawRecord):
             "v017", {"_": "name", "d": "division"}, False
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def monographic_title(self):
         """
         Monographic Title
@@ -114,8 +107,7 @@ class BaseReferenceRecord(RawRecord):
             "v018", {"_": "text", "l": "language"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def size(self):
         """
         Size
@@ -127,16 +119,14 @@ class BaseReferenceRecord(RawRecord):
             "v020", {"_": "size", "u": "unit"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def tome(self):
         """
         v022
         """
         return self.get_field_content("v022", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def coltitle(self):
         """
         Collection title
@@ -144,8 +134,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v025", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def colvolid(self):
         """
         Collection volume
@@ -153,8 +142,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v026", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def serial_person_authors(self):
         """
         Monographic Anonymous
@@ -174,8 +162,7 @@ class BaseReferenceRecord(RawRecord):
             False,
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def serial_corporative_authors(self):
         """
         Monographic Corporative Author
@@ -187,8 +174,7 @@ class BaseReferenceRecord(RawRecord):
             "v029", {"_": "name", "d": "division"}, False
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def journal_title(self):
         """
         Journal title
@@ -200,8 +186,7 @@ class BaseReferenceRecord(RawRecord):
             "v030", {"_": "text", "l": "language"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def volume(self):
         """
         Volume
@@ -209,8 +194,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v031", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def issue(self):
         """
         Issue
@@ -222,8 +206,7 @@ class BaseReferenceRecord(RawRecord):
             "v032", {"n": "number", "s": "suppl"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def issue_title(self):
         """
         Issue title
@@ -231,8 +214,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v033", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def issue_part(self):
         """
         Issue part
@@ -240,8 +222,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v034", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def issn(self):
         """
         ISSN
@@ -249,8 +230,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v035", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def ext_link(self):
         """
         Ext Link
@@ -258,8 +238,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v037", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def thesis_date(self):
         """
         Thesis Date
@@ -267,8 +246,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v044", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def thesis_date_iso(self):
         """
         Thesis Date Iso
@@ -276,8 +254,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v045", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def thesis_location(self):
         """
         Thesis Location
@@ -289,8 +266,7 @@ class BaseReferenceRecord(RawRecord):
             "v046", {"_": "city", "e": "state"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def thesis_country(self):
         """
         Thesis Country
@@ -298,8 +274,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v047", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def thesis_organization(self):
         """
         Thesis Organization
@@ -311,8 +286,7 @@ class BaseReferenceRecord(RawRecord):
             "v050", {"_": "name", "d": "division"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def thesis_degree(self):
         """
         Thesis Degree
@@ -320,8 +294,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v051", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def conference_organization(self):
         """
         Conference Organization
@@ -333,8 +306,7 @@ class BaseReferenceRecord(RawRecord):
             "v052", {"_": "name", "d": "division"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def conferences(self):
         """
         Conference
@@ -346,8 +318,7 @@ class BaseReferenceRecord(RawRecord):
             "v053", {"_": "name", "n": "number"}, False
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def conference_date(self):
         """
         Conference Date
@@ -355,8 +326,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v054", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def conference_date_iso(self):
         """
         Conference Date Iso
@@ -364,8 +334,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v055", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def conference_location(self):
         """
         Conference Location
@@ -377,8 +346,7 @@ class BaseReferenceRecord(RawRecord):
             "v056", {"_": "city", "e": "state"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def conference_country(self):
         """
         Conference Country
@@ -386,8 +354,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v057", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def project_sponsor(self):
         """
         Project Sponsor
@@ -399,8 +366,7 @@ class BaseReferenceRecord(RawRecord):
             "v058", {"_": "name", "d": "division"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def project_name(self):
         """
         Project Name
@@ -408,8 +374,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v059", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def project_number(self):
         """
         Project Number
@@ -417,8 +382,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v060", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def notes(self):
         """
         Notes
@@ -426,8 +390,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v061", {}, False)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def publisher_name(self):
         """
         Publisher Name
@@ -435,8 +398,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v062", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def edition(self):
         """
         Edition
@@ -444,8 +406,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v063", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def year(self):
         """
         Year
@@ -453,8 +414,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v064", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def publication_date_iso(self):
         """
         Publication Date Iso
@@ -462,8 +422,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v065", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def publisher_location(self):
         """
         Publisher Location
@@ -475,8 +434,7 @@ class BaseReferenceRecord(RawRecord):
             "v066", {"_": "city", "e": "state"}, True
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def publisher_country(self):
         """
         Publisher Country
@@ -484,8 +442,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v067", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def isbn(self):
         """
         ISBN
@@ -493,8 +450,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v069", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def publication_type(self):
         """
         Publication Type
@@ -502,8 +458,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v071", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def version(self):
         """
         Version
@@ -511,8 +466,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v095", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def access_date(self):
         """
         Access date
@@ -520,8 +474,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v109", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def access_date_iso(self):
         """
         Access date_iso
@@ -529,8 +482,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v110", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def label(self):
         """
         Label
@@ -538,8 +490,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v118", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def patent(self):
         """
         Patent
@@ -559,8 +510,7 @@ class BaseReferenceRecord(RawRecord):
             True,
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def doi(self):
         """
         Doi
@@ -568,8 +518,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v237", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def pmid(self):
         """
         Pmid
@@ -577,8 +526,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v238", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def pmcid(self):
         """
         Pmcid
@@ -586,8 +534,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v239", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def pages(self):
         """
         v514 {'e': 'elocation', 'f': 'first', 'l': 'last', 'r': 'range'}
@@ -600,8 +547,7 @@ class BaseReferenceRecord(RawRecord):
             False,
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def index_number(self):
         """
         Index number
@@ -609,8 +555,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v701", {}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def paragraph_text(self):
         """
         Paragraph text
@@ -620,8 +565,7 @@ class BaseReferenceRecord(RawRecord):
         """
         return self.get_field_content("v704", {"_": ""}, True)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def etal(self):
         """
         Etal

@@ -1,5 +1,5 @@
 import logging
-from functools import lru_cache
+from functools import cached_property
 
 from scielo_classic_website.htmlbody import html_style_fixer
 from scielo_classic_website.isisdb.c_record import ReferenceRecord
@@ -26,16 +26,15 @@ class Reference:
     def record(self):
         return self._reference_record.record
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def publication_type(self):
         """
         This method retrieves the publication type of the citation.
         """
         return self._reference_record.publication_type
 
-    @lru_cache(maxsize=1)
-    def _get_pages(self):
+    @cached_property
+    def pagination(self):
         """
         Internal method to process pages information.
         Returns a tuple with (start_page, end_page, elocation, pages_range)
@@ -71,7 +70,7 @@ class Reference:
         This method retrieves the start page of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        return self._get_pages()[0]
+        return self.pagination[0]
 
     @property
     def end_page(self):
@@ -79,7 +78,7 @@ class Reference:
         This method retrieves the end page of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        return self._get_pages()[1]
+        return self.pagination[1]
 
     @property
     def elocation(self):
@@ -87,7 +86,7 @@ class Reference:
         This method retrieves the e-location of the citation.
         This method deals with the legacy fields (514 and 14).
         """
-        return self._get_pages()[2]
+        return self.pagination[2]
 
     @property
     def pages(self):
@@ -96,10 +95,9 @@ class Reference:
         separeted by hipen.
         This method deals with the legacy fields (514 and 14).
         """
-        return self._get_pages()[3]
+        return self.pagination[3]
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def source(self):
         """
         This method retrieves the citation source title. Ex:
@@ -112,8 +110,7 @@ class Reference:
             and self._reference_record.monographic_title.get("text")
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def journal_title(self):
         """
         This method retrieves the citation source title. Ex:
@@ -125,8 +122,7 @@ class Reference:
             and self._reference_record.journal_title.get("text")
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def article_title(self):
         """
         If it is an article citation, this method retrieves the article title, if it exists.
@@ -137,8 +133,7 @@ class Reference:
                 and self._reference_record.article_title.get("text")
             )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def chapter_title(self):
         """
         If it is an book citation, this method retrieves the chapter title, if it exists.
@@ -149,8 +144,7 @@ class Reference:
                 and self._reference_record.article_title.get("text")
             )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def data_title(self):
         """
         If it is an data citation, this method retrieves the data title, if it exists.
@@ -158,8 +152,7 @@ class Reference:
         if self.publication_type == "data":
             return self._reference_record.article_title.get("text")
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def date(self):
         """
         This method retrieves the date, if it is exists, according to the
@@ -176,8 +169,7 @@ class Reference:
             return self.patent_application_date_iso
         return self._reference_record.publication_date_iso
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def publication_date(self):
         """
         This method retrieves the publication date, if it is exists.
@@ -192,40 +184,34 @@ class Reference:
             or self._reference_record.access_date_iso
         )
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def patent_application_date(self):
         try:
             return self._reference_record.patent.get("date")
         except AttributeError:
             return None
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def patent_application_date_iso(self):
         try:
             return self._reference_record.patent.get("date_iso")
         except AttributeError:
             return None
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def patent_country(self):
         country = self._reference_record.patent.get("country")
         return country if country != "nd" else None
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def patent_organization(self):
         return self._reference_record.patent.get("organization")
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def patent_id(self):
         return self._reference_record.patent.get("id")
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def mixed_citation(self):
         if self.paragraph_text:
             return html_style_fixer.get_mixed_citation_node(self.paragraph_text)

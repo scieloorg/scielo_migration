@@ -1,4 +1,4 @@
-from copy import deepcopy
+from functools import cached_property
 
 
 def build_object(obj, record_as_dict):
@@ -275,7 +275,7 @@ class MetaRecord:
         """
         data_dict = data_dict or self._data_dictionary
         if not data_dict:
-            return deepcopy(self._record)
+            return dict(self._record)
 
         record = {}
         for tag in self._record.keys():
