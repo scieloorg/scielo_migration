@@ -102,7 +102,7 @@ class Document:
     def record_types(self):
         return self.document_records.records.keys()
 
-    @cached_property
+    @property
     def document_records(self):
         return self._document_records
 
