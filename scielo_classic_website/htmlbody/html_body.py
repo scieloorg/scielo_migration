@@ -211,7 +211,7 @@ def build_text(p_records):
         return ""
     document = "".join(fix_paragraphs(p_records))
     if not document:
-        return
+        return ""
     hc = HTMLContent(document)    
     hc.fix_asset_paths()
     return hc.content

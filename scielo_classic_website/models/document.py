@@ -143,6 +143,8 @@ class Document:
     @property
     @lru_cache(maxsize=1)
     def main_html_paragraphs(self):
+        if not self.p_records:
+            return {}
         try:
             return BodyFromISIS(self.p_records).parts
         except Exception as e:
