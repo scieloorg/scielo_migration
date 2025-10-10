@@ -150,28 +150,31 @@ class BodyFromISIS:
 
     @property
     def parts(self):
+        if not self.p_records:
+            return {}
         parts = {}
-        try:
-            parts["before references"] = build_text(self.before_references_paragraphs)
-        except Exception as e:
-            # logging.exception(e)
-            parts["before references"] = get_text(
-                get_paragraphs_data(self.before_references_paragraphs)
-            )
-        try:
-            parts["references"] = list(fix_references(self.references_paragraphs))
-        except Exception as e:
-            # logging.exception(e)
-            parts["references"] = list(get_paragraphs_data(self.references_paragraphs))
-
-        try:
-            parts["after references"] = build_text(self.after_references_paragraphs)
-        except Exception as e:
-            # logging.exception(e)
-            parts["after references"] = get_text(
-                get_paragraphs_data(self.after_references_paragraphs)
-            )
+        parts["before references"] = get_text_block(self.before_references_paragraphs)
+        parts["references"] = self.get_references_block()
+        parts["after references"] = get_text_block(self.after_references_paragraphs)
         return parts
+
+    def get_references_block(self):
+        if not self.references_paragraphs:
+            return []
+        try:
+            return list(fix_references(self.references_paragraphs))
+        except Exception as e:
+            # logging.exception(e)
+            return list(get_paragraphs_data(self.references_paragraphs))
+
+
+def get_text_block(paragraphs):
+    if not paragraphs:
+        return ""
+    try:
+        return build_text(paragraphs)
+    except Exception as e:
+        return get_text(get_paragraphs_data(paragraphs))
 
 
 def get_paragraphs_data(p_records, part_name=None):
@@ -198,10 +201,14 @@ def get_paragraphs_data(p_records, part_name=None):
 
 
 def get_text(items):
+    if not items:
+        return ""
     return "".join([item["text"] for item in items or []])
 
 
 def build_text(p_records):
+    if not p_records:
+        return ""
     document = "".join(fix_paragraphs(p_records))
     if not document:
         return
