@@ -1,6 +1,3 @@
-from copy import deepcopy
-
-
 def build_object(obj, record_as_dict):
     """
     Cria atributos no obj baseado em `data_dict`
