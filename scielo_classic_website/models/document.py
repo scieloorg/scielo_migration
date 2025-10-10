@@ -1,5 +1,5 @@
 import logging
-from functools import lru_cache
+from functools import cached_property
 
 from scielo_classic_website.htmlbody.html_body import BodyFromISIS
 from scielo_classic_website.isisdb.c_record import ReferenceRecord
@@ -100,9 +100,9 @@ class Document:
 
     @property
     def record_types(self):
-        return self._document_records.records.keys()
+        return self.document_records.records.keys()
 
-    @property
+    @cached_property
     def document_records(self):
         return self._document_records
 
@@ -110,7 +110,7 @@ class Document:
     def document_records(self, document_records):
         self._document_records = document_records
 
-    @property
+    @cached_property
     def processing_date(self):
         try:
             item = self.document_records.get_record("o")[0]
@@ -118,7 +118,7 @@ class Document:
         except (KeyError, IndexError):
             return None
 
-    @property
+    @cached_property
     def h_record(self):
         try:
             return self.document_records.get_record("f")[0]
@@ -135,13 +135,11 @@ class Document:
                     f"Document.h_record: {self.document_records._records.keys()}")
             logging.exception(e)
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def p_records(self):
         return self.document_records.get_record("p") or []
 
-    @property
-    @lru_cache(maxsize=1)
+    @cached_property
     def main_html_paragraphs(self):
         if not self.p_records:
             return {}
@@ -183,6 +181,10 @@ class Document:
     @issue.setter
     def issue(self, record):
         self._issue = Issue(record)
+
+    @cached_property
+    def page(self):
+        return self.h_record.page
 
     @property
     def start_page(self):
@@ -274,7 +276,7 @@ class Document:
             author["affiliation"] = affs[author["xref"]]["orgname"]
             yield author
 
-    @property
+    @cached_property
     def citations(self):
         return self.document_records.get_record("c")
 
