@@ -138,12 +138,19 @@ class Document:
     @property
     @lru_cache(maxsize=1)
     def p_records(self):
-        return self.document_records.get_record("p")
+        return self.document_records.get_record("p") or []
 
     @property
     @lru_cache(maxsize=1)
     def main_html_paragraphs(self):
-        return BodyFromISIS(self.p_records).parts
+        if not self.p_records:
+            return {}
+        try:
+            return BodyFromISIS(self.p_records).parts
+        except Exception as e:
+            logging.info("main_html_paragraphs")
+            logging.exception(e)
+            return {}
 
     @property
     def translated_html_by_lang(self):
