@@ -44,8 +44,7 @@ class ClassicWebsitePaths:
 
     def get_paragraphs_id_file_path(self, article_pid):
         if article_pid and len(article_pid) == 23:
-            return os.path.join(
-                self.bases_path,
+            partial_path = os.path.join(
                 "artigo",
                 "p",
                 article_pid[1:10],
@@ -53,6 +52,12 @@ class ClassicWebsitePaths:
                 article_pid[14:18],
                 article_pid[-5:] + ".id",
             )
+            path = os.path.join(self.bases_work_path, partial_path)
+            if os.path.isfile(path):
+                return path
+            path = os.path.join(self.bases_path, partial_path)
+            if os.path.isfile(path):
+                return path
 
     @property
     def id_files(self):
