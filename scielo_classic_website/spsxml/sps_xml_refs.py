@@ -603,7 +603,6 @@ class XMLCitation(object):
                 name.append(elem)
             if author.get("anonymous"):
                 elem = ET.Element("anonymous")
-                utils.handle_bad_text(elem, author.get("given_names"))
                 name.append(elem)
             if name.getchildren():
                 return name
@@ -723,7 +722,7 @@ class XMLCitation(object):
                 elem = ET.Element("country")
                 elem.text = raw.conference_country
                 conf_loc.append(elem)
-            if conf_loc.find("*") is not None:
+            if conf_loc.getchildren():
                 elementcitation.append(conf_loc)
 
             if raw.conference_sponsor:

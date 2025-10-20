@@ -257,14 +257,14 @@ class XMLArticleMetaContribGroupPipe(plumber.Pipe):
         if raw.corporative_authors:
             collab = ET.Element("collab")
             try:
-                collab.text = raw.corporative_authors[0]
+                collab = create_node_with_fixed_html_text("collab", raw.corporative_authors[0])
             except (IndexError, TypeError, ValueError):
                 pass
             else:
                 # cria o elemento contrib e seu atributo contrib-type
                 contrib = ET.Element("contrib")
                 contrib.set("contrib-type", "author")
-                contrib.append(create_node_with_fixed_html_text(collab))
+                contrib.append(collab)
                 contrib_group.append(contrib)
 
         if raw.authors or raw.corporative_authors:
