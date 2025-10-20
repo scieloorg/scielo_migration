@@ -39,7 +39,10 @@ class DocumentRecord(BaseDocumentRecord):
         Original article title
         v012
         """
-        return super().article_titles[0]["text"]
+        try:
+            return super().article_titles[0]["text"]
+        except IndexError:
+            return None
 
     @cached_property
     def translated_titles(self):
@@ -47,7 +50,10 @@ class DocumentRecord(BaseDocumentRecord):
         Translated article titles
         v012
         """
-        return super().article_titles[1:]
+        try:
+            return super().article_titles[1:]
+        except TypeError:
+            return []
 
     @cached_property
     def original_abstract(self):
@@ -68,7 +74,7 @@ class DocumentRecord(BaseDocumentRecord):
         """
         try:
             return super().abstracts[1:]
-        except IndexError:
+        except TypeError:
             return None
 
     @cached_property
