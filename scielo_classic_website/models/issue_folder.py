@@ -111,7 +111,7 @@ class IssueFolder:
         pattern = os.path.join(
             self._classic_website_paths.bases_translation_path,
             self._subdir_acron_issue,
-            "*",
+            "*.ht*",
         )
         for item in get_files([pattern], "html"):
             if item.get("error"):
@@ -159,7 +159,7 @@ class IssueFolder:
         pattern = os.path.join(
             self._classic_website_paths.bases_pdf_path,
             self._subdir_acron_issue,
-            "*",
+            "*.*",
         )
         for item in get_files([pattern], "pdf"):
             if item.get("error"):
@@ -200,8 +200,7 @@ class IssueFolder:
         htdocs_path = os.path.dirname(os.path.dirname(htdocs_img_revistas_path))
 
         patterns = [
-            os.path.join(htdocs_path, "**", self._subdir_acron_issue, "*.*"),
-            os.path.join(htdocs_path, "**", self._subdir_acron_issue, "*", "*.*"),
+            os.path.join(htdocs_path, "**", self._subdir_acron_issue, "**", "*.*"),
         ]
 
         for item in get_files(patterns, "asset", True):
