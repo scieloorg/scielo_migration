@@ -218,12 +218,12 @@ def fix_paragraphs(p_records):
     for item in p_records:
         # item.data (dict which keys: text, index, reference_index)
         if item.data["text"]:
-            yield html_fixer.avoid_mismatched_p(item.data["text"])
+            yield html_fixer.avoid_mismatched_tags(item.data["text"])
 
 
 def fix_references(p_records):
     for item in p_records:
         # item.data (dict which keys: text, index, reference_index)
         if item.data["text"]:
-            item.data["text"] = html_fixer.avoid_mismatched_p(item.data["text"])               
+            item.data["text"] = html_fixer.avoid_mismatched_tags(item.data["text"])
             yield item.data
