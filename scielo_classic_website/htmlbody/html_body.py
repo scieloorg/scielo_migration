@@ -96,7 +96,7 @@ class HTMLContent:
         for change in self.old_and_new_links:
             old_link = change.get("old_link")
             new_link = change.get("new_link")
-            for node in self.tree.xpath(f".//a[@href={old_link}]|.//img[@src={old_link}]"):
+            for node in self.tree.xpath(f'.//a[@href="{old_link}"]|.//img[@src="{old_link}"]'):
                 if node.get("href"):
                     attr = "href"
                 elif node.get("src"):
