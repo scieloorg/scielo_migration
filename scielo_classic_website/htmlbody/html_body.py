@@ -13,8 +13,7 @@ from scielo_classic_website.htmlbody import html_fixer
 from scielo_classic_website.htmlbody.html_code_utils import html_safe_decode
 
 
-class UnableToGetHTMLTreeError(Exception):
-    ...
+class UnableToGetHTMLTreeError(Exception): ...
 
 
 class HTMLContent:
@@ -83,9 +82,7 @@ class HTMLContent:
                 for folder in ("htdocs", "bases"):
                     if folder not in new_link:
                         continue
-                    new_link = new_link[
-                        new_link.find(folder) + len(folder) :
-                    ]
+                    new_link = new_link[new_link.find(folder) + len(folder) :]
                     logging.info({"old_link": old_link, "new_link": new_link})
                     yield {"old_link": old_link, "new_link": new_link}
                     break
@@ -96,7 +93,9 @@ class HTMLContent:
         for change in self.old_and_new_links:
             old_link = change.get("old_link")
             new_link = change.get("new_link")
-            for node in self.tree.xpath(f'.//a[@href="{old_link}"]|.//img[@src="{old_link}"]'):
+            for node in self.tree.xpath(
+                f'.//a[@href="{old_link}"]|.//img[@src="{old_link}"]'
+            ):
                 if node.get("href"):
                     attr = "href"
                 elif node.get("src"):
@@ -120,32 +119,36 @@ class BodyFromISIS:
 
     @cached_property
     def before_references_paragraphs(self):
-        if self.p_records and self.first_reference:
+        if self.first_reference:
             return self.p_records[: self.first_reference]
         return self.p_records
 
     @cached_property
     def references_paragraphs(self):
-        if self.p_records and self.first_reference and self.last_reference:
+        if self.first_reference and self.last_reference:
             return self.p_records[self.first_reference : self.last_reference + 1]
         return []
 
     @cached_property
     def after_references_paragraphs(self):
-        if self.p_records and self.last_reference:
+        if self.last_reference:
             return self.p_records[self.last_reference + 1 :]
         return []
 
     def _identify_references_range(self):
+        x = []
         for i, item in enumerate(self.p_records):
-            if not self.first_reference and item.reference_index:
-                self.first_reference = i
             if item.reference_index:
                 self.last_reference = i
+                x.append((i, int(item.reference_index)))
+                if not self.first_reference:
+                    self.first_reference = i
         logging.info(f"first_reference: {self.first_reference}")
         logging.info(f"last_reference: {self.last_reference}")
+        for i, ref_index in x:
+            logging.info(f"reference_index: {ref_index} at p_record index: {i}")
 
-    @property
+    @cached_property
     def parts(self):
         if not self.p_records:
             return {}
@@ -156,13 +159,14 @@ class BodyFromISIS:
         return parts
 
     def get_references_block(self):
-        if not self.references_paragraphs:
+        references = self.references_paragraphs
+        if not references:
             return []
         try:
-            return list(fix_references(self.references_paragraphs))
+            return list(fix_references(references))
         except Exception as e:
             # logging.exception(e)
-            return list(get_paragraphs_data(self.references_paragraphs))
+            return list(get_paragraphs_data(references))
 
 
 def get_text_block(paragraphs):
@@ -175,26 +179,25 @@ def get_text_block(paragraphs):
 
 
 def get_paragraphs_data(p_records, part_name=None):
+    index = None
     for item in p_records:
         # item.data (dict which keys: text, index, reference_index)
-        if item.data["text"]:
-            # logging.info("Antes:")
-            # logging.info(item.data)
+        if not item.paragraph_text:
+            continue
 
-            hc = HTMLContent(item.data["text"])
-            root = hc.tree.find(".//body/*")
-            if part_name:
-                root.set("data-part", part_name)
+        if index:
+            index += 1
+        elif item.reference_index:
+            index = int(item.reference_index)
 
-            ref_idx = item.data.get("reference_index")
-            if ref_idx:
-                root.set("data-ref-index", ref_idx)
+        data = {}
+        data.update(item.data)
 
-            item.data["text"] = hc.content
-
-            # logging.info("Depois:")
-            # logging.info(item.data["text"])
-            yield item.data
+        hc = HTMLContent(item.paragraph_text)
+        data["text"] = hc.content
+        if not item.reference_index:
+            data["guessed_reference_index"] = str(index)
+        yield data
 
 
 def get_text(items):
@@ -209,7 +212,7 @@ def build_text(p_records):
     document = "".join(fix_paragraphs(p_records))
     if not document:
         return ""
-    hc = HTMLContent(document)    
+    hc = HTMLContent(document)
     hc.fix_asset_paths()
     return hc.content
 
@@ -217,13 +220,24 @@ def build_text(p_records):
 def fix_paragraphs(p_records):
     for item in p_records:
         # item.data (dict which keys: text, index, reference_index)
-        if item.data["text"]:
-            yield html_fixer.avoid_mismatched_tags(item.data["text"])
+        text = item.paragraph_text
+        if text:
+            yield html_fixer.avoid_mismatched_tags(text)
 
 
 def fix_references(p_records):
+    index = None
     for item in p_records:
         # item.data (dict which keys: text, index, reference_index)
-        if item.data["text"]:
-            item.data["text"] = html_fixer.avoid_mismatched_tags(item.data["text"])
-            yield item.data
+        if index:
+            index += 1
+        elif item.reference_index:
+            index = int(item.reference_index)
+        text = item.paragraph_text
+        if text:
+            data = {}
+            data.update(item.data)
+            data["text"] = html_fixer.avoid_mismatched_tags(text)
+            if not item.reference_index:
+                data["guessed_reference_index"] = str(index)
+            yield data
