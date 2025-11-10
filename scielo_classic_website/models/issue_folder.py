@@ -158,7 +158,7 @@ class IssueFolder:
                 content = fix_html_content(item["content"])
                 if not content:
                     raise ValueError(
-                        f"Conteúdo vazio no arquivo HTML {item['content']}"
+                        f"Conteúdo vazio no arquivo HTML {item['path']}"
                     )
                 item["content"] = content
                 yield item
