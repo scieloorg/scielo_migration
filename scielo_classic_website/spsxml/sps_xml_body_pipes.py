@@ -1664,8 +1664,9 @@ class PreMainHTMLPipe(plumber.Pipe):
                 ref.set("id", f"B{ref_index}")
             except KeyError:
                 ref_index = item.get("guessed_reference_index")
-                ref.set("id", f"B{ref_index}")
-                ref.set("guessed_reference_index", "true")
+                if ref_index:
+                    ref.set("id", f"B{ref_index}")
+                    ref.set("guessed_reference_index", "true")
 
             mixed_citation = ET.Element("temp")
             mixed_citation.set("type", "mixed-citation")
