@@ -23,8 +23,8 @@ RECORD = dict(
     p=ParagraphRecord,
 )
 
-class GenerateBodyAndBackFromHTMLError(Exception):
-    ...
+
+class GenerateBodyAndBackFromHTMLError(Exception): ...
 
 
 def _get_value(data, tag):
@@ -76,7 +76,9 @@ class Document:
             self._issue = Issue(data["issue"])
         except (TypeError, KeyError):
             self._issue = None
-        self.document_records = DocumentRecords(self.data["article"], _id)
+        self.document_records = DocumentRecords(
+            self.data["article"], _id, self.data.get("paragraph")
+        )
         self._params_for_xml_creation = {}
 
     def __getattr__(self, name):
@@ -125,14 +127,13 @@ class Document:
         except TypeError as e:
             if len(self.document_records._records.keys()) == 0:
                 try:
-                    logging.info(
-                        f"Document.h_record: {self.data['article']}")
+                    logging.info(f"Document.h_record: {self.data['article']}")
                 except KeyError:
-                    logging.info(
-                        f"Document.h_record: {self.data.keys()}")
+                    logging.info(f"Document.h_record: {self.data.keys()}")
             else:
                 logging.info(
-                    f"Document.h_record: {self.document_records._records.keys()}")
+                    f"Document.h_record: {self.document_records._records.keys()}"
+                )
             logging.exception(e)
 
     @cached_property
@@ -226,7 +227,9 @@ class Document:
             section = sections.get(lang)
             return section["text"]
         except (TypeError, ValueError, KeyError):
-            raise GetSectionTitleException(f"Not registered: {self.section_code} {lang}. Registered: {self.issue.sections}")
+            raise GetSectionTitleException(
+                f"Not registered: {self.section_code} {lang}. Registered: {self.issue.sections}"
+            )
 
     def get_article_title(self, lang):
         if not hasattr(self, "_article_titles") or not self._article_titles:
@@ -321,10 +324,11 @@ class Document:
 
 
 class DocumentRecords:
-    def __init__(self, records, _id=None):
+    def __init__(self, records, _id=None, paragraph_records=None):
         self._id = _id
         self._records = None
         self.records = records
+        self.paragraph_records = paragraph_records
 
     @property
     def records(self):
@@ -346,7 +350,11 @@ class DocumentRecords:
                 # todos os registros são armazenados, no entanto,
                 # durante a migração nem todos os registros são usados
                 pass
-
+        if not self._records.get("p") and self.paragraph_records:
+            self._records["p"] = []
+            for _record in self.paragraph_records:
+                record = ParagraphRecord(_record)
+                self._records["p"].append(record)
 
     def get_record(self, rec_type):
         return self._records.get(rec_type)

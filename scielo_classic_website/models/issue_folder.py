@@ -28,12 +28,16 @@ def modified_date(file_path):
 
 def _get_classic_website_rel_path(file_path):
     for folder in (
+        "bases-work",
         "bases",
         "htdocs",
     ):
         if folder in file_path:
-            path = file_path[file_path.find(folder):]
-            return path
+            return file_path[file_path.find(folder) :]
+    logging.error(
+        f"Não foi possível determinar o caminho relativo do arquivo {file_path}"
+    )
+    return None
 
 
 def fixed_glob(patterns, file_type, recursive):
@@ -63,10 +67,27 @@ def get_files(patterns, file_type, recursive=False):
                 item["key"], item["extension"] = os.path.splitext(item["name"])
                 item["type"] = file_type
                 item["relative_path"] = _get_classic_website_rel_path(path)
-            yield  item
+            yield item
 
         except Exception as e:
             yield {"type": file_type, "error": str(e), "error_type": type(e).__name__}
+
+
+def fix_html_content(content):
+    if not content:
+        return None
+    try:
+        content = content.decode("utf-8")
+    except Exception as e:
+        content = content.decode("iso-8859-1")
+        logging.warning(
+            f"HTML content decoded using iso-8859-1 due to utf-8 decoding error. {e}"
+        )
+    try:
+        return HTMLContent(content).content
+    except Exception as e:
+        logging.warning(f"HTML content could not be fixed: {e}")
+        return content
 
 
 class IssueFolder:
@@ -83,9 +104,13 @@ class IssueFolder:
 
     @property
     def files(self):
+        logging.info("xml")
         yield from self.bases_xml_files
+        logging.info("bases_translation_files")
         yield from self.bases_translation_files
+        logging.info("bases_pdf_files")
         yield from self.bases_pdf_files
+        logging.info("htdocs_img_revistas_files")
         yield from self.htdocs_img_revistas_files
 
     @property
@@ -113,6 +138,7 @@ class IssueFolder:
             self._subdir_acron_issue,
             "*.ht*",
         )
+        logging.info(pattern)
         for item in get_files([pattern], "html"):
             if item.get("error"):
                 yield item
@@ -129,12 +155,12 @@ class IssueFolder:
                 item["key"] = key
                 item["lang"] = lang
                 item["part"] = part
-                try:
-                    hc = HTMLContent(item["content"])
-                    if hc.asset_path_fixes:
-                        item["content"] = hc.content
-                except KeyError:
-                    pass
+                content = fix_html_content(item["content"])
+                if not content:
+                    raise ValueError(
+                        f"Conteúdo vazio no arquivo HTML {item['path']}"
+                    )
+                item["content"] = content
                 yield item
 
             except Exception as e:
@@ -166,15 +192,13 @@ class IssueFolder:
                 yield item
                 continue
             try:
+                lang = None
                 key = item["key"]
                 if "_" in key and key[2] == "_":
                     # translations
                     lang = key[:2]
                     key = key[3:]
                     item["key"] = key
-                else:
-                    # main pdf
-                    lang = None
             except IndexError as e:
                 continue
             try:
