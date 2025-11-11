@@ -325,10 +325,10 @@ class Document:
 
 class DocumentRecords:
     def __init__(self, records, _id=None, paragraph_records=None):
+        self.paragraph_records = paragraph_records
         self._id = _id
         self._records = None
         self.records = records
-        self.paragraph_records = paragraph_records
 
     @property
     def records(self):
