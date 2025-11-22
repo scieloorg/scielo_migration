@@ -288,6 +288,7 @@ def convert_html_to_xml_step_4(document):
     # logging.info("convert_html_to_xml - step 4")
     ppl = plumber.Pipeline(
         StartPipe(),
+        ReplaceIdhrefAndRidhrefByIdPipe(),
         DivIdToAssetPipe(),
         XRefTypePipe(),
         InsertGraphicInFigPipe(),
@@ -1087,9 +1088,10 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             if not rid:
                 rid = self.get_rid_from_href_and_pkg_name(href, pkg_name)
             if rid:
-                child.set("rid", rid)
+                child.set("rid-href", rid)
 
             element_name = self.get_element_name(label_text, rid, ext)
+            child.set("ref-type", ELEM_AND_REF_TYPE.get(element_name) or element_name)
             try:
                 xpath = f"//*[@filebasename='{basename}']"
                 if rid:
@@ -1097,13 +1099,13 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                 found = root.xpath(xpath)[0]
                 if not found.get("filebasename"):
                     found.set("filebasename", basename)
-                if not found.get("id") and rid:
-                    found.set("id", rid)
+                if not found.get("id") and not found.get("id-href") and rid:
+                    found.set("id-href", rid)
                 
             except IndexError:
                 new_elem = ET.Element(element_name)
                 if rid:
-                    new_elem.set("id", rid)
+                    new_elem.set("id-href", rid)
                 new_elem.set("filebasename", basename)
 
                 elem_label = ET.Element("label")
@@ -1421,6 +1423,43 @@ class DivIdToAssetPipe(plumber.Pipe):
         raw, xml = data
         _process(xml, "div[@id]", self.parser_node)
         _report(xml, func_name=type(self))
+        return data
+
+
+class ReplaceIdhrefAndRidhrefByIdPipe(plumber.Pipe):
+    """
+    Transforma div em table-wrap ou fig.
+    """
+    def replace_rid_href_by_id(self, node, xml):
+        node_id = node.get("id")
+        filebasename = node.get("filebasename")
+        for xref in xml.xpath(f".//*[@rid and @filebasename='{filebasename}']"):
+            xref.set("rid", node_id)
+            xref.attrib.pop("rid-href", None)
+            xref.attrib.pop("filebasename", None)
+        node.attrib.pop("filebasename", None)
+        node.attrib.pop("id-href", None)
+
+    def create_rid_from_filebasename(self, node, rid=None):
+        node.set("rid", node.attrib.pop("filebasename"))
+        node.attrib.pop("rid-href", None)
+
+    def create_id_from_filebasename(self, node, xml):
+        node.set("id", node.attrib.pop("filebasename"))
+        node.attrib.pop("rid-href", None)
+
+    def transform(self, data):
+        raw, xml = data
+        for node in xml.xpath(".//*[@filebasename and @id]"):
+            self.replace_rid_href_by_id(node, xml)
+
+        for node in xml.xpath(".//*[not(@rid) and @rid-href and @filebasename]"):
+            self.create_rid_from_filebasename(node, xml)
+
+        for node in xml.xpath(".//*[not(@id) and @id-href and @filebasename]"):
+            self.create_id_from_filebasename(node, xml)
+
+
         return data
 
 
