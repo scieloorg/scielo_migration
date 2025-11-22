@@ -4,6 +4,7 @@ import logging
 import os
 from copy import deepcopy
 from io import StringIO
+import re
 
 import plumber
 from lxml import etree as ET
@@ -19,18 +20,48 @@ REF_TYPES = {
     "e": "disp-formula",
 }
 
-
-ELEM_NAME = {
+LABEL_INITIAL_TO_ELEMENT = {
     "t": "table-wrap",
     "f": "fig",
     "e": "disp-formula",
-    "c": "table-wrap",
+    "c": "table-wrap", # cuadro
+    "a": "app", # appendix, anexo
 }
+
+FILENAME_TO_ELEMENT = {}
+FILENAME_TO_ELEMENT.update(LABEL_INITIAL_TO_ELEMENT)
+FILENAME_TO_ELEMENT["i"] = "fig"
 
 
 ELEM_AND_REF_TYPE = {
     "table-wrap": "table",
 }
+
+
+def get_letter_and_number(codigo):
+    """
+    Verifica se a string inteira corresponde exatamente ao padrão:
+    [Letra (maiúscula/minúscula)][Um ou mais dígitos].
+    Se corresponder (ex: 'f1', 'A99'), retorna a string original.
+    Se não corresponder (ex: '1f', 'f1a'), retorna None.
+    """
+    
+    # Expressão Regular: r"^[a-zA-Z]\d+$"
+    # ^: Início da string
+    # [a-zA-Z]: Exatamente uma letra
+    # \d+: Um ou mais dígitos
+    # $: Fim da string
+    regex = r"^[a-zA-Z]\d+$"
+    
+    # re.fullmatch() verifica se a string inteira corresponde ao padrão
+    match = re.fullmatch(regex, codigo)
+    
+    if match:
+        # Se o padrão casar com a string inteira, retorna o valor original
+        return codigo
+    else:
+        # Caso contrário, retorna None
+        return None
 
 
 class XMLBodyAnBackConvertException(Exception): ...
@@ -831,7 +862,7 @@ class AHrefPipe(plumber.Pipe):
         if "img/revistas/" in href or ".." in href:
             return self._create_internal_link_to_asset_html_page(node)
 
-        if journal_acron and journal_acron in href:
+        if journal_acron and f"/{journal_acron}/" in href.lower():
             return self._create_internal_link_to_asset_html_page(node)
 
         if ":" in href:
@@ -950,7 +981,32 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
     def _extract_xref_text(self, xref_element):
         return " ".join(xref_element.xpath(".//text()")).strip()
 
-    def _extract_rid(self, href, pkg_name, label_text, label_number):
+    def get_rid_from_xref_label_and_number(self, label_text, label_number):
+        """
+        Gera o rid a partir do label_text e label_number.
+
+        Args:
+            label_text: Texto do label (e.g., 'Table', 'Figure')
+            label_number: Número do label (e.g., '1', '2')
+
+        Returns:
+            String com o rid ou None
+        """
+        if not label_text:
+            return None
+        
+        element_prefix = label_text[0].lower()
+        if not label_number:
+            return element_prefix
+
+        if label_number.isdigit():
+            return f"{element_prefix}{label_number}"
+        
+        if label_number[:-1].isdigit() and  label_number[-1].isalpha():
+            return f"{element_prefix}{label_number[:-1]}"
+        return None
+
+    def get_rid_from_href_and_pkg_name(self, href, pkg_name):
         """
         Extrai o rid a partir do href e nome do pacote.
 
@@ -961,45 +1017,48 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         Returns:
             String com o rid ou None
         """
-        if label_text and label_number and label_number.isdigit():
-            try:
-                return ELEM_NAME.get(label_text[0].lower())[0] + str(label_number)
-            except (IndexError, AttributeError, ValueError):
-                pass
-
         basename = os.path.basename(href)
         filename, _ = os.path.splitext(basename)
         if filename.startswith(pkg_name):
-            rid = filename.replace(pkg_name, "")
-            if rid:
-                return rid
+            filename = filename.replace(pkg_name, "")
+            if not filename:
+                return None
+        return get_letter_and_number(filename)
 
-        greater_pos = -1
-        rid = None
-        for k, v in ELEM_NAME.items():
-            position = filename.rfind(k)
-            if position > greater_pos:
-                rid = k
-                greater_pos = position
-        if rid:
-            rid = filename[greater_pos:]
-            return rid
-        return filename
+    def _extract_filename(self, href):
+        basename = os.path.basename(href)
+        filename, ext = os.path.splitext(basename)
+        return filename, ext
 
-    def parse_xref_text(self, xref_text, label_text):
+    def get_label_text_and_number_from_xref_text(self, xref_text, label_text):
         # Tables 1-3
-        parts = xref_text.split(" ")
+        if not xref_text:
+            return None, None
+        
+        parts = xref_text.split()
 
-        if len(parts) == 1 and parts[0][0].isdigit():
-            return label_text, parts[0]
-
-        if len(parts) == 1:
-            return label_text, None
-
-        if len(parts) == 2 and parts[-1][0].isdigit():
-            return parts[0], parts[-1]
-
-        return None, None
+        # first character of last part
+        expected_number = parts[-1]
+        if expected_number[0].isdigit():
+            if len(parts) == 2:
+                return parts[0], expected_number
+            if len(parts) == 1:
+                return label_text, expected_number
+        return parts[0], None
+    
+    def get_element_name(self, label_text, rid, ext):
+        element_name = None
+        if label_text:
+            label_initial = label_text[0].lower()
+            element_name = LABEL_INITIAL_TO_ELEMENT.get(label_initial)
+        elif rid:
+            element_name = FILENAME_TO_ELEMENT.get(rid[0])
+        if not element_name:
+            if ext in (".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".html", ".htm"):
+                element_name = "supplementary-material"
+        if not element_name:
+            element_name = "element"
+        return element_name
 
     def parser_xref_parent(self, xref_parent, root, pkg_name):
         label_text = None
@@ -1020,19 +1079,36 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                 logging.error("XRefSpecialInternalLinkPipe - no href found")
                 continue
 
-            label_text, label_number = self.parse_xref_text(xref_text, label_text)
+            basename, ext = self._extract_filename(href)
+            child.set("filebasename", basename)
 
-            rid = self._extract_rid(href, pkg_name, label_text, label_number)
-            child.set("rid", rid)
-            element_name = ELEM_NAME.get(rid[0]) or "fig"
+            label_text, label_number = self.get_label_text_and_number_from_xref_text(xref_text, label_text)
+            rid = self.get_rid_from_xref_label_and_number(label_text, label_number)
+            if not rid:
+                rid = self.get_rid_from_href_and_pkg_name(href, pkg_name)
+            if rid:
+                child.set("rid", rid)
+
+            element_name = self.get_element_name(label_text, rid, ext)
             try:
-                found = root.xpath(f"//*[@id='{rid}']")[0]
+                xpath = f"//*[@filebasename='{basename}']"
+                if rid:
+                    xpath = f"//*[@id='{rid}' | @filebasename='{basename}']"
+                found = root.xpath(xpath)[0]
+                if not found.get("filebasename"):
+                    found.set("filebasename", basename)
+                if not found.get("id") and rid:
+                    found.set("id", rid)
+                
             except IndexError:
                 new_elem = ET.Element(element_name)
-                new_elem.set("id", rid)
+                if rid:
+                    new_elem.set("id", rid)
+                new_elem.set("filebasename", basename)
 
                 elem_label = ET.Element("label")
                 new_elem.append(elem_label)
+                elem_label.text = xref_text
 
                 g = ET.Element("graphic")
                 g.set("{http://www.w3.org/1999/xlink}href", href)
@@ -1042,7 +1118,9 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
 
             child.attrib.pop("is_internal_link_to_asset_html_page")
 
-        for child in reversed(children):
+        # Sort children by rid before inserting
+        children_sorted = sorted(children, key=lambda x: x.get("filebasename"))
+        for child in children_sorted:
             node = ET.Element(xref_parent.tag)
             node.append(child)
             xref_parent.addnext(node)
@@ -1157,14 +1235,19 @@ class InsertGraphicInTableWrapPipe(plumber.Pipe):
         graphic = sibling.find(".//graphic")
         if graphic is None and table is None:
             return
+        
+        elem = None
         if graphic is not None:
             node.append(deepcopy(graphic))
             elem = graphic
         elif table is not None:
             node.append(deepcopy(table))
             elem = table
-        parent = elem.getparent()
-        parent.remove(elem)
+        
+        if elem is not None:
+            parent = elem.getparent()
+            if parent is not None:
+                parent.remove(elem)
 
     def transform(self, data):
         raw, xml = data
