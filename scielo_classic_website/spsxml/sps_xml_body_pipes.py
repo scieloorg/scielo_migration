@@ -118,9 +118,11 @@ def convert_html_to_xml(document):
     document está em scielo_classic_website.models.document.Document.
     """
     calls = (
-        convert_html_to_xml_step_0,
-        convert_html_to_xml_step_1,
-        convert_html_to_xml_step_2,
+        convert_html_to_xml_step_0_insert_html_in_cdata,
+        convert_html_to_xml_step_1_remove_cdata,
+        convert_html_to_xml_step_2_a,
+        convert_html_to_xml_step_2_b,
+        convert_html_to_xml_step_2_c,
         convert_html_to_xml_step_3,
         convert_html_to_xml_step_4,
         convert_html_to_xml_step_fix_body,
@@ -148,17 +150,24 @@ def convert_html_to_xml(document):
             )
 
 
-def convert_html_to_xml_step_0(document):
+def convert_html_to_xml_step_0_insert_html_in_cdata(document):
     """
-    Coloca os textos HTML principal e traduções na estrutura do XML:
-    article/body, article/back/ref-list, article/back/sec,
-    sub-article/body, sub-article/back,
+    Prepara o documento para conversão inserindo conteúdo HTML em estruturas CDATA.
+    
+    Insere o HTML principal e traduções dentro de tags CDATA na estrutura XML,
+    preparando o documento para as etapas subsequentes de conversão.
 
     Parameters
     ----------
-    document: Document
+    document : Document
+        Documento contendo HTML a ser convertido para XML
+        
+    Returns
+    -------
+    Document
+        Documento com HTML encapsulado em CDATA dentro da estrutura XML
     """
-    # logging.info("convert_html_to_xml - step 1")
+    # logging.info("convert_html_to_xml - step 0")
     ppl = plumber.Pipeline(
         SetupPipe(),
         PreMainHTMLPipe(),
@@ -169,15 +178,26 @@ def convert_html_to_xml_step_0(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_1(document):
+def convert_html_to_xml_step_1_remove_cdata(document):
     """
-    Coloca os textos HTML principal e traduções na estrutura do XML:
-    article/body, article/back/ref-list, article/back/sec,
-    sub-article/body, sub-article/back,
+    Remove as tags CDATA e posiciona o conteúdo HTML na estrutura XML.
+    
+    Posiciona os textos HTML principal e traduções na estrutura do XML:
+    - article/body
+    - article/back/ref-list
+    - article/back/sec
+    - sub-article/body
+    - sub-article/back
 
     Parameters
     ----------
-    document: Document
+    document : Document
+        Documento com HTML em CDATA
+        
+    Returns
+    -------
+    Document
+        Documento com HTML integrado à estrutura XML sem CDATA
     """
     # logging.info("convert_html_to_xml - step 1")
     ppl = plumber.Pipeline(
@@ -239,23 +259,130 @@ def convert_html_to_xml_step_2(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_3(document):
+def convert_html_to_xml_step_2_a(document):
     """
-    Converte o XML obtido no passo 2.
-    Localiza os xref e os graphics e adiciona, respectivamente, ref-type e
-    os elementos fig, table-wrap, disp-formula, de acordo como o nome / local.
+    Primeira etapa de conversão de tags HTML para XML correspondentes.
+    
+    Realiza conversões básicas de elementos HTML:
+    - Normaliza espaços em branco
+    - Remove comentários
+    - Converte símbolos de fonte
+    - Renomeia elementos HTML para tags XML
+    - Processa listas ordenadas e não ordenadas
+    - Processa tags de cabeçalho (h1-h6)
+    - Cria tags de estilo a partir de atributos
+    - Processa links e imagens
 
     Parameters
     ----------
-    document: Document
+    document : Document
+        Documento com HTML integrado na estrutura XML
+        
+    Returns
+    -------
+    Document
+        Documento com tags HTML parcialmente convertidas para XML
+    """
+    # logging.info("convert_html_to_xml - step 2_a")
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        XMLNormalizeSpacePipe(),
+        RemoveCommentPipe(),
+        FontSymbolPipe(),
+        RenameElementsPipe(),
+        OlPipe(),
+        UlPipe(),
+        TagsHPipe(),
+        CreateStyleTagFromAttributePipe(),
+        StylePipe(),
+        ASourcePipe(),
+        ImgSrcPipe(),
+        ANamePipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
 
-    ((address | alternatives | answer | answer-set | array |
-    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
-    fig | fig-group | graphic | media | preformat | question | question-wrap |
-    question-wrap-group | supplementary-material | table-wrap |
-    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
-    tex-math | mml:math | p | related-article | related-object | disp-quote |
-    speech | statement | verse-group)*, (sec)*, sig-block?)
+
+def convert_html_to_xml_step_2_b(document):
+    """
+    Segunda etapa de conversão focada em estrutura de parágrafos e formatação.
+    
+    Processa elementos de formatação e estrutura:
+    - Converte atributos 'size' em tags apropriadas (bold, title)
+    - Corrige estrutura de parágrafos e quebras de linha
+    - Remove tags HTML residuais
+    - Remove tags span vazias
+
+    Parameters
+    ----------
+    document : Document
+        Documento processado pela etapa 2_a
+        
+    Returns
+    -------
+    Document
+        Documento com estrutura de parágrafos corrigida
+    """
+    # logging.info("convert_html_to_xml - step 2_b")
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        SizeAttributePipe(),
+        FixParagraphsAndBreaksPipe(),
+        RemoveHTMLTagsPipe(),
+        RemoveSpanTagsPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_2_c(document):
+    """
+    Terceira etapa de conversão focada em processamento de links.
+    
+    Processa elementos de hiperlink:
+    - Converte atributos href em estruturas XML apropriadas
+    - Processa âncoras e links internos
+
+    Parameters
+    ----------
+    document : Document
+        Documento processado pela etapa 2_b
+        
+    Returns
+    -------
+    Document
+        Documento com links processados
+    """
+    # logging.info("convert_html_to_xml - step 2_c")
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        AHrefPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
+def convert_html_to_xml_step_3(document):
+    """
+    Processa referências cruzadas e gráficos inline.
+    
+    Identifica e processa elementos de referência:
+    - Localiza e processa tags xref adicionando atributo ref-type
+    - Processa gráficos inline
+    - Identifica links internos especiais
+
+    Parameters
+    ----------
+    document : Document
+        Documento processado pela etapa 2_c
+        
+    Returns
+    -------
+    Document
+        Documento com referências cruzadas e gráficos inline processados
     """
     # logging.info("convert_html_to_xml - step 3")
     ppl = plumber.Pipeline(
@@ -271,19 +398,25 @@ def convert_html_to_xml_step_3(document):
 
 def convert_html_to_xml_step_4(document):
     """
-    Converte o XML obtido no passo 3,
+    Organiza elementos de figuras, tabelas e fórmulas.
+    
+    Estrutura elementos complexos:
+    - Substitui atributos idhref e ridhref por id
+    - Converte divs com id para elementos de asset apropriados
+    - Define tipos de xref
+    - Insere gráficos em elementos fig
+    - Insere gráficos em elementos table-wrap
+    - Remove tags vazias
 
     Parameters
     ----------
-    document: Document
-
-    ((address | alternatives | answer | answer-set | array |
-    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
-    fig | fig-group | graphic | media | preformat | question | question-wrap |
-    question-wrap-group | supplementary-material | table-wrap |
-    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
-    tex-math | mml:math | p | related-article | related-object | disp-quote |
-    speech | statement | verse-group)*, (sec)*, sig-block?)
+    document : Document
+        Documento processado pela etapa 3
+        
+    Returns
+    -------
+    Document
+        Documento com figuras, tabelas e fórmulas estruturadas
     """
     # logging.info("convert_html_to_xml - step 4")
     ppl = plumber.Pipeline(
@@ -292,9 +425,9 @@ def convert_html_to_xml_step_4(document):
         DivIdToAssetPipe(),
         XRefTypePipe(),
         InsertGraphicInFigPipe(),
-        RemoveEmptyPTagPipe(),
+        RemoveEmptyTagPipe(),
         InsertGraphicInTableWrapPipe(),
-        RemoveEmptyPTagPipe(),
+        RemoveEmptyTagPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -303,19 +436,21 @@ def convert_html_to_xml_step_4(document):
 
 def convert_html_to_xml_step_5(document):
     """
-    Converte o XML obtido no passo 4,
+    Adiciona legendas e títulos em tabelas.
+    
+    Completa a estrutura de tabelas:
+    - Insere elementos caption e title em table-wrap
+    - Organiza a hierarquia de elementos de tabela
 
     Parameters
     ----------
-    document: Document
-
-    ((address | alternatives | answer | answer-set | array |
-    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
-    fig | fig-group | graphic | media | preformat | question | question-wrap |
-    question-wrap-group | supplementary-material | table-wrap |
-    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
-    tex-math | mml:math | p | related-article | related-object | disp-quote |
-    speech | statement | verse-group)*, (sec)*, sig-block?)
+    document : Document
+        Documento processado pela etapa 4
+        
+    Returns
+    -------
+    Document
+        Documento com estrutura de tabelas completa
     """
     # logging.info("convert_html_to_xml - step 5")
     ppl = plumber.Pipeline(
@@ -329,20 +464,23 @@ def convert_html_to_xml_step_5(document):
 
 def convert_html_to_xml_step_7(document):
     """
-    Converte o XML obtido no passo 6,
+    Processa elementos alternativos de gráficos.
+    
+    Cria estruturas de alternatives para gráficos:
+    - Agrupa versões alternativas de gráficos
+    - Organiza elementos graphic dentro de alternatives
 
     Parameters
     ----------
-    document: Document
-
-    ((address | alternatives | answer | answer-set | array |
-    block-alternatives | boxed-text | chem-struct-wrap | code | explanation |
-    fig | fig-group | graphic | media | preformat | question | question-wrap |
-    question-wrap-group | supplementary-material | table-wrap |
-    table-wrap-group | disp-formula | disp-formula-group | def-list | list |
-    tex-math | mml:math | p | related-article | related-object | disp-quote |
-    speech | statement | verse-group)*, (sec)*, sig-block?)
+    document : Document
+        Documento processado pela etapa 5
+        
+    Returns
+    -------
+    Document
+        Documento com estruturas alternatives para gráficos
     """
+    # logging.info("convert_html_to_xml - step 7")
     ppl = plumber.Pipeline(
         StartPipe(),
         AlternativesGraphicPipe(),
@@ -353,6 +491,24 @@ def convert_html_to_xml_step_7(document):
 
 
 def convert_html_to_xml_step_fix_body(document):
+    """
+    Corrige a estrutura do body envolvendo parágrafos soltos em seções.
+    
+    Organiza o conteúdo do body:
+    - Envolve parágrafos soltos em elementos sec
+    - Garante hierarquia correta do body
+
+    Parameters
+    ----------
+    document : Document
+        Documento com body a ser corrigido
+        
+    Returns
+    -------
+    Document
+        Documento com estrutura do body corrigida
+    """
+    # logging.info("convert_html_to_xml - fix body")
     ppl = plumber.Pipeline(
         StartPipe(),
         WrapPwithSecPipe(),
@@ -363,7 +519,25 @@ def convert_html_to_xml_step_fix_body(document):
 
 
 def convert_html_to_xml_complete_disp_formula(document):
-    # logging.info("convert_html_to_xml - step 5")
+    """
+    Completa a estrutura de fórmulas exibidas (display formulas).
+    
+    Finaliza elementos de fórmulas matemáticas:
+    - Completa estrutura de disp-formula
+    - Adiciona atributos necessários
+    - Organiza conteúdo matemático
+
+    Parameters
+    ----------
+    document : Document
+        Documento com fórmulas a serem completadas
+        
+    Returns
+    -------
+    Document
+        Documento com estrutura de fórmulas completa
+    """
+    # logging.info("convert_html_to_xml - complete disp formula")
     ppl = plumber.Pipeline(
         StartPipe(),
         CompleteDispFormulaPipe(),
@@ -643,6 +817,77 @@ class RenameElementsPipe(plumber.Pipe):
         return data
 
 
+class FixParagraphsAndBreaksPipe(plumber.Pipe):
+
+    def fix_paragraphs_and_breaks(self, parent):
+        if parent.xpath(".//p"):
+            # TODO - casos que há p já existem
+            return
+        self.fix_paragraph_absence(parent)
+
+    def fix_paragraph_absence(self, parent):
+        # troca break duplo por DOUBLEBREAK
+        self.mark_double_breaks(parent)
+        self.replace_span_followed_by_break_by_p(parent)
+        self.replace_span_which_only_child_is_doublebreak_with_p(parent)
+        self.replace_font_followed_by_break_by_p_or_sec(parent)
+            
+    def mark_double_breaks(self, parent):
+        # remove break duplo, substitui por DOUBLEBREAK
+        for break_node in parent.xpath("//break[following-sibling::node()[1][self::break]]"):
+            if (break_node.tail or "").strip():
+                continue
+            next_sibling = break_node.getnext()
+            if next_sibling.tail and next_sibling.tail.strip():
+                continue
+            break_node.tag = "DOUBLEBREAK"
+            next_sibling.tag = "TOREMOVE"
+        ET.strip_tags(parent, "TOREMOVE")
+
+    def replace_span_followed_by_break_by_p(self, parent):
+        for span_node in parent.xpath("//span[following-sibling::node()[1][self::DOUBLEBREAK]]"):
+            if (span_node.tail or "").strip():
+                continue
+            span_node.tag = "p"
+            next_sibling = span_node.getnext()
+            next_sibling.tag = "TOREMOVE"
+        ET.strip_tags(parent, "TOREMOVE")
+
+    def replace_span_which_only_child_is_doublebreak_with_p(self, parent):
+        # substitui span cujo único filho é doublebreak por p, remove doublebreak
+        for node in parent.xpath(".//span[DOUBLEBREAK]"):
+            children = node.xpath(".//*")
+            if len(children) != 1:
+                continue
+            child = children[0]
+            if (child.tail or "").strip():
+                continue
+            node.tag = "p"
+            child.tag = "BREAKTOREMOVE"
+        ET.strip_tags(parent, "BREAKTOREMOVE")
+
+    def replace_font_followed_by_break_by_p_or_sec(self, parent):
+        for font_node in parent.xpath("//font[following-sibling::node()[1][self::DOUBLEBREAK]]"):
+            if (font_node.tail or "").strip():
+                continue
+            if font_node.find("p") is None:
+                font_node.tag = "p"
+            else:
+                font_node.tag = "sec"
+            next_sibling = font_node.getnext()
+            next_sibling.tag = "TOREMOVE"
+        ET.strip_tags(parent, "TOREMOVE")
+
+    def transform(self, data):
+        raw, xml = data
+        for body in xml.xpath(".//body"):
+            self.fix_paragraphs_and_breaks(body)
+        
+        for back in xml.xpath(".//back"):
+            self.fix_paragraphs_and_breaks(back)
+        return data
+
+
 class FixMissingParagraphsPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
@@ -663,46 +908,59 @@ class ReplaceBrByPPipe(plumber.Pipe):
         return data
 
     def replace_tag_by_p(self, body, break_tag):
-        for br_parent in body.xpath(f"*[{break_tag}]"):
-            if len(br_parent.xpath(break_tag)) == 1:
+        """Converte elementos com múltiplas tags break em parágrafos separados."""
+        for parent_element in body.xpath(f"*[{break_tag}]"):
+            break_count = len(parent_element.xpath(break_tag))
+            if break_count <= 1:
                 continue
-            # Coletar o conteúdo e criar novos parágrafos
-            new_elements = []
-            p = ET.Element("p")
-
-            # Adicionar texto inicial se existir
-            if br_parent.text:
-                p.text = br_parent.text
-                br_parent.text = None
-
-            # Processar cada filho
-            for (
-                child
-            ) in (
-                br_parent.getchildren()
-            ):  # usar list() para evitar modificar durante iteração
-                if child.tag == break_tag:
-                    # Adicionar parágrafo atual se tiver conteúdo
-                    if p.text or len(p):
-                        new_elements.append(p)
-                    # Criar novo parágrafo
-                    p = ET.Element("p")
-                    if child.tail:
-                        p.text = child.tail
-                else:
-                    # Adicionar elemento não-break ao parágrafo atual
-                    p.append(child)
-
-            # Adicionar último parágrafo se tiver conteúdo
-            if p.text or len(p):
-                new_elements.append(p)
-
-            # Limpar o parent original
-            br_parent.clear()
-
-            # Adicionar os novos elementos
-            for elem in new_elements:
-                br_parent.addprevious(elem)
+            
+            paragraphs = self._split_content_by_breaks(parent_element, break_tag)
+            self._replace_with_paragraphs(parent_element, paragraphs)
+    
+    def _split_content_by_breaks(self, element, break_tag):
+        """Divide o conteúdo de um elemento em segmentos separados por breaks."""
+        paragraphs = []
+        current_paragraph = ET.Element("p")
+        
+        # Adiciona texto inicial do elemento
+        if element.text and element.text.strip():
+            current_paragraph.text = element.text
+        
+        # Processa cada filho do elemento
+        for child in list(element):  # list() evita modificação durante iteração
+            if child.tag == break_tag:
+                # Finaliza parágrafo atual se tiver conteúdo
+                if self._has_content(current_paragraph):
+                    paragraphs.append(current_paragraph)
+                
+                # Inicia novo parágrafo com texto após o break
+                current_paragraph = ET.Element("p")
+                if child.tail and child.tail.strip():
+                    current_paragraph.text = child.tail
+            else:
+                # Adiciona elemento não-break ao parágrafo atual
+                current_paragraph.append(child)
+        
+        # Adiciona último parágrafo se tiver conteúdo
+        if self._has_content(current_paragraph):
+            paragraphs.append(current_paragraph)
+        
+        return paragraphs
+    
+    def _has_content(self, element):
+        """Verifica se um elemento tem conteúdo (texto ou filhos)."""
+        return (element.text and element.text.strip()) or len(element) > 0
+    
+    def _replace_with_paragraphs(self, original_element, paragraphs):
+        """Substitui o elemento original pelos novos parágrafos."""
+        # Insere novos parágrafos antes do elemento original
+        for paragraph in paragraphs:
+            original_element.addprevious(paragraph)
+        
+        # Remove o elemento original
+        parent = original_element.getparent()
+        if parent is not None:
+            parent.remove(original_element)
 
 
 class FontSymbolPipe(plumber.Pipe):
@@ -721,13 +979,28 @@ class CreateStyleTagFromAttributePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
         for node in xml.xpath(".//*[@style]"):
-            if not node.get("style"):
-                continue
             for style in ("italic", "sup", "sub", "bold", "underline"):
                 if style in node.get("style"):
                     node.tag = style
-                    node.attrib.pop("style")
                     break
+        return data
+
+
+class SizeAttributePipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+        for node in xml.xpath(".//*[@size]"):
+            size = node.get("size")
+            if size[0] == "-":
+                continue
+            s = size
+            if s[0] == "+":
+                s = s[1:]
+            try:
+                if int(s) > 1:
+                    node.tag = "title"
+            except (ValueError, TypeError):
+                pass
         return data
 
 
@@ -863,7 +1136,7 @@ class AHrefPipe(plumber.Pipe):
         if "img/revistas/" in href or ".." in href:
             return self._create_internal_link_to_asset_html_page(node)
 
-        if journal_acron and f"/{journal_acron}/" in href.lower():
+        if journal_acron and journal_acron in href.lower():
             return self._create_internal_link_to_asset_html_page(node)
 
         if ":" in href:
@@ -878,14 +1151,11 @@ class AHrefPipe(plumber.Pipe):
 
     def transform(self, data):
         raw, xml = data
-
+        journal_acron = raw.journal and raw.journal.acronym
+        if journal_acron:
+            journal_acron = f"/{journal_acron}/"
         for node in xml.xpath(".//a[@href]"):
-            try:
-                journal_acron = f"/{raw.journal.acronym}/"
-            except Exception:
-                journal_acron = None
             self.parser_node(node, journal_acron)
-        _report(xml, func_name=type(self))
         return data
 
 
@@ -896,7 +1166,6 @@ class ANamePipe(plumber.Pipe):
             name = node.get("name")
             if name.startswith("top") or name.startswith("back"):
                 node.set("delete", "true")
-
                 for ahref in root.xpath(f".//a[@href='#{name}']"):
                     ahref.set("delete", "true")
         delete_tags(root)
@@ -968,6 +1237,9 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
 
     def transform(self, data):
         raw, xml = data
+
+        if not xml.xpath(".//xref[@is_internal_link_to_asset_html_page]"):
+            return data
 
         for xref_parent in xml.xpath(".//*[xref]"):
             if xref_parent.xpath("xref[@is_internal_link_to_asset_html_page]"):
@@ -1258,6 +1530,34 @@ class InsertGraphicInTableWrapPipe(plumber.Pipe):
         return data
 
 
+class RemoveEmptyTagPipe(plumber.Pipe):
+    """
+    Remove parágrafo vazio, ou que contenha somente espaços em branco.
+
+    Ex: <p> </p>
+    """
+
+    def mark_empty_tag(self, node):
+        # Verifica se existe algum filho no node.
+        if node.getchildren():
+            return None
+        # Verifica se node.text tem conteúdo.
+        if node.text and node.text.strip():
+            return None
+        node.tag = "REMOVE_EMPTY_TAG"
+
+    def remove_empty_tags(self, xml, tag):
+        for node in xml.findall(f".//{tag}"):
+            self.mark_empty_tag(node)
+        ET.strip_tags(xml, "REMOVE_EMPTY_TAG")
+
+    def transform(self, data):
+        raw, xml = data
+        self.remove_empty_tags(xml, "p")
+        self.remove_empty_tags(xml, "sec")
+        return data
+
+
 class RemoveEmptyPTagPipe(plumber.Pipe):
     """
     Remove parágrafo vazio, ou que contenha somente espaços em branco.
@@ -1301,8 +1601,8 @@ class RemoveEmptyRefTagPipe(plumber.Pipe):
         for item in xml.xpath(".//ref"):
             text = "".join(item.xpath(".//text()")).strip()
             if not text:
-                parent = item.getparent()
-                parent.remove(item)
+                item.tag = "REMOVE_EMPTY_REF_TAG"
+        ET.strip_tags(xml, "REMOVE_EMPTY_REF_TAG")
         return data
 
 
@@ -1322,10 +1622,13 @@ class RemoveExcedingBreakTagPipe(plumber.Pipe):
                     continue
                 if item.getnext() is not None:
                     continue
-                parent.remove(item)
+                item.tag = "REMOVE_EXCEDING_BREAK_TAG"
+        ET.strip_tags(xml, "REMOVE_EXCEDING_BREAK_TAG")
 
         for parent in xml.xpath(".//mixed-citation[break]"):
-            ET.strip_tags(parent, "break")
+            for item in parent.xpath("break"):
+                item.tag = "REMOVE_EXCEDING_BREAK_TAG"
+        ET.strip_tags(xml, "REMOVE_EXCEDING_BREAK_TAG")
         return data
 
 
