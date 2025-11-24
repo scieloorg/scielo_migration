@@ -993,7 +993,7 @@ class SizeAttributePipe(plumber.Pipe):
             size = node.get("size")
             if size[0] == "-":
                 continue
-            s = size[0]
+            s = size
             if s[0] == "+":
                 s = s[1:]
             try:
