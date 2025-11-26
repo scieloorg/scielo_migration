@@ -9,6 +9,7 @@ import re
 import plumber
 from lxml import etree as ET
 
+from scielo_classic_website.htmlbody.html_fixer import remove_tags
 from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
@@ -92,26 +93,44 @@ def _report(xml, func_name):
 
 
 def text_to_node(element_name, children_data_as_text):
+    if not element_name:
+        raise ValueError("element_name cannot be empty")
     if not children_data_as_text:
-        return None
+        return ET.Element(element_name)
+
+    # padroniza entidades
     try:
-        fixed = fix_pre_loading(children_data_as_text)
-        if element_name == "body":
-            html_content = fixed
-        else:
-            html_content = f"<{element_name}>{fixed}</{element_name}>"
-        return ET.fromstring(html_content)
+        children_data_as_text = fix_html_entities(element_name, children_data_as_text)
+        return ET.fromstring(children_data_as_text)
     except Exception as e:
-        pass
+        logging.exception(e)
+
+    # padroniza código HTML
+    return get_node_from_standardized_html(element_name, children_data_as_text)
+
+
+def fix_html_entities(element_name, children_data_as_text):
+    # corrige entidades para evitar problema de carga
+    fixed = fix_pre_loading(children_data_as_text)
+    if element_name == "body":
+        return fixed
+    return f"<{element_name}>{fixed}</{element_name}>"
+
+
+def get_node_from_standardized_html(element_name, children_data_as_text):
     try:
-        hc = HTMLContent(html_content)
-        return hc.tree.find(f".//{element_name}")
+        hc = HTMLContent(children_data_as_text)
+        node = hc.tree.find(f".//{element_name}")
+        if node.xpath(".//*") or "".join(node.itertext()):
+            return node
+        raise ValueError("No content")
     except Exception as e:
         logging.exception(e)
         logging.info(element_name)
         logging.info(children_data_as_text)
-
-        raise Exception(f"Error: text_to_node {element_name} {children_data_as_text}")
+        return ET.fromstring(
+            f"<{element_name}>{remove_tags(children_data_as_text)}</{element_name}>"
+        )
 
 
 def convert_html_to_xml(document):
@@ -494,12 +513,8 @@ class MainHTMLPipe(plumber.Pipe):
 
         for item in xml.xpath(".//temp[@type='mixed-citation']"):
             parent = item.getparent()
-            parent.remove(item)
-            node = text_to_node("mixed-citation", item.text)
-            if node.getchildren() and not (node.tail or "").strip():
-                node = node.find("*")
-                node.tag = "mixed-citation"
-            parent.append(node)
+            new_node = text_to_node("mixed-citation", item.text)
+            parent.replace(item, new_node)
         return data
 
 
