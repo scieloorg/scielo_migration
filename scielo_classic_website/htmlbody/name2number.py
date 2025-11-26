@@ -409,12 +409,15 @@ def fix_pre_loading(xml):
             return xml
 
         for ent in entities:
-            xml = xml.replace(ent, NAME_TO_NUMBER_ENTITIES.get(ent) or f"&amp;{ent}")
+            try:
+                xml = xml.replace(ent, NAME_TO_NUMBER_ENTITIES.get(ent) or f"&amp;{ent}")
+            except Exception as e:
+                logging.exception(e)
 
         return xml
     except Exception as e:
-        logging.info(xml)
         logging.exception(e)
+        return xml
 
 
 def find_entities_to_fix(bkp):
