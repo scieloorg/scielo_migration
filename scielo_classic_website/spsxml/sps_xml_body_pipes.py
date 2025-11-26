@@ -99,38 +99,33 @@ def text_to_node(element_name, children_data_as_text):
         return ET.Element(element_name)
 
     # padroniza entidades
+    fixed_html_entities = fix_pre_loading(children_data_as_text)
+    wrapped_text = wrap_text(element_name, fixed_html_entities)
     try:
-        children_data_as_text = fix_html_entities(element_name, children_data_as_text)
-        return ET.fromstring(children_data_as_text)
+        return ET.fromstring(wrapped_text)
     except Exception as e:
-        logging.exception(e)
+        pass
+    try:
+        return get_node_from_standardized_html(element_name, wrapped_text)
+    except Exception as e:
+        return ET.fromstring(
+            f"<{element_name}>{remove_tags(wrapped_text)}</{element_name}>"
+        )
 
-    # padroniza código HTML
-    return get_node_from_standardized_html(element_name, children_data_as_text)
 
-
-def fix_html_entities(element_name, children_data_as_text):
+def wrap_text(element_name, children_data_as_text):
     # corrige entidades para evitar problema de carga
-    fixed = fix_pre_loading(children_data_as_text)
     if element_name == "body":
         return fixed
     return f"<{element_name}>{fixed}</{element_name}>"
 
 
 def get_node_from_standardized_html(element_name, children_data_as_text):
-    try:
-        hc = HTMLContent(children_data_as_text)
-        node = hc.tree.find(f".//{element_name}")
-        if node.xpath(".//*") or "".join(node.itertext()):
-            return node
-        raise ValueError("No content")
-    except Exception as e:
-        logging.exception(e)
-        logging.info(element_name)
-        logging.info(children_data_as_text)
-        return ET.fromstring(
-            f"<{element_name}>{remove_tags(children_data_as_text)}</{element_name}>"
-        )
+    hc = HTMLContent(children_data_as_text)
+    node = hc.tree.find(f".//{element_name}")
+    if node.xpath(".//*") or "".join(node.itertext()):
+        return node
+    raise ValueError("Unable to get node from html")
 
 
 def convert_html_to_xml(document):
