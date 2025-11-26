@@ -8,6 +8,8 @@ import re
 
 import plumber
 from lxml import etree as ET
+
+from scielo_classic_website.htmlbody.html_fixer import remove_tags
 from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
@@ -24,8 +26,8 @@ LABEL_INITIAL_TO_ELEMENT = {
     "t": "table-wrap",
     "f": "fig",
     "e": "disp-formula",
-    "c": "table-wrap", # cuadro
-    "a": "app", # appendix, anexo
+    "c": "table-wrap",  # cuadro
+    "a": "app",  # appendix, anexo
 }
 
 FILENAME_TO_ELEMENT = {}
@@ -45,17 +47,17 @@ def get_letter_and_number(codigo):
     Se corresponder (ex: 'f1', 'A99'), retorna a string original.
     Se não corresponder (ex: '1f', 'f1a'), retorna None.
     """
-    
+
     # Expressão Regular: r"^[a-zA-Z]\d+$"
     # ^: Início da string
     # [a-zA-Z]: Exatamente uma letra
     # \d+: Um ou mais dígitos
     # $: Fim da string
     regex = r"^[a-zA-Z]\d+$"
-    
+
     # re.fullmatch() verifica se a string inteira corresponde ao padrão
     match = re.fullmatch(regex, codigo)
-    
+
     if match:
         # Se o padrão casar com a string inteira, retorna o valor original
         return codigo
@@ -91,26 +93,42 @@ def _report(xml, func_name):
 
 
 def text_to_node(element_name, children_data_as_text):
+    if not element_name:
+        raise ValueError("element_name cannot be empty")
     if not children_data_as_text:
-        return None
+        return ET.Element(element_name)
+
+    # padroniza entidades
+    fixed_html_entities = fix_pre_loading(children_data_as_text)
     try:
-        fixed = fix_pre_loading(children_data_as_text)
-        if element_name == "body":
-            html_content = fixed
-        else:
-            html_content = f"<{element_name}>{fixed}</{element_name}>"
-        return ET.fromstring(html_content)
+        return ET.fromstring(
+            f"<{element_name}>{fixed_html_entities}</{element_name}>"
+        )
     except Exception as e:
         pass
     try:
-        hc = HTMLContent(html_content)
-        return hc.tree.find(f".//{element_name}")
+        return get_node_from_standardized_html(element_name, fixed_html_entities)
     except Exception as e:
-        logging.exception(e)
-        logging.info(element_name)
-        logging.info(children_data_as_text)
+        return ET.fromstring(
+            f"<{element_name}>{remove_tags(fixed_html_entities)}</{element_name}>"
+        )
 
-        raise Exception(f"Error: text_to_node {element_name} {children_data_as_text}")
+
+def get_node_from_standardized_html(element_name, fixed_html_entities):
+    if element_name != "body":
+        fixed_html_entities = f"<{element_name}>{fixed_html_entities}</{element_name}>"
+    try:
+        hc = HTMLContent(fixed_html_entities)
+        node = hc.tree.find(f".//{element_name}")
+        if node is None:
+            raise ValueError("Unable to get node from html")
+        if node.xpath(".//*") or "".join(node.itertext()):
+            raise ValueError("Unable to get node from html")
+        return node
+    except Exception as e:
+        raise ValueError("Unable to get node from html")
+    
+    
 
 
 def convert_html_to_xml(document):
@@ -667,12 +685,8 @@ class MainHTMLPipe(plumber.Pipe):
 
         for item in xml.xpath(".//temp[@type='mixed-citation']"):
             parent = item.getparent()
-            parent.remove(item)
-            node = text_to_node("mixed-citation", item.text)
-            if node.getchildren() and not (node.tail or "").strip():
-                node = node.find("*")
-                node.tag = "mixed-citation"
-            parent.append(node)
+            new_node = text_to_node("mixed-citation", item.text)
+            parent.replace(item, new_node)
         return data
 
 
@@ -1267,15 +1281,15 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         """
         if not label_text:
             return None
-        
+
         element_prefix = label_text[0].lower()
         if not label_number:
             return element_prefix
 
         if label_number.isdigit():
             return f"{element_prefix}{label_number}"
-        
-        if label_number[:-1].isdigit() and  label_number[-1].isalpha():
+
+        if label_number[:-1].isdigit() and label_number[-1].isalpha():
             return f"{element_prefix}{label_number[:-1]}"
         return None
 
@@ -1307,7 +1321,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         # Tables 1-3
         if not xref_text:
             return None, None
-        
+
         parts = xref_text.split()
 
         # first character of last part
@@ -1318,7 +1332,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             if len(parts) == 1:
                 return label_text, expected_number
         return parts[0], None
-    
+
     def get_element_name(self, label_text, rid, ext):
         element_name = None
         if label_text:
@@ -1327,7 +1341,17 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
         elif rid:
             element_name = FILENAME_TO_ELEMENT.get(rid[0])
         if not element_name:
-            if ext in (".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".html", ".htm"):
+            if ext in (
+                ".pdf",
+                ".doc",
+                ".docx",
+                ".xls",
+                ".xlsx",
+                ".ppt",
+                ".pptx",
+                ".html",
+                ".htm",
+            ):
                 element_name = "supplementary-material"
         if not element_name:
             element_name = "element"
@@ -1355,7 +1379,9 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             basename, ext = self._extract_filename(href)
             child.set("filebasename", basename)
 
-            label_text, label_number = self.get_label_text_and_number_from_xref_text(xref_text, label_text)
+            label_text, label_number = self.get_label_text_and_number_from_xref_text(
+                xref_text, label_text
+            )
             rid = self.get_rid_from_xref_label_and_number(label_text, label_number)
             if not rid:
                 rid = self.get_rid_from_href_and_pkg_name(href, pkg_name)
@@ -1373,7 +1399,7 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
                     found.set("filebasename", basename)
                 if not found.get("id") and not found.get("id-href") and rid:
                     found.set("id-href", rid)
-                
+
             except IndexError:
                 new_elem = ET.Element(element_name)
                 if rid:
@@ -1509,7 +1535,7 @@ class InsertGraphicInTableWrapPipe(plumber.Pipe):
         graphic = sibling.find(".//graphic")
         if graphic is None and table is None:
             return
-        
+
         elem = None
         if graphic is not None:
             node.append(deepcopy(graphic))
@@ -1517,7 +1543,7 @@ class InsertGraphicInTableWrapPipe(plumber.Pipe):
         elif table is not None:
             node.append(deepcopy(table))
             elem = table
-        
+
         if elem is not None:
             parent = elem.getparent()
             if parent is not None:
@@ -1733,6 +1759,7 @@ class ReplaceIdhrefAndRidhrefByIdPipe(plumber.Pipe):
     """
     Transforma div em table-wrap ou fig.
     """
+
     def replace_rid_href_by_id(self, node, xml):
         node_id = node.get("id")
         filebasename = node.get("filebasename")
@@ -1761,7 +1788,6 @@ class ReplaceIdhrefAndRidhrefByIdPipe(plumber.Pipe):
 
         for node in xml.xpath(".//*[not(@id) and @id-href and @filebasename]"):
             self.create_id_from_filebasename(node, xml)
-
 
         return data
 
