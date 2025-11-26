@@ -100,32 +100,35 @@ def text_to_node(element_name, children_data_as_text):
 
     # padroniza entidades
     fixed_html_entities = fix_pre_loading(children_data_as_text)
-    wrapped_text = wrap_text(element_name, fixed_html_entities)
     try:
-        return ET.fromstring(wrapped_text)
+        return ET.fromstring(
+            f"<{element_name}>{fixed_html_entities}</{element_name}>"
+        )
     except Exception as e:
         pass
     try:
-        return get_node_from_standardized_html(element_name, wrapped_text)
+        return get_node_from_standardized_html(element_name, fixed_html_entities)
     except Exception as e:
         return ET.fromstring(
-            f"<{element_name}>{remove_tags(wrapped_text)}</{element_name}>"
+            f"<{element_name}>{remove_tags(fixed_html_entities)}</{element_name}>"
         )
 
 
-def wrap_text(element_name, children_data_as_text):
-    # corrige entidades para evitar problema de carga
-    if element_name == "body":
-        return fixed
-    return f"<{element_name}>{fixed}</{element_name}>"
-
-
-def get_node_from_standardized_html(element_name, children_data_as_text):
-    hc = HTMLContent(children_data_as_text)
-    node = hc.tree.find(f".//{element_name}")
-    if node.xpath(".//*") or "".join(node.itertext()):
+def get_node_from_standardized_html(element_name, fixed_html_entities):
+    if element_name != "body":
+        fixed_html_entities = f"<{element_name}>{fixed_html_entities}</{element_name}>"
+    try:
+        hc = HTMLContent(fixed_html_entities)
+        node = hc.tree.find(f".//{element_name}")
+        if node is None:
+            raise ValueError("Unable to get node from html")
+        if node.xpath(".//*") or "".join(node.itertext()):
+            raise ValueError("Unable to get node from html")
         return node
-    raise ValueError("Unable to get node from html")
+    except Exception as e:
+        raise ValueError("Unable to get node from html")
+    
+    
 
 
 def convert_html_to_xml(document):
