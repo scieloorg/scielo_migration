@@ -4,7 +4,7 @@ import unicodedata
 from scielo_migration.scielo_classic_website.spsxml.detector_config_xref import (
     REF_TYPE_TO_ELEMENT, ID_PATTERNS, TEXT_PATTERNS, REF_TYPE_TO_ID_PREFIX
 )
-from scielo_migration.scielo_classic_website.spsxml.dectector_config_sec import SEC_TYPE_PATTERNS, COMBINED_PATTERNS
+from scielo_migration.scielo_classic_website.spsxml.detector_config_sec import SEC_TYPE_PATTERNS, COMBINED_PATTERNS
 
 
 def detect_from_id(rid: str) -> Tuple[Optional[str], Optional[str]]:
@@ -452,7 +452,8 @@ if __name__ == "__main__":
     ]
     
     for text in test_texts:
-        ref_type, element_name, rid = detect_from_text(text)
+        ref_type, element_name, prefix, number = detect_from_text(text)
+        rid = f"{prefix}{number}" if prefix and number else None
         print(f"{text:<30} → ref_type: {ref_type:<15} element: {element_name:<20} rid: {rid}")
     
     # Teste 2: Análise a partir de IDs
