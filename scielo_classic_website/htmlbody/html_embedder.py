@@ -6,8 +6,7 @@ Foco: processar HTMLs locais, corrigir âncoras/hrefs e retornar conteúdo para 
 import os
 import re
 import logging
-from typing import Optional, Set
-from urllib.parse import urlparse
+from typing import Optional
 from scielo_classic_website.htmlbody.html_body import HTMLContent
 
 
