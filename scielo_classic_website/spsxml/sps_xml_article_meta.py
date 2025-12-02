@@ -557,22 +557,42 @@ class XMLArticleMetaPermissionPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
+        licenses = self.get_licenses(raw)
+        if not licenses:
+            return data
+        
         articlemeta = xml.find("./front/article-meta")
         permissions = ET.Element("permissions")
 
-        for item in raw.license_texts.values():
+        for language, url, text in licenses:
             dlicense = ET.Element("license")
             dlicense.set("license-type", "open-access")
-            dlicense.set("{http://www.w3.org/1999/xlink}href", item["url"])
-            dlicense.set("{http://www.w3.org/XML/1998/namespace}lang", item["language"])
+            dlicense.set("{http://www.w3.org/1999/xlink}href", url)
+            dlicense.set("{http://www.w3.org/XML/1998/namespace}lang", language)
             licensep = ET.Element("license-p")
-            licensep.text = item["text"]
+            licensep.text = text
             dlicense.append(licensep)
             permissions.append(dlicense)
         articlemeta.append(permissions)
 
         return data
 
+    def get_licenses(self, raw):     
+        data = [] 
+        for item in raw.license_texts.values():
+            url = item.get("url")
+            languge = item.get("language")
+            if not languge:
+                continue
+            if not url:
+                code = (item.get("code") or "").lower()
+                if not code:
+                    continue
+                url = f"https://creativecommons.org/licenses/{code}/4.0/"
+            if not url:
+                continue
+            data.append((language, url, text))
+        return data
 
 class XMLArticleMetaSelfUriPipe(plumber.Pipe):
     """Adiciona tag `self-uri` ao article-meta do artigo.
