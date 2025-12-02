@@ -286,12 +286,14 @@ class Document:
         issue_licenses = self.issue.license_texts
         data = {}
         for language in languages:
-            item = issue_licenses.get(language) or {}
+            item = issue_licenses.get(language)
+            if not item:
+                continue
             item["code"] = license_code
             data.setdefault(language, item)
             try:
                 text = f"<root>{item['html']}</root>"
-                html = ET.fromstring()
+                html = ET.fromstring(text)
                 item["url"] = html.get("href")
                 item["text"] = "".join(html.itertext())
                 data[language] = item
