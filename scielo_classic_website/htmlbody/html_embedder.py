@@ -185,6 +185,6 @@ def get_html_to_embed(href, journal_acron_folder, file_reader, processed):
     """
     try:
         html_embedder = HTMLEmbedder(journal_acron_folder, file_reader, processed)
-        return = html_embedder.get_html_to_embed(href)
+        return html_embedder.get_html_to_embed(href)
     except Exception as e:
         logging.exception(e)
