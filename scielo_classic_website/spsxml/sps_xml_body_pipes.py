@@ -14,56 +14,8 @@ from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.spsxml.sps_xml_article_meta import XMLNormalizeSpacePipe
 from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
 from scielo_classic_website.htmlbody.name2number import fix_pre_loading
-
-
-REF_TYPES = {
-    "t": "table",
-    "f": "fig",
-    "e": "disp-formula",
-}
-
-LABEL_INITIAL_TO_ELEMENT = {
-    "t": "table-wrap",
-    "f": "fig",
-    "e": "disp-formula",
-    "c": "table-wrap",  # cuadro
-    "a": "app",  # appendix, anexo
-}
-
-FILENAME_TO_ELEMENT = {}
-FILENAME_TO_ELEMENT.update(LABEL_INITIAL_TO_ELEMENT)
-FILENAME_TO_ELEMENT["i"] = "fig"
-
-
-ELEM_AND_REF_TYPE = {
-    "table-wrap": "table",
-}
-
-
-def get_letter_and_number(codigo):
-    """
-    Verifica se a string inteira corresponde exatamente ao padrão:
-    [Letra (maiúscula/minúscula)][Um ou mais dígitos].
-    Se corresponder (ex: 'f1', 'A99'), retorna a string original.
-    Se não corresponder (ex: '1f', 'f1a'), retorna None.
-    """
-
-    # Expressão Regular: r"^[a-zA-Z]\d+$"
-    # ^: Início da string
-    # [a-zA-Z]: Exatamente uma letra
-    # \d+: Um ou mais dígitos
-    # $: Fim da string
-    regex = r"^[a-zA-Z]\d+$"
-
-    # re.fullmatch() verifica se a string inteira corresponde ao padrão
-    match = re.fullmatch(regex, codigo)
-
-    if match:
-        # Se o padrão casar com a string inteira, retorna o valor original
-        return codigo
-    else:
-        # Caso contrário, retorna None
-        return None
+from scielo_migration.scielo_classic_website.spsxml.detector import analyze_xref, detect_from_text
+from scielo_migration.scielo_classic_website.htmlbody.html_embedder import get_html_to_embed
 
 
 class XMLBodyAnBackConvertException(Exception): ...
@@ -130,7 +82,6 @@ def get_node_from_standardized_html(element_name, fixed_html_entities):
     
     
 
-
 def convert_html_to_xml(document):
     """
     document está em scielo_classic_website.models.document.Document.
@@ -138,7 +89,8 @@ def convert_html_to_xml(document):
     calls = (
         convert_html_to_xml_step_0_insert_html_in_cdata,
         convert_html_to_xml_step_1_remove_cdata,
-        convert_html_to_xml_step_2_a,
+        convert_html_to_xml_step_1_embed_html,
+        convert_html_to_xml_step_2_html_to_xml,
         convert_html_to_xml_step_2_b,
         convert_html_to_xml_step_2_c,
         convert_html_to_xml_step_3,
@@ -228,7 +180,18 @@ def convert_html_to_xml_step_1_remove_cdata(document):
     return next(transformed_data)
 
 
+def convert_html_to_xml_step_1_embed_html(document):
+    ppl = plumber.Pipeline(
+        StartPipe(),
+        MarkHTMLFileToEmbedPipe(),
+        EndPipe(),
+    )
+    transformed_data = ppl.run(document, rewrap=True)
+    return next(transformed_data)
+
+
 def convert_html_to_xml_step_2(document):
+    # SEM USO, SUBSTITUIDO POR 2_a, 2_b e 2_c
     """
     Converte o XML obtido no passo 1,
     converte as tags HTML nas XML correspondentes
@@ -277,19 +240,19 @@ def convert_html_to_xml_step_2(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_2_a(document):
+def convert_html_to_xml_step_2_html_to_xml(document):
     """
     Primeira etapa de conversão de tags HTML para XML correspondentes.
     
     Realiza conversões básicas de elementos HTML:
     - Normaliza espaços em branco
-    - Remove comentários
-    - Converte símbolos de fonte
-    - Renomeia elementos HTML para tags XML
-    - Processa listas ordenadas e não ordenadas
-    - Processa tags de cabeçalho (h1-h6)
-    - Cria tags de estilo a partir de atributos
-    - Processa links e imagens
+    - Remove comentários HTML
+    - Converte símbolos de fonte especiais
+    - Renomeia elementos HTML para tags XML apropriadas (div→sec, b→bold, etc.)
+    - Processa listas ordenadas (ol) e não ordenadas (ul)
+    - Converte tags de cabeçalho (h1-h6) em títulos
+    - Cria tags de estilo (bold, italic, sup, sub) a partir de atributos
+    - Processa elementos de estilo inline
 
     Parameters
     ----------
@@ -313,9 +276,6 @@ def convert_html_to_xml_step_2_a(document):
         TagsHPipe(),
         CreateStyleTagFromAttributePipe(),
         StylePipe(),
-        ASourcePipe(),
-        ImgSrcPipe(),
-        ANamePipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -329,8 +289,6 @@ def convert_html_to_xml_step_2_b(document):
     Processa elementos de formatação e estrutura:
     - Converte atributos 'size' em tags apropriadas (bold, title)
     - Corrige estrutura de parágrafos e quebras de linha
-    - Remove tags HTML residuais
-    - Remove tags span vazias
 
     Parameters
     ----------
@@ -376,7 +334,13 @@ def convert_html_to_xml_step_2_c(document):
     # logging.info("convert_html_to_xml - step 2_c")
     ppl = plumber.Pipeline(
         StartPipe(),
+        ASourcePipe(),
+        ImgSrcPipe(),
         AHrefPipe(),
+        XRefAssetTypeImagePipe(),
+        XRefAssetOtherTypesPipe(),
+        XRefPipe(),
+        ANamePipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -405,7 +369,6 @@ def convert_html_to_xml_step_3(document):
     # logging.info("convert_html_to_xml - step 3")
     ppl = plumber.Pipeline(
         StartPipe(),
-        XRefSpecialInternalLinkPipe(),
         InlineGraphicPipe(),
         # RemoveParentPTagOfGraphicPipe(),
         EndPipe(),
@@ -439,9 +402,6 @@ def convert_html_to_xml_step_4(document):
     # logging.info("convert_html_to_xml - step 4")
     ppl = plumber.Pipeline(
         StartPipe(),
-        ReplaceIdhrefAndRidhrefByIdPipe(),
-        DivIdToAssetPipe(),
-        XRefTypePipe(),
         InsertGraphicInFigPipe(),
         RemoveEmptyTagPipe(),
         InsertGraphicInTableWrapPipe(),
@@ -1089,6 +1049,60 @@ class ASourcePipe(plumber.Pipe):
 
 
 class AHrefPipe(plumber.Pipe):
+    """
+    Pipe para processar tags <a> em documentos XML, convertendo-as para formato SPS.
+    
+    Este pipe transforma elementos <a> do HTML em elementos apropriados do padrão SPS XML:
+    - Links de email (<a href="mailto:...">) → <email>
+    - Links internos (<a href="#id">) → <xref rid="id">
+    - Links para arquivos locais → <xref> com metadados de asset (tipo, mimetype, etc.)
+    - Links externos → <ext-link>
+    
+    O pipe identifica automaticamente o tipo de link baseado no valor do atributo href
+    e aplica a transformação apropriada, incluindo:
+    - Detecção de arquivos locais por padrão de caminho
+    - Classificação de assets por extensão (pdf, imagem, vídeo, áudio, etc.)
+    - Adição de metadados de tipo MIME
+    - Sanitização de valores href malformados
+    
+    Attributes:
+        Herda de plumber.Pipe
+    
+    Methods:
+        transform(data): Processa todos os elementos <a> no XML
+        parser_node(node, journal_acron, journal_acron_folder): Analisa e transforma um nó <a>
+        sanitize_href(node): Remove caracteres inválidos do atributo href
+        _is_local_file(href, journal_acron_folder): Verifica se href aponta para arquivo local
+        _create_ext_link(node, extlinktype): Converte para <ext-link>
+        _create_email(node): Converte para <email>
+        _create_internal_link(node): Converte para <xref> interno
+        _create_internal_link_for_asset(node): Converte para <xref> de asset com metadados
+    """
+
+    def _is_local_file(self, href: str, journal_acron_folder) -> bool:
+        """
+        Determina se um arquivo HTML é local baseado na presença de acrônimo entre barras.
+        
+        Args:
+            href: Caminho para o arquivo HTML
+            
+        Returns:
+            True se for arquivo local (contém /acrônimo/), False caso contrário
+        """
+        # Normaliza barras
+        normalized_href = href.replace('\\', '/')
+
+        if journal_acron_folder not in normalized_href:
+            return False
+        
+        # URLs absolutas não são locais
+        if normalized_href.startswith('http://') or normalized_href.startswith('https://'):
+            return False
+        
+        # Verifica padrão /acrônimo/ no caminho
+        pattern = r'.*/([a-zA-Z]+)/[^/]*\.[^/]+(?:#.*)?$'
+        return bool(re.search(pattern, normalized_href))
+    
     def _create_ext_link(self, node, extlinktype="uri"):
         node.tag = "ext-link"
         href = (node.get("href") or "").strip()
@@ -1097,9 +1111,6 @@ class AHrefPipe(plumber.Pipe):
         node.set("{http://www.w3.org/1999/xlink}href", href)
 
     def _create_email(self, node):
-        email_from_href = None
-        email_from_node_text = None
-
         node.tag = "email"
         href = (node.get("href") or "").strip()
         node.attrib.clear()
@@ -1107,85 +1118,211 @@ class AHrefPipe(plumber.Pipe):
         texts = href.replace("mailto:", "")
         for text in texts.split():
             if "@" in text:
-                email_from_href = text
-                break
+                node.text =  text
+                return
 
-        texts = (node.text or "").strip()
+        texts = " ".join(node.xpath(".//text()")).strip()
         for text in texts.split():
             if "@" in text:
-                email_from_node_text = text
-                break
-        node.text = email_from_href or email_from_node_text
+                node.text =  text
+                return
 
     def _create_internal_link(self, node):
-        node.tag = "xref"
         try:
-            xml = ET.tostring(node)
-            node.set("rid", node.attrib.pop("href")[1:].lower())
+            href = node.get("href").strip()
+            rid = href.lstrip("#")
+            if "top" in rid or "back" in rid:
+                node.set("delete", "true")
+                # nota: não remover o a[@name='top' or @name='back'] porque podem ter conteúdo
+                return
+            node.attrib.clear()
+            node.tag = "xref"
+            node.set("rid", rid)
         except (ValueError, TypeError, AttributeError, IndexError) as e:
+            xml = ET.tostring(node)
             logging.error(f"Unable to _create_internal_link for {xml}")
             logging.exception(e)
 
-    def _create_internal_link_to_asset_html_page(self, node):
+    def _create_internal_link_for_asset(self, node):
         node.tag = "xref"
-        node.set("is_internal_link_to_asset_html_page", "true")
+        href_parts = node.get("href").split("#")
+        path = href_parts[0]
+        name, ext = os.path.splitext(os.path.basename(path))
+        node.set("path", path)
+        node.set("rid", name)
+        ext = ext.lower()
+        asset_type = "other"
+        mimetype = None
+        mime_subtype = None
+        
+        if ext == ".pdf":
+            asset_type = "pdf"
+            mimetype = "application"
+            mime_subtype = "pdf"
+        elif ext in (".gif", ".jpg", ".jpeg", ".png", ".tiff", ".bmp", ".svg"):
+            asset_type = "image"
+            mimetype = "image"
+            if ext == ".gif":
+                mime_subtype = "gif"
+            elif ext in (".jpg", ".jpeg"):
+                mime_subtype = "jpeg"
+            elif ext == ".png":
+                mime_subtype = "png"
+            elif ext == ".tiff":
+                mime_subtype = "tiff"
+            elif ext == ".bmp":
+                mime_subtype = "bmp"
+            elif ext == ".svg":
+                mime_subtype = "svg+xml"
+        elif ext in (".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv"):
+            asset_type = "video"
+            mimetype = "video"
+            if ext == ".mp4":
+                mime_subtype = "mp4"
+            elif ext == ".avi":
+                mime_subtype = "x-msvideo"
+            elif ext == ".mov":
+                mime_subtype = "quicktime"
+            elif ext == ".wmv":
+                mime_subtype = "x-ms-wmv"
+            elif ext == ".flv":
+                mime_subtype = "x-flv"
+            elif ext == ".mkv":
+                mime_subtype = "x-matroska"
+        elif ext in (".mp3", ".wav", ".ogg", ".flac"):
+            asset_type = "audio"
+            mimetype = "audio"
+            if ext == ".mp3":
+                mime_subtype = "mpeg"
+            elif ext == ".wav":
+                mime_subtype = "wav"
+            elif ext == ".ogg":
+                mime_subtype = "ogg"
+            elif ext == ".flac":
+                mime_subtype = "flac"
+        elif ext in (".htm", ".html"):
+            asset_type = "html"
+            mimetype = "text"
+            mime_subtype = "html"
+            if len(href_parts) > 1:
+                node.set("anchor", href_parts[1])
+        elif ext in (".xls", ".xlsx", ".xlsm"):
+            asset_type = "spreadsheet"
+            mimetype = "application"
+            if ext == ".xls":
+                mime_subtype = "vnd.ms-excel"
+            elif ext in (".xlsx", ".xlsm"):
+                mime_subtype = "vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        elif ext in (".doc", ".docx"):
+            asset_type = "document"
+            mimetype = "application"
+            if ext == ".doc":
+                mime_subtype = "msword"
+            elif ext == ".docx":
+                mime_subtype = "vnd.openxmlformats-officedocument.wordprocessingml.document"
+        elif ext in (".ppt", ".pptx"):
+            asset_type = "presentation"
+            mimetype = "application"
+            if ext == ".ppt":
+                mime_subtype = "vnd.ms-powerpoint"
+            elif ext == ".pptx":
+                mime_subtype = "vnd.openxmlformats-officedocument.presentationml.presentation"
+        elif ext in (".zip", ".rar", ".7z", ".tar", ".gz"):
+            asset_type = "compressed"
+            mimetype = "application"
+            if ext == ".zip":
+                mime_subtype = "zip"
+            elif ext == ".rar":
+                mime_subtype = "x-rar-compressed"
+            elif ext == ".7z":
+                mime_subtype = "x-7z-compressed"
+            elif ext in (".tar", ".gz"):
+                mime_subtype = "x-tar"
+        
+        node.set("asset_type", asset_type)
+        if mimetype:
+            node.set("mimetype", mimetype)
+        if mime_subtype:
+            node.set("mime-subtype", mime_subtype)
 
-    def parser_node(self, node, journal_acron):
-        href = node.get("href") or ""
-        if href.count('"') == 2:
-            node.set("href", href.replace('"', ""))
-
-        node.set("href", (node.get("href") or "").strip())
-        href = node.get("href")
-
+    def parser_node(self, node, journal_acron, journal_acron_folder):
+        href = self.sanitize_href(node)
         if not href:
             return
-
-        if ("mailto" in href) or (node.text and "@" in node.text):
+        text = " ".join(node.xpath(".//text()")).strip()
+        if ("mailto" in href) or ("@" in href) or (text and "@" in text):
+            # email
             return self._create_email(node)
 
         if href[0] == "#":
+            # xref interno
             return self._create_internal_link(node)
 
-        if "img/revistas/" in href or ".." in href:
-            return self._create_internal_link_to_asset_html_page(node)
+        if self._is_local_file(href, journal_acron or ""):
+            # xref para asset interno
+            return self._create_internal_link_for_asset(node)
+        
+        if journal_acron_folder and journal_acron_folder in href.lower():
+            # xref para asset interno
+            return self._create_internal_link_for_asset(node)
 
-        if journal_acron and journal_acron in href.lower():
-            return self._create_internal_link_to_asset_html_page(node)
+        if "img/revistas/" in href or ".." in href:
+            # xref para asset interno
+            return self._create_internal_link_for_asset(node)
 
         if ":" in href:
+            # ext-link
             return self._create_ext_link(node)
         if "www" in href:
+            # ext-link
             return self._create_ext_link(node)
         if href.startswith("http"):
+            # ext-link
             return self._create_ext_link(node)
         href = href.split("/")[0]
         if href and href.count(".") and href.replace(".", ""):
+            # ext-link
             return self._create_ext_link(node)
+
+    def sanitize_href(self, node):
+        href = (node.get("href") or "").strip()
+        if href.count('"') == 2:
+            href = href.replace('"', "")
+            node.set("href", href)
+        return href
 
     def transform(self, data):
         raw, xml = data
         journal_acron = raw.journal and raw.journal.acronym
-        if journal_acron:
-            journal_acron = f"/{journal_acron}/"
+        journal_acron_folder = f"/{journal_acron}/" if journal_acron else ""
         for node in xml.xpath(".//a[@href]"):
-            self.parser_node(node, journal_acron)
+            self.parser_node(node, journal_acron, journal_acron_folder)
+        delete_tags(xml)
         return data
 
 
 class ANamePipe(plumber.Pipe):
-    def remove_top_and_back(self, root):
+    """
+    Pipe para processar tags <a name="..."> em documentos XML:    
+    - Remoção de âncoras especiais 'top' e 'back' quando vazias
+    - Eliminação de âncoras duplicadas (múltiplas ocorrências do mesmo 'name')
+    - Conversão de <a name="id"> para elemento genérico com atributo id
+    """
 
+    def remove_top_and_back(self, root):
         for node in root.xpath(".//a[@name]"):
             name = node.get("name")
             if name.startswith("top") or name.startswith("back"):
+                node.set("id", name)
+                if (node.tail or "").strip():
+                    continue
+                if node.getchildren():
+                    continue
+                text = " ".join(node.xpath(".//text()")).strip()
+                if text:
+                    continue
                 node.set("delete", "true")
-                for ahref in root.xpath(f".//a[@href='#{name}']"):
-                    ahref.set("delete", "true")
         delete_tags(root)
-        # else:
-        #     node.tag = "div"
-        #     node.set("id", node.attrib.pop("name"))
 
     def remove_multiplicity(self, root):
         items = []
@@ -1199,12 +1336,10 @@ class ANamePipe(plumber.Pipe):
 
     def transform(self, data):
         raw, xml = data
-
         self.remove_top_and_back(xml)
         self.remove_multiplicity(xml)
-
         for node in xml.xpath(".//a[@name]"):
-            node.tag = "div"
+            node.tag = "element"
             node.set("id", node.attrib.pop("name"))
         return data
 
@@ -1223,101 +1358,121 @@ class ImgSrcPipe(plumber.Pipe):
         return data
 
 
-class XRefTypePipe(plumber.Pipe):
+class XRefPipe(plumber.Pipe):
+    """
+    Processa elementos xref, identificando e configurando ref-type apropriado
+    e atualizando tags de elementos referenciados e
+    atributo 'name' é substituído por 'id'
 
-    def parser_node(self, node, xml):
+    Exemplos de transformações:
+    - <xref rid="fn1">Footnote 1</xref> → adiciona ref-type="fn"
+    - <xref rid="aff01">Author affiliation</xref> → adiciona ref-type="aff"
+    - <xref rid="B1">Reference 1</xref> → adiciona ref-type="bibr"
+    - <xref rid="corresp">*</xref> → adiciona ref-type="corresp"
+    
+    Atualiza tags e atributos de elementos referenciados:
+    - <a name="fn1">...</a> → <fn id="fn1">...</fn>
+    - <a name="aff01">...</a> → <aff id="aff01">...</aff>
+    
+    """
+    def add_reftype(self, node, xml):
         rid = node.get("rid")
         if not rid:
-            logging.warning("Missing rid: {}".format(ET.tostring(node)))
             return
-
-        related = xml.find(f".//*[@id='{rid}']")
-        if related is None:
-            logging.warning("Missing id={}".format(rid))
+        text = " ".join(node.xpath(".//text()")).strip()
+        if not text:
             return
+        if "corresp" in rid:
+            result = {"ref_type": "corresp", "element_name": "corresp"}
+        else:
+            result = analyze_xref(text, rid)
+        if ref_type := result.get("ref_type"):
+            node.set("ref-type", ref_type)            
+        element_name = result.get("element_name")
+        if element_name:
+            for elem in xml.xpath(f".//*[@name='{rid}']"):
+                elem.tag = element_name
+                elem.set("id", rid)
+                elem.attrib.pop("name", None)
+            
+    def handle_special_xref_reftypes(self, xml, ref_type):
+        xrefs = xml.xpath(f".//xref[@ref-type='{ref_type}']")
+        if not xrefs:
+            return
+        for xref in xrefs:
+            self.discover_reftype_and_element_name(xml, xref)
 
-        node.set("ref-type", ELEM_AND_REF_TYPE.get(related.tag) or related.tag)
+    def discover_reftype_and_element_name(self, xml, xref):
+        rid = xref.get("rid")
+        node_ref_type = None
+        if xref.get("ref-type") == "number":
+            items = (
+                (".//ref-list", "ref", "bibr"),
+                (".//back", "fn", "fn"),
+                (".//body", "aff", "aff"),
+            )
+        else:
+            items = (
+                (".//back", "fn", "fn"),
+                (".//body", "aff", "aff"),
+            )
+        for xpath, tag, reftype in items:
+            for root in xml.xpath(xpath):
+                for elem in root.xpath(f".//*[@name='{rid}']"):
+                    elem.tag = tag
+                    elem.set("id", rid)
+                    elem.attrib.pop("name", None)
+                    node_ref_type = reftype
+                    break
+            if node_ref_type:
+                xref.set("ref-type", node_ref_type)
+                return
 
     def transform(self, data):
         raw, xml = data
-        for xref in xml.xpath(".//xref"):
-            if xref.get("ref-type"):
-                continue
-            self.parser_node(xref, xml)
+        for xref in xml.xpath(".//xref[not(@ref-type)]"):
+            self.add_reftype(xref, xml)
+        self.handle_special_xref_reftypes(xml, "number")
+        self.handle_special_xref_reftypes(xml, "symbol")
+        self.handle_special_xref_reftypes(xml, "letter")
         return data
 
 
-class XRefSpecialInternalLinkPipe(plumber.Pipe):
-
+class XRefAssetTypeImagePipe(plumber.Pipe):
+    """
+    Processa xrefs do tipo asset_type='image'.
+    Cria elementos (fig, table-wrap, disp-formula, ...) a partir dos xrefs do tipo image.
+    """
     def transform(self, data):
         raw, xml = data
-
-        if not xml.xpath(".//xref[@is_internal_link_to_asset_html_page]"):
+        if not xml.xpath(".//xref[@asset_type='image']"):
             return data
-
-        for xref_parent in xml.xpath(".//*[xref]"):
-            if xref_parent.xpath("xref[@is_internal_link_to_asset_html_page]"):
-                self.parser_xref_parent(
-                    xref_parent,
-                    xml,
-                    raw.filename_without_extension,
-                )
+        self.find_parents(xml)
+        for xref_parent in xml.xpath(".//*[@xref-parent='true']"):
+            self.process_parent(raw, xml, xref_parent)
         _report(xml, func_name=type(self))
         return data
+    
+    def find_parents(self, xml):
+        for xref in xml.xpath(".//xref[@asset_type='image']"):
+            parent = xref.getparent()
+            parent.set("xref-parent", "true")
+
+    def process_parent(self, raw, xml, xref_parent):
+        new_elements = self.get_elements_to_create(
+            xref_parent,
+            xml,
+            raw.filename_without_extension,
+        )
+        for new_element in new_elements:
+            node = ET.Element("p")
+            node.append(new_element)
+            xref_parent.addnext(node)
 
     def _extract_xref_text(self, xref_element):
         return " ".join(xref_element.xpath(".//text()")).strip()
 
-    def get_rid_from_xref_label_and_number(self, label_text, label_number):
-        """
-        Gera o rid a partir do label_text e label_number.
-
-        Args:
-            label_text: Texto do label (e.g., 'Table', 'Figure')
-            label_number: Número do label (e.g., '1', '2')
-
-        Returns:
-            String com o rid ou None
-        """
-        if not label_text:
-            return None
-
-        element_prefix = label_text[0].lower()
-        if not label_number:
-            return element_prefix
-
-        if label_number.isdigit():
-            return f"{element_prefix}{label_number}"
-
-        if label_number[:-1].isdigit() and label_number[-1].isalpha():
-            return f"{element_prefix}{label_number[:-1]}"
-        return None
-
-    def get_rid_from_href_and_pkg_name(self, href, pkg_name):
-        """
-        Extrai o rid a partir do href e nome do pacote.
-
-        Args:
-            href: String com o caminho href
-            pkg_name: Nome do pacote
-
-        Returns:
-            String com o rid ou None
-        """
-        basename = os.path.basename(href)
-        filename, _ = os.path.splitext(basename)
-        if filename.startswith(pkg_name):
-            filename = filename.replace(pkg_name, "")
-            if not filename:
-                return None
-        return get_letter_and_number(filename)
-
-    def _extract_filename(self, href):
-        basename = os.path.basename(href)
-        filename, ext = os.path.splitext(basename)
-        return filename, ext
-
-    def get_label_text_and_number_from_xref_text(self, xref_text, label_text):
+    def get_label_text_and_number_from_xref_text(self, xref_text, previous_label_text):
         # Tables 1-3
         if not xref_text:
             return None, None
@@ -1330,100 +1485,67 @@ class XRefSpecialInternalLinkPipe(plumber.Pipe):
             if len(parts) == 2:
                 return parts[0], expected_number
             if len(parts) == 1:
-                return label_text, expected_number
+                return previous_label_text, expected_number
         return parts[0], None
 
-    def get_element_name(self, label_text, rid, ext):
-        element_name = None
-        if label_text:
-            label_initial = label_text[0].lower()
-            element_name = LABEL_INITIAL_TO_ELEMENT.get(label_initial)
-        elif rid:
-            element_name = FILENAME_TO_ELEMENT.get(rid[0])
-        if not element_name:
-            if ext in (
-                ".pdf",
-                ".doc",
-                ".docx",
-                ".xls",
-                ".xlsx",
-                ".ppt",
-                ".pptx",
-                ".html",
-                ".htm",
-            ):
-                element_name = "supplementary-material"
-        if not element_name:
-            element_name = "element"
-        return element_name
-
-    def parser_xref_parent(self, xref_parent, root, pkg_name):
+    def get_elements_to_create(self, xref_parent, xml, pkg_name):
         label_text = None
         children = []
 
+        # navega pelos xref dentro do xref_parent
+        # trata casos como <xref>Table 1</xref> and <xref>2</xref>
         for child in xref_parent.xpath(
-            "xref[@is_internal_link_to_asset_html_page and @href]"
+            "xref[@asset_type='image' and @path]"
         ):
-
+            # guarda label_text anterior (Table)
+            previous_label_text = label_text
             # Table 1
             xref_text = self._extract_xref_text(child)
             if not xref_text:
-                logging.error("XRefSpecialInternalLinkPipe - no xref_text found")
+                logging.error("XRefAssetTypeImagePipe - no xref_text found")
                 continue
-            try:
-                href = child.attrib.pop("href")
-            except KeyError:
-                logging.error("XRefSpecialInternalLinkPipe - no href found")
-                continue
-
-            basename, ext = self._extract_filename(href)
-            child.set("filebasename", basename)
-
             label_text, label_number = self.get_label_text_and_number_from_xref_text(
-                xref_text, label_text
+                xref_text, previous_label_text
             )
-            rid = self.get_rid_from_xref_label_and_number(label_text, label_number)
-            if not rid:
-                rid = self.get_rid_from_href_and_pkg_name(href, pkg_name)
-            if rid:
-                child.set("rid-href", rid)
+            label = " ".join([item.strip() for item in [label_text, label_number] if item and item.strip()])
+            if not label:
+                logging.error("XRefAssetTypeImagePipe - no label found")
+                continue
+            ref_type, element_name, prefix, number = detect_from_text(label)
+            if ref_type:
+                child.set("ref-type", ref_type)
+            
+            # verifica se já existe o elemento referenciado por xref
+            # cria se não existir e completa os atributos            
+            path = child.get("path")
+            rid = child.get("rid")
+            xpath = f"//*[@id='{rid}' or @name='{rid}' or @path='{path}']"
 
-            element_name = self.get_element_name(label_text, rid, ext)
-            child.set("ref-type", ELEM_AND_REF_TYPE.get(element_name) or element_name)
-            try:
-                xpath = f"//*[@filebasename='{basename}']"
-                if rid:
-                    xpath = f"//*[@id='{rid}' | @filebasename='{basename}']"
-                found = root.xpath(xpath)[0]
-                if not found.get("filebasename"):
-                    found.set("filebasename", basename)
-                if not found.get("id") and not found.get("id-href") and rid:
-                    found.set("id-href", rid)
-
+            try:        
+                element = xml.xpath(xpath)[0]
+                element.set("id", rid)
             except IndexError:
                 new_elem = ET.Element(element_name)
-                if rid:
-                    new_elem.set("id-href", rid)
-                new_elem.set("filebasename", basename)
+                new_elem.set("id", rid)
+                new_elem.set("path", path)
 
                 elem_label = ET.Element("label")
                 new_elem.append(elem_label)
-                elem_label.text = xref_text
+                elem_label.text = label
 
                 g = ET.Element("graphic")
-                g.set("{http://www.w3.org/1999/xlink}href", href)
+                g.set("{http://www.w3.org/1999/xlink}href", path)
 
                 new_elem.append(g)
                 children.append(new_elem)
 
-            child.attrib.pop("is_internal_link_to_asset_html_page")
+            child.attrib.pop("asset_type")
+
+        if not children:
+            return []
 
         # Sort children by rid before inserting
-        children_sorted = sorted(children, key=lambda x: x.get("filebasename"))
-        for child in children_sorted:
-            node = ET.Element(xref_parent.tag)
-            node.append(child)
-            xref_parent.addnext(node)
+        return reversed(sorted(children, key=lambda x: x.get("filebasename")))
 
 
 class InsertGraphicInFigPipe(plumber.Pipe):
@@ -1729,66 +1851,6 @@ class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
         raw, xml = data
         _process(xml, "p[graphic]", self.parser_node)
         _report(xml, func_name=type(self))
-        return data
-
-
-class DivIdToAssetPipe(plumber.Pipe):
-    """
-    Transforma div em table-wrap ou fig.
-    """
-
-    def parser_node(self, node):
-        attrib_id = node.get("id")
-        if not attrib_id or "top" in attrib_id or "back" in attrib_id:
-            return
-        if attrib_id.startswith("t"):
-            node.tag = "table-wrap"
-        elif attrib_id.startswith("f"):
-            node.tag = "fig"
-        elif attrib_id.startswith("e"):
-            node.tag = "disp-formula"
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "div[@id]", self.parser_node)
-        _report(xml, func_name=type(self))
-        return data
-
-
-class ReplaceIdhrefAndRidhrefByIdPipe(plumber.Pipe):
-    """
-    Transforma div em table-wrap ou fig.
-    """
-
-    def replace_rid_href_by_id(self, node, xml):
-        node_id = node.get("id")
-        filebasename = node.get("filebasename")
-        for xref in xml.xpath(f".//*[@rid and @filebasename='{filebasename}']"):
-            xref.set("rid", node_id)
-            xref.attrib.pop("rid-href", None)
-            xref.attrib.pop("filebasename", None)
-        node.attrib.pop("filebasename", None)
-        node.attrib.pop("id-href", None)
-
-    def create_rid_from_filebasename(self, node, rid=None):
-        node.set("rid", node.attrib.pop("filebasename"))
-        node.attrib.pop("rid-href", None)
-
-    def create_id_from_filebasename(self, node, xml):
-        node.set("id", node.attrib.pop("filebasename"))
-        node.attrib.pop("rid-href", None)
-
-    def transform(self, data):
-        raw, xml = data
-        for node in xml.xpath(".//*[@filebasename and @id]"):
-            self.replace_rid_href_by_id(node, xml)
-
-        for node in xml.xpath(".//*[not(@rid) and @rid-href and @filebasename]"):
-            self.create_rid_from_filebasename(node, xml)
-
-        for node in xml.xpath(".//*[not(@id) and @id-href and @filebasename]"):
-            self.create_id_from_filebasename(node, xml)
-
         return data
 
 
@@ -2248,3 +2310,181 @@ class CompleteDispFormulaPipe(plumber.Pipe):
             self.wrap_graphic_in_disp_formula(disp_formula_id, item.find("graphic"))
 
         return raw, xml
+
+
+class XRefAssetOtherTypesPipe(plumber.Pipe):
+    """
+    Processa xrefs com asset_type='pdf' ou asset_type='other' para anexos e materiais suplementares.
+    Converte os xrefs em elementos supplementary-material apropriados.
+    """
+    
+    def _extract_file_info(self, href):
+        """Extrai informações básicas do arquivo."""
+        name = os.path.basename(href)
+        _, ext = os.path.splitext(name)
+        return name, ext
+
+    def _create_asset_element(self, xref, element_name, name, text):
+        """Cria o elemento de asset com atributos apropriados.
+        <media mimetype="application" mime-subtype="pdf" xlink:href="1234-5678-scie-58-e1043-md3.pdf"/>
+        """
+        new_node = ET.Element(element_name or "sec")
+        new_node.set("id", name)
+
+        label = ET.Element("label")
+        label.text = text
+
+        sub_node = ET.Element("media")
+        sub_node.set("mimetype", xref.get("mimetype"))
+        sub_node.set("mime-subtype", xref.get("mime-subtype"))
+        sub_node.set("{http://www.w3.org/1999/xlink}href", xref.get("path"))
+
+        new_node.append(label)
+        new_node.append(sub_node)
+        
+        return new_node
+    
+    def transform(self, data):
+        raw, xml = data
+        
+        processed = set()
+        
+        for xref in xml.xpath(".//xref[@asset_type!='image']"):
+            href = xref.get('href')
+            if not href:
+                continue
+            
+            try:
+                name, ext = self._extract_file_info(href)
+                text = "".join(xref.xpath(".//text()")).strip()
+                
+                xref.set("rid", name)
+                element_name = None
+                if text:
+                    ref_type, element_name, prefix, number = detect_from_text(text)
+                    if ref_type:
+                        xref.set("ref-type", ref_type)
+
+                if href in processed:
+                    # elemento "asset" já foi criado
+                    continue
+                parent = xref.getparent()
+                if parent is None:
+                    continue
+                new_node = self._create_asset_element(xref, element_name, name, text)
+                parent.addnext(new_node)
+                processed.add(href)
+            except Exception as e:
+                logging.error(f"Erro ao processar asset {href}: {e}")
+        
+        _report(xml, func_name=type(self))
+        return data
+
+
+class MarkHTMLFileToEmbedPipe(plumber.Pipe):
+    """
+    Marca xrefs com ... que são arquivos HTML locais para serem embedados."""
+    def _is_local_html_file(self, href: str, journal_acron_folder) -> bool:
+        """
+        Determina se um arquivo HTML é local baseado na presença de acrônimo entre barras.
+        
+        Args:
+            href: Caminho para o arquivo HTML
+            
+        Returns:
+            True se for arquivo local (contém /acrônimo/), False caso contrário
+        """
+        # Normaliza barras
+        normalized_href = href.replace('\\', '/')
+
+        if journal_acron_folder not in normalized_href:
+            return False
+        
+        # URLs absolutas não são locais
+        if normalized_href.startswith('http://') or normalized_href.startswith('https://'):
+            return False
+        
+        # Verifica padrão /acrônimo/ no caminho
+        pattern = r'.*/([a-zA-Z]+)/[^/]*\.html?(?:#.*)?$'
+        return bool(re.search(pattern, normalized_href))
+         
+    def get_anchor_prefix_and_name_from_href(self, href: str) -> tuple[str, str, str, str]:
+        """
+        Extrai o nome da âncora do href.
+        
+        Args:
+            href: Caminho para o arquivo HTML
+            
+        Returns:
+            Tuple containing (new_anchor_prefix, anchor, new_name, new_href)
+        """
+        parts = href.split("#")
+        path = parts[0]
+        anchor = ""
+        if len(parts) > 1:
+            anchor = parts[-1]
+        new_anchor_prefix, _ = os.path.splitext(os.path.basename(path))
+        new_name = f"{new_anchor_prefix}{anchor}"
+        new_href = f"#{new_name}"
+        return new_anchor_prefix, anchor, new_name, new_href
+    
+    def transform(self, data):
+        raw, xml = data
+
+        journal_acron = raw.journal and raw.journal.acronym
+        if not journal_acron:
+            return data
+        journal_acron_folder = f"/{journal_acron}/"
+
+        # Processa xrefs com asset_type='html'
+        done_list = set()
+        for a_href in xml.xpath(".//a[@href]"):
+            href = (a_href.get("href") or "").strip()
+            if not self._is_local_html_file(href, journal_acron_folder):
+                logging.info(f"HTML não é local: {href}")
+                continue
+            new_anchor_prefix, anchor, new_name, new_href = self.get_anchor_prefix_and_name_from_href(href)
+            self.update_anchor_attributes(a_href, href, anchor, new_href)
+            if new_anchor_prefix in done_list:
+                logging.info(f"HTML local já processado: {href}")
+                continue
+            
+            try:
+                # TODO: reativar processamento do HTML embedado
+                # self.embed_html(a_href, href, journal_acron_folder, raw.file_reader, done_list, new_name)
+                done_list.add(new_anchor_prefix)                   
+            except Exception as e:
+                logging.error(f"Erro ao processar HTML local {href}: {e}")
+        
+        _report(xml, func_name=type(self))
+        return data
+
+    def update_anchor_attributes(self, a_href, href, anchor, new_href):
+        a_href.tag = "xref"
+        if anchor:
+            a_href.set("path", href.split("#")[0])
+            a_href.set("anchor", anchor)
+        else:
+            a_href.set("path", href)
+        a_href.set("new-href", new_href)
+        a_href.set("asset_type", "html")
+
+    def embed_html(self, a_href, path, journal_acron_folder, file_reader, done_list, new_name):
+        
+        # Navega e processa o HTML local recursivamente
+        corrected_html = get_html_to_embed(path, journal_acron_folder, file_reader, done_list)
+        
+        if not corrected_html:
+            logging.warning(f"Não foi possível processar HTML: {path}")
+            return False
+
+        corrected_html.set("name", new_name)
+
+        # Cria elemento para o conteúdo embedado
+        parent = a_href.getparent()
+        if parent is None:
+            return False
+
+        # Cria wrapper com conteúdo corrigido
+        parent.addnext(corrected_html)
+        return True
