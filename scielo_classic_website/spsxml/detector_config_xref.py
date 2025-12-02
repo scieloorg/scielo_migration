@@ -569,3 +569,167 @@ ID_PATTERNS = {
     r"^list\d+": "list",
     r"^contrib\d+": "contrib",
 }
+
+
+ASSET_TYPE_CONFIG = {
+    ".pdf": {
+        "asset_type": "pdf",
+        "mimetype": "application",
+        "mime_subtype": "pdf"
+    },
+    ".gif": {
+        "asset_type": "image",
+        "mimetype": "image",
+        "mime_subtype": "gif"
+    },
+    ".jpg": {
+        "asset_type": "image",
+        "mimetype": "image",
+        "mime_subtype": "jpeg"
+    },
+    ".jpeg": {
+        "asset_type": "image",
+        "mimetype": "image",
+        "mime_subtype": "jpeg"
+    },
+    ".png": {
+        "asset_type": "image",
+        "mimetype": "image",
+        "mime_subtype": "png"
+    },
+    ".tiff": {
+        "asset_type": "image",
+        "mimetype": "image",
+        "mime_subtype": "tiff"
+    },
+    ".bmp": {
+        "asset_type": "image",
+        "mimetype": "image",
+        "mime_subtype": "bmp"
+    },
+    ".svg": {
+        "asset_type": "image",
+        "mimetype": "image",
+        "mime_subtype": "svg+xml"
+    },
+    ".mp4": {
+        "asset_type": "video",
+        "mimetype": "video",
+        "mime_subtype": "mp4"
+    },
+    ".avi": {
+        "asset_type": "video",
+        "mimetype": "video",
+        "mime_subtype": "x-msvideo"
+    },
+    ".mov": {
+        "asset_type": "video",
+        "mimetype": "video",
+        "mime_subtype": "quicktime"
+    },
+    ".wmv": {
+        "asset_type": "video",
+        "mimetype": "video",
+        "mime_subtype": "x-ms-wmv"
+    },
+    ".flv": {
+        "asset_type": "video",
+        "mimetype": "video",
+        "mime_subtype": "x-flv"
+    },
+    ".mkv": {
+        "asset_type": "video",
+        "mimetype": "video",
+        "mime_subtype": "x-matroska"
+    },
+    ".mp3": {
+        "asset_type": "audio",
+        "mimetype": "audio",
+        "mime_subtype": "mpeg"
+    },
+    ".wav": {
+        "asset_type": "audio",
+        "mimetype": "audio",
+        "mime_subtype": "wav"
+    },
+    ".ogg": {
+        "asset_type": "audio",
+        "mimetype": "audio",
+        "mime_subtype": "ogg"
+    },
+    ".flac": {
+        "asset_type": "audio",
+        "mimetype": "audio",
+        "mime_subtype": "flac"
+    },
+    ".htm": {
+        "asset_type": "html",
+        "mimetype": "text",
+        "mime_subtype": "html"
+    },
+    ".html": {
+        "asset_type": "html",
+        "mimetype": "text",
+        "mime_subtype": "html"
+    },
+    ".xls": {
+        "asset_type": "spreadsheet",
+        "mimetype": "application",
+        "mime_subtype": "vnd.ms-excel"
+    },
+    ".xlsx": {
+        "asset_type": "spreadsheet",
+        "mimetype": "application",
+        "mime_subtype": "vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    ".xlsm": {
+        "asset_type": "spreadsheet",
+        "mimetype": "application",
+        "mime_subtype": "vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    ".doc": {
+        "asset_type": "document",
+        "mimetype": "application",
+        "mime_subtype": "msword"
+    },
+    ".docx": {
+        "asset_type": "document",
+        "mimetype": "application",
+        "mime_subtype": "vnd.openxmlformats-officedocument.wordprocessingml.document"
+    },
+    ".ppt": {
+        "asset_type": "presentation",
+        "mimetype": "application",
+        "mime_subtype": "vnd.ms-powerpoint"
+    },
+    ".pptx": {
+        "asset_type": "presentation",
+        "mimetype": "application",
+        "mime_subtype": "vnd.openxmlformats-officedocument.presentationml.presentation"
+    },
+    ".zip": {
+        "asset_type": "compressed",
+        "mimetype": "application",
+        "mime_subtype": "zip"
+    },
+    ".rar": {
+        "asset_type": "compressed",
+        "mimetype": "application",
+        "mime_subtype": "x-rar-compressed"
+    },
+    ".7z": {
+        "asset_type": "compressed",
+        "mimetype": "application",
+        "mime_subtype": "x-7z-compressed"
+    },
+    ".tar": {
+        "asset_type": "compressed",
+        "mimetype": "application",
+        "mime_subtype": "x-tar"
+    },
+    ".gz": {
+        "asset_type": "compressed",
+        "mimetype": "application",
+        "mime_subtype": "x-tar"
+    }
+}
