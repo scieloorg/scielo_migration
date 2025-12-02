@@ -1,13 +1,13 @@
 import re
 from typing import Dict, Optional, Tuple, List
 import unicodedata
-from scielo_migration.scielo_classic_website.spsxml.detector_config_xref import (
+from scielo_classic_website.spsxml.detector_config_xref import (
     REF_TYPE_TO_ELEMENT,
     ID_PATTERNS,
     TEXT_PATTERNS,
     REF_TYPE_TO_ID_PREFIX,
 )
-from scielo_migration.scielo_classic_website.spsxml.detector_config_sec import (
+from scielo_classic_website.spsxml.detector_config_sec import (
     SEC_TYPE_PATTERNS,
     COMBINED_PATTERNS,
 )
