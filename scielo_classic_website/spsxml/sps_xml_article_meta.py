@@ -550,30 +550,46 @@ class XMLArticleMetaPermissionPipe(plumber.Pipe):
     def precond(data):
         raw, xml = data
 
-        if not raw.permissions:
+        if not raw.license_texts:
             raise plumber.UnmetPrecondition()
 
     @plumber.precondition(precond)
     def transform(self, data):
         raw, xml = data
 
+        licenses = self.get_licenses(raw)
+        if not licenses:
+            return data
+        
         articlemeta = xml.find("./front/article-meta")
-
         permissions = ET.Element("permissions")
-        dlicense = ET.Element("license")
-        dlicense.set("license-type", "open-access")
-        dlicense.set("{http://www.w3.org/1999/xlink}href", raw.permissions["url"])
-        dlicense.set("{http://www.w3.org/XML/1998/namespace}lang", "en")
 
-        licensep = ET.Element("license-p")
-        licensep.text = raw.permissions["text"]
-
-        dlicense.append(licensep)
-        permissions.append(dlicense)
+        for language, url, text in licenses:
+            dlicense = ET.Element("license")
+            dlicense.set("license-type", "open-access")
+            dlicense.set("{http://www.w3.org/1999/xlink}href", url)
+            dlicense.set("{http://www.w3.org/XML/1998/namespace}lang", language)
+            licensep = ET.Element("license-p")
+            licensep.text = text
+            dlicense.append(licensep)
+            permissions.append(dlicense)
         articlemeta.append(permissions)
 
         return data
 
+    def get_licenses(self, raw):     
+        data = [] 
+        for language, item in raw.license_texts.items():
+            url = item.get("url")
+            if not url:
+                code = (item.get("code") or "").lower()
+                if not code:
+                    continue
+                url = f"https://creativecommons.org/licenses/{code}/4.0/"
+            if not url:
+                continue
+            data.append((language, url, item.get("text")))
+        return data
 
 class XMLArticleMetaSelfUriPipe(plumber.Pipe):
     """Adiciona tag `self-uri` ao article-meta do artigo.

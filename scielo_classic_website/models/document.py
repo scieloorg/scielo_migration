@@ -1,6 +1,8 @@
 import logging
 from functools import cached_property
 
+from lxml import etree as ET
+
 from scielo_classic_website.htmlbody.html_body import BodyFromISIS
 from scielo_classic_website.isisdb.c_record import ReferenceRecord
 from scielo_classic_website.isisdb.h_record import DocumentRecord
@@ -269,8 +271,35 @@ class Document:
 
     @property
     def permissions(self):
-        # FIXME
-        return {"url": "", "text": ""}
+        return self.get_license("en")
+
+    def get_license(self, language):
+        try:
+            return self.license_texts[language]
+        except KeyError:
+            return None
+
+    @property
+    def license_texts(self):
+        languages = ("en", "es", "pt")
+        license_code = self.h_record.license_code
+        issue_licenses = self.issue.license_texts
+        data = {}
+        for language in languages:
+            item = issue_licenses.get(language)
+            if not item:
+                continue
+            item["code"] = license_code
+            data.setdefault(language, item)
+            try:
+                text = f"<root>{item['html']}</root>"
+                html = ET.fromstring(text)
+                item["url"] = html.get("href")
+                item["text"] = "".join(html.itertext())
+                data[language] = item
+            except Exception as e:
+                logging.exception(e)
+        return data
 
     @property
     def authors_with_aff(self):
