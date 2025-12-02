@@ -2369,13 +2369,13 @@ class XRefAssetOtherTypesPipe(plumber.Pipe):
 
         processed = set()
 
-        for xref in xml.xpath(".//xref[@asset_type!='image']"):
-            href = xref.get("href")
-            if not href:
+        for xref in xml.xpath(".//xref[@asset_type and @asset_type!='image']"):
+            path = xref.get("path")
+            if not path:
                 continue
 
             try:
-                name, ext = self._extract_file_info(href)
+                name, ext = self._extract_file_info(path)
                 text = "".join(xref.xpath(".//text()")).strip()
 
                 xref.set("rid", name)
@@ -2385,7 +2385,7 @@ class XRefAssetOtherTypesPipe(plumber.Pipe):
                     if ref_type:
                         xref.set("ref-type", ref_type)
 
-                if href in processed:
+                if path in processed:
                     # elemento "asset" já foi criado
                     continue
                 parent = xref.getparent()
@@ -2393,9 +2393,9 @@ class XRefAssetOtherTypesPipe(plumber.Pipe):
                     continue
                 new_node = self._create_asset_element(xref, element_name, name, text)
                 parent.addnext(new_node)
-                processed.add(href)
+                processed.add(path)
             except Exception as e:
-                logging.error(f"Erro ao processar asset {href}: {e}")
+                logging.error(f"Erro ao processar asset {path}: {e}")
 
         _report(xml, func_name=type(self))
         return data
