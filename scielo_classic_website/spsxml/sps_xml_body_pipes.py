@@ -3,7 +3,6 @@ import sys
 import logging
 import os
 from copy import deepcopy
-from io import StringIO
 import re
 
 import plumber
@@ -20,6 +19,9 @@ from scielo_migration.scielo_classic_website.spsxml.detector import (
 )
 from scielo_migration.scielo_classic_website.htmlbody.html_embedder import (
     get_html_to_embed,
+)
+from scielo_migration.scielo_classic_website.spsxml.detector_config_xref import (
+    ASSET_TYPE_CONFIG,
 )
 
 
@@ -1164,94 +1166,14 @@ class AHrefPipe(plumber.Pipe):
         asset_type = "other"
         mimetype = None
         mime_subtype = None
-
-        if ext == ".pdf":
-            asset_type = "pdf"
-            mimetype = "application"
-            mime_subtype = "pdf"
-        elif ext in (".gif", ".jpg", ".jpeg", ".png", ".tiff", ".bmp", ".svg"):
-            asset_type = "image"
-            mimetype = "image"
-            if ext == ".gif":
-                mime_subtype = "gif"
-            elif ext in (".jpg", ".jpeg"):
-                mime_subtype = "jpeg"
-            elif ext == ".png":
-                mime_subtype = "png"
-            elif ext == ".tiff":
-                mime_subtype = "tiff"
-            elif ext == ".bmp":
-                mime_subtype = "bmp"
-            elif ext == ".svg":
-                mime_subtype = "svg+xml"
-        elif ext in (".mp4", ".avi", ".mov", ".wmv", ".flv", ".mkv"):
-            asset_type = "video"
-            mimetype = "video"
-            if ext == ".mp4":
-                mime_subtype = "mp4"
-            elif ext == ".avi":
-                mime_subtype = "x-msvideo"
-            elif ext == ".mov":
-                mime_subtype = "quicktime"
-            elif ext == ".wmv":
-                mime_subtype = "x-ms-wmv"
-            elif ext == ".flv":
-                mime_subtype = "x-flv"
-            elif ext == ".mkv":
-                mime_subtype = "x-matroska"
-        elif ext in (".mp3", ".wav", ".ogg", ".flac"):
-            asset_type = "audio"
-            mimetype = "audio"
-            if ext == ".mp3":
-                mime_subtype = "mpeg"
-            elif ext == ".wav":
-                mime_subtype = "wav"
-            elif ext == ".ogg":
-                mime_subtype = "ogg"
-            elif ext == ".flac":
-                mime_subtype = "flac"
-        elif ext in (".htm", ".html"):
-            asset_type = "html"
-            mimetype = "text"
-            mime_subtype = "html"
-            if len(href_parts) > 1:
+        
+        config = ASSET_TYPE_CONFIG.get(ext)
+        if config:
+            asset_type = config["asset_type"]
+            mimetype = config["mimetype"]
+            mime_subtype = config["mime_subtype"]
+            if ext in (".htm", ".html") and len(href_parts) > 1:
                 node.set("anchor", href_parts[1])
-        elif ext in (".xls", ".xlsx", ".xlsm"):
-            asset_type = "spreadsheet"
-            mimetype = "application"
-            if ext == ".xls":
-                mime_subtype = "vnd.ms-excel"
-            elif ext in (".xlsx", ".xlsm"):
-                mime_subtype = "vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        elif ext in (".doc", ".docx"):
-            asset_type = "document"
-            mimetype = "application"
-            if ext == ".doc":
-                mime_subtype = "msword"
-            elif ext == ".docx":
-                mime_subtype = (
-                    "vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
-        elif ext in (".ppt", ".pptx"):
-            asset_type = "presentation"
-            mimetype = "application"
-            if ext == ".ppt":
-                mime_subtype = "vnd.ms-powerpoint"
-            elif ext == ".pptx":
-                mime_subtype = (
-                    "vnd.openxmlformats-officedocument.presentationml.presentation"
-                )
-        elif ext in (".zip", ".rar", ".7z", ".tar", ".gz"):
-            asset_type = "compressed"
-            mimetype = "application"
-            if ext == ".zip":
-                mime_subtype = "zip"
-            elif ext == ".rar":
-                mime_subtype = "x-rar-compressed"
-            elif ext == ".7z":
-                mime_subtype = "x-7z-compressed"
-            elif ext in (".tar", ".gz"):
-                mime_subtype = "x-tar"
 
         node.set("asset_type", asset_type)
         if mimetype:
@@ -1565,7 +1487,7 @@ class XRefAssetTypeImagePipe(plumber.Pipe):
             return []
 
         # Sort children by rid before inserting
-        return reversed(sorted(children, key=lambda x: x.get("filebasename")))
+        return reversed(sorted(children, key=lambda x: x.get("id")))
 
 
 class InsertGraphicInFigPipe(plumber.Pipe):
