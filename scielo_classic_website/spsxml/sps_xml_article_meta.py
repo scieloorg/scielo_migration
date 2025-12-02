@@ -579,11 +579,8 @@ class XMLArticleMetaPermissionPipe(plumber.Pipe):
 
     def get_licenses(self, raw):     
         data = [] 
-        for item in raw.license_texts.values():
+        for language, item in raw.license_texts.items():
             url = item.get("url")
-            languge = item.get("language")
-            if not languge:
-                continue
             if not url:
                 code = (item.get("code") or "").lower()
                 if not code:
@@ -591,7 +588,7 @@ class XMLArticleMetaPermissionPipe(plumber.Pipe):
                 url = f"https://creativecommons.org/licenses/{code}/4.0/"
             if not url:
                 continue
-            data.append((language, url, text))
+            data.append((language, url, item.get("text")))
         return data
 
 class XMLArticleMetaSelfUriPipe(plumber.Pipe):
