@@ -91,19 +91,15 @@ def convert_html_to_xml(document):
     document está em scielo_classic_website.models.document.Document.
     """
     calls = (
-        convert_html_to_xml_step_0_insert_html_in_cdata,
-        convert_html_to_xml_step_1_remove_cdata,
-        convert_html_to_xml_step_1_embed_html,
-        convert_html_to_xml_step_2_html_to_xml,
-        convert_html_to_xml_step_2_b,
-        convert_html_to_xml_step_2_c,
-        convert_html_to_xml_step_3,
-        convert_html_to_xml_step_4,
-        convert_html_to_xml_step_fix_body,
-        convert_html_to_xml_complete_disp_formula,
-        # convert_html_to_xml_step_5,
-        # convert_html_to_xml_step_6,
-        # convert_html_to_xml_step_7,
+        convert_html_to_xml_step_10_insert_html_in_cdata,
+        convert_html_to_xml_step_20_remove_cdata,
+        convert_html_to_xml_step_30_embed_html,
+        convert_html_to_xml_step_40_basic_html_to_xml,
+        convert_html_to_xml_step_50_break_to_p,
+        convert_html_to_xml_step_60_ahref_and_aname,
+        convert_html_to_xml_step_70_complete_fig_and_tablewrap,
+        convert_html_to_xml_step_80_fix_sec,
+        convert_html_to_xml_step_90_complete_disp_formula,
     )
     document.exceptions = []
     document.xml_body_and_back = []
@@ -124,7 +120,7 @@ def convert_html_to_xml(document):
             )
 
 
-def convert_html_to_xml_step_0_insert_html_in_cdata(document):
+def convert_html_to_xml_step_10_insert_html_in_cdata(document):
     """
     Prepara o documento para conversão inserindo conteúdo HTML em estruturas CDATA.
 
@@ -152,7 +148,7 @@ def convert_html_to_xml_step_0_insert_html_in_cdata(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_1_remove_cdata(document):
+def convert_html_to_xml_step_20_remove_cdata(document):
     """
     Remove as tags CDATA e posiciona o conteúdo HTML na estrutura XML.
 
@@ -184,7 +180,7 @@ def convert_html_to_xml_step_1_remove_cdata(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_1_embed_html(document):
+def convert_html_to_xml_step_30_embed_html(document):
     ppl = plumber.Pipeline(
         StartPipe(),
         MarkHTMLFileToEmbedPipe(),
@@ -244,7 +240,7 @@ def convert_html_to_xml_step_2(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_2_html_to_xml(document):
+def convert_html_to_xml_step_40_basic_html_to_xml(document):
     """
     Primeira etapa de conversão de tags HTML para XML correspondentes.
 
@@ -289,7 +285,7 @@ def convert_html_to_xml_step_2_html_to_xml(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_2_b(document):
+def convert_html_to_xml_step_50_break_to_p(document):
     """
     Segunda etapa de conversão focada em estrutura de parágrafos e formatação.
 
@@ -319,7 +315,7 @@ def convert_html_to_xml_step_2_b(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_2_c(document):
+def convert_html_to_xml_step_60_ahref_and_aname(document):
     """
     Terceira etapa de conversão focada em processamento de links.
 
@@ -353,128 +349,20 @@ def convert_html_to_xml_step_2_c(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_3(document):
-    """
-    Processa referências cruzadas e gráficos inline.
-
-    Identifica e processa elementos de referência:
-    - Localiza e processa tags xref adicionando atributo ref-type
-    - Processa gráficos inline
-    - Identifica links internos especiais
-
-    Parameters
-    ----------
-    document : Document
-        Documento processado pela etapa 2_c
-
-    Returns
-    -------
-    Document
-        Documento com referências cruzadas e gráficos inline processados
-    """
+def convert_html_to_xml_step_70_complete_fig_and_tablewrap(document):
+    
     # logging.info("convert_html_to_xml - step 3")
     ppl = plumber.Pipeline(
         StartPipe(),
         InlineGraphicPipe(),
-        # RemoveParentPTagOfGraphicPipe(),
+        InsertGraphicInFigOrTablewrap(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
     return next(transformed_data)
 
 
-def convert_html_to_xml_step_4(document):
-    """
-    Organiza elementos de figuras, tabelas e fórmulas.
-
-    Estrutura elementos complexos:
-    - Substitui atributos idhref e ridhref por id
-    - Converte divs com id para elementos de asset apropriados
-    - Define tipos de xref
-    - Insere gráficos em elementos fig
-    - Insere gráficos em elementos table-wrap
-    - Remove tags vazias
-
-    Parameters
-    ----------
-    document : Document
-        Documento processado pela etapa 3
-
-    Returns
-    -------
-    Document
-        Documento com figuras, tabelas e fórmulas estruturadas
-    """
-    # logging.info("convert_html_to_xml - step 4")
-    ppl = plumber.Pipeline(
-        StartPipe(),
-        InsertGraphicInFigPipe(),
-        RemoveEmptyTagPipe(),
-        InsertGraphicInTableWrapPipe(),
-        RemoveEmptyTagPipe(),
-        EndPipe(),
-    )
-    transformed_data = ppl.run(document, rewrap=True)
-    return next(transformed_data)
-
-
-def convert_html_to_xml_step_5(document):
-    """
-    Adiciona legendas e títulos em tabelas.
-
-    Completa a estrutura de tabelas:
-    - Insere elementos caption e title em table-wrap
-    - Organiza a hierarquia de elementos de tabela
-
-    Parameters
-    ----------
-    document : Document
-        Documento processado pela etapa 4
-
-    Returns
-    -------
-    Document
-        Documento com estrutura de tabelas completa
-    """
-    # logging.info("convert_html_to_xml - step 5")
-    ppl = plumber.Pipeline(
-        StartPipe(),
-        InsertCaptionAndTitleInTableWrapPipe(),
-        EndPipe(),
-    )
-    transformed_data = ppl.run(document, rewrap=True)
-    return next(transformed_data)
-
-
-def convert_html_to_xml_step_7(document):
-    """
-    Processa elementos alternativos de gráficos.
-
-    Cria estruturas de alternatives para gráficos:
-    - Agrupa versões alternativas de gráficos
-    - Organiza elementos graphic dentro de alternatives
-
-    Parameters
-    ----------
-    document : Document
-        Documento processado pela etapa 5
-
-    Returns
-    -------
-    Document
-        Documento com estruturas alternatives para gráficos
-    """
-    # logging.info("convert_html_to_xml - step 7")
-    ppl = plumber.Pipeline(
-        StartPipe(),
-        AlternativesGraphicPipe(),
-        EndPipe(),
-    )
-    transformed_data = ppl.run(document, rewrap=True)
-    return next(transformed_data)
-
-
-def convert_html_to_xml_step_fix_body(document):
+def convert_html_to_xml_step_80_fix_sec(document):
     """
     Corrige a estrutura do body envolvendo parágrafos soltos em seções.
 
@@ -502,7 +390,7 @@ def convert_html_to_xml_step_fix_body(document):
     return next(transformed_data)
 
 
-def convert_html_to_xml_complete_disp_formula(document):
+def convert_html_to_xml_step_90_complete_disp_formula(document):
     """
     Completa a estrutura de fórmulas exibidas (display formulas).
 
@@ -1496,134 +1384,82 @@ class XRefAssetTypeImagePipe(plumber.Pipe):
         return reversed(sorted(children, key=lambda x: x.get("id")))
 
 
-class InsertGraphicInFigPipe(plumber.Pipe):
+class InsertGraphicInFigOrTablewrap(plumber.Pipe):
     """
-    Envolve o elemento graphic dentro de fig.
+    Procura graphic nos irmãos ascendentes de fig e table-wrap e os envolve.
+    Antes:
+    <fig id="f1"/>
+    <p align="center">
+        <graphic xlink:href="f1.jpg"/>
+    </p>
 
     Resultado esperado:
-
     <fig id="f1">
         <graphic xlink:href="f1.jpg"/>
     </fig>
+    <p align="center"> </p>
     """
+    def transform(self, data):
+        raw, xml = data
+        _process(xml, "fig[@id]", self.wrap_graphic)
+        _process(xml, "table-wrap[@id]", self.wrap_graphic)
+        return data
 
-    def parser_node(self, node):
-        if node.find("table") is not None:
-            return
-        if node.find("graphic") is not None:
-            return
-
-        parent = node.getparent()
-
-        while True:
-            grand_parent = parent.getparent()
-            if grand_parent is None:
-                break
-            if grand_parent.tag == "body":
-                break
-            parent = grand_parent
-
-        sibling = parent.getnext()
-        if sibling is None:
-            return
-        graphic = sibling.find(".//graphic")
+    def wrap_graphic(self, fig_or_tablewrap):
+        item = fig_or_tablewrap
+        graphic = self.find_graphic(item)
         if graphic is None:
             return
-        node.append(deepcopy(graphic))
-        parent = graphic.getparent()
-        parent.remove(graphic)
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "fig[@id]", self.parser_node)
-        _report(xml, func_name=type(self))
-        return data
-
-
-class InsertGraphicInTableWrapPipe(plumber.Pipe):
-    """
-    Envolve o elemento graphic dentro de table-wrap.
-
-    Antes:
-
-    <p align="center">
-        <table-wrap id="t1"/>
-    </p>
-    <p align="center"> </p>
-    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
-    <p align="center">
-        <graphic xlink:href="t01.jpg"/>
-    </p>
-
-    Resultado esperado:
-
-    <table-wrap id="t1">
-        <graphic xlink:href="t01.jpg"/>
-    </table-wrap>
-
-    Antes:
-
-    <p align="center">
-        <table-wrap id="t1"/>
-    </p>
-    <p align="center"> </p>
-    <p align="center"><b>Table 1 Composition and energy provide by the experimental diets</b></p>
-    <p align="center">
-        <table/>
-    </p>
-
-    Depois:
-
-    <table-wrap id="t1">
-        <table/>
-    </table-wrap>
-    """
-
-    def parser_node(self, node):
-        if node.find("table") is not None:
-            return
-        if node.find("graphic") is not None:
-            return
-
-        parent = node.getparent()
-
-        while True:
-            grand_parent = parent.getparent()
-            if grand_parent is None:
+        fig_or_tablewrap.append(graphic)
+        
+    def find_graphic(self, item):
+        graphic = None
+        for i in range(3):
+            if item is None:
+                # item is not valid
                 break
-            if grand_parent.tag == "body":
-                break
-            parent = grand_parent
-
-        sibling = parent.getnext()
+            # procura em item
+            graphic = item.find(".//graphic")
+            if graphic is not None:
+                # encontrou graphic dentro de item
+                return graphic
+            # procura em siblings
+            graphic = self.find_graphic_in_siblings(item)
+            if graphic is not None:
+                # encontrou graphic em siblings
+                return graphic
+            item = self.go_up(item)
+        return graphic
+    
+    def find_graphic_in_siblings(self, item):
+        # remove empty siblings antes de procurar no sibling
+        self.clean_empty_siblings(item)
+        # procura no sibling
+        sibling = item.getnext()
         if sibling is None:
-            comment = ET.Comment("FIXME check whether element is table-wrap")
-            node.insert(1, comment)
-            logging.info(f"Unable to find graphic for {node.get('id')}")
             return
-        table = sibling.find(".//table")
-        graphic = sibling.find(".//graphic")
-        if graphic is None and table is None:
-            return
-
-        elem = None
-        if graphic is not None:
-            node.append(deepcopy(graphic))
-            elem = graphic
-        elif table is not None:
-            node.append(deepcopy(table))
-            elem = table
-
-        if elem is not None:
-            parent = elem.getparent()
-            if parent is not None:
-                parent.remove(elem)
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "table-wrap[@id]", self.parser_node)
-        _report(xml, func_name=type(self))
-        return data
+        return sibling.find(".//graphic")
+    
+    def go_up(self, node):
+        if node.tag == "body":
+            return None
+        parent = node.getparent()
+        if parent is None:
+            return None
+        if parent.tag == "body":
+            return None
+        # parent sibling
+        return parent.getnext()
+    
+    def clean_empty_siblings(self, node):
+        parent = node.getparent()
+        for sibling in node.xpath("./following-sibling::*"):
+            if sibling.getchildren():
+                break
+            if "".join(sibling.xpath(".//text()")).strip():
+                break
+            sibling.set("delete", "true")
+        delete_tags(parent)
 
 
 class RemoveEmptyTagPipe(plumber.Pipe):
@@ -1737,281 +1573,32 @@ class InlineGraphicPipe(plumber.Pipe):
     nó anterior tem tail(graphic.getprevious() and graphic.getprevious().tail.strip())
     """
 
-    def graphic_to_inline(self, node):
-        if node.tag == "graphic":
-            g = node
-        else:
-            g = node.find(".//graphic")
-        g.tag = "inline-graphic"
-
     def parser_node(self, node):
-        if node.text and node.text.strip():
-            _process(node, "graphic", self.graphic_to_inline)
-            return
-
-        has_text = False
-        for child in node.getchildren():
-            if child.tail and child.tail.strip():
-                has_text = True
-                break
-
-        if has_text:
-            _process(node, "graphic", self.graphic_to_inline)
+        for graphic in node.xpath("graphic"):
+            if self.is_graphic_inline(graphic):
+                graphic.tag = "inline-graphic"
 
     def transform(self, data):
         raw, xml = data
-        _process(xml, "p[graphic]", self.parser_node)
-        _process(xml, "xref[graphic]", self.graphic_to_inline)
-        _report(xml, func_name=type(self))
+        for parent in xml.xpath(".//*[graphic]"):
+            self.parser_node(parent)
         return data
 
-
-class RemoveParentPTagOfGraphicPipe(plumber.Pipe):
-    """
-    Remove parent de graphic se parent.tag == 'p'.
-
-    Antes:
-
-    <p align="center">
-      <graphic xlink:href="53t01.jpg"/>
-    </p>
-
-    Depois:
-
-    <graphic xlink:href="53t01.jpg"/>
-    """
-
-    def parser_node(self, node):
-        # Pega o parent do node.
-        parent = node.getparent()
-
-        # Pega o primeiro filho do node.
-        graphic = node.getchildren()[0]
-
-        # Adiciona o graphic em parent.
-        index = parent.index(node)
-        parent.insert(index, graphic)
-
-        # Remove o node. <p> com todos os filhos.
-        parent.remove(node)
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "p[graphic]", self.parser_node)
-        _report(xml, func_name=type(self))
-        return data
-
-
-class InsertCaptionAndTitleInTableWrapPipe(plumber.Pipe):
-    """
-    Insere caption dentro de table-wrap.
-    E title dentro de caption.
-    Pode conter label ou não.
-    """
-
-    def process(self, xml, tag, xref_dict, func):
-        # Este process passa a tag e uma lista.
-        nodes = xml.findall(".//%s" % tag)
-        for node in nodes:
-            func(node, xref_dict)
-
-    def add_label(self, node, label):
-        # cria label / nao há caption
-        label_node = ET.Element("label")
-        label_node.text = label
-        node.insert(0, label_node)
-
-    def find_label_and_caption(self, node, labels):
-        """
-        <label>Tabela 5</label>
-          <caption>
-            <title>Alíquota menor para prestadores</title>
-          </caption>
-        """
-        table_id = node.get("id")
-        label = labels.get(table_id)
-        if not label:
-            # table-wrap não tem xref, logo não se sabe o label
-            return
-
-        parent = node.getparent()
-        if parent is None:
-            self.add_label(node, label)
-            return
-
-        previous_node = parent.getprevious()
-        if previous_node is None:
-            self.add_label(node, label)
-            return
-
-        # verifica se os textos de previous node contém label (xref content)
-        texts = previous_node.xpath(".//text()")
-        text = " ".join(texts)
-        if text and text.strip().upper().startswith(label.upper()):
-            pass
-        else:
-            self.add_label(node, label)
-            return
-
-        # sim, os textos de previous node contém label (xref content)
-        # identificar o node que contém o texto do label
-        found_label_node = None
-        for child in previous_node.xpath(".//*"):
-            # procura nos filhos
-            if child.text.strip().upper().startswith(label.upper()):
-                found_label_node = child
-                break
-        else:
-            # procura no próprio nó
-            if previous_node.text and previous_node.text.strip().upper().startswith(
-                label.upper()
-            ):
-                found_label_node = previous_node
-
-        if found_label_node is None:
-            # não encontrou
-            # pode decidir criar ou não
-            self.add_label(node, label)
-            return
-
-        # encontrou elemento que contém label
-        # precisa identificar se o elemento contém somente label ou label + caption
-        found_label_node_text = found_label_node.text.strip()[: len(label)]
-        caption_node_text = found_label_node.text.replace(
-            found_label_node_text, ""
-        ).strip()
-
-        if caption_node_text:
-            # elemento contém label + caption
-            caption_node = ET.Element("caption")
-            title_node = ET.Element("title")
-            title_node.text = caption_node_text
-            caption_node.append(title_node)
-            label_node = ET.Element("label")
-            label_node.text = found_label_node_text
-            node.append(label_node)
-            node.append(caption_node)
-        else:
-            # elemento contém somente label
-            next_node = found_label_node.getnext()
-            if next_node is None:
-                label_node = deepcopy(found_label_node)
-                label_node.tag = "label"
-                node.append(label_node)
-                return
-
-            title_node = deepcopy(next_node)
-            title_node.tag = "title"
-            caption_node = ET.Element("caption")
-            caption_node.append(title_node)
-
-            label_node = deepcopy(found_label_node)
-            label_node.tag = "label"
-
-            node.append(label_node)
-            node.append(caption_node)
-
-    def transform(self, data):
-        raw, xml = data
-        xref_items = xml.xpath(".//xref[@rid and @ref-type='table']")
-
-        labels = {}
-        for xref in xref_items:
-            # A chave é o id e o valor é o texto.
-            # Ex: {'t1': 'Table 1', 't2': 'Table 2'}
-            if xref.text:
-                labels[xref.attrib["rid"]] = xref.text.strip()
-
-        if labels:
-            self.process(xml, "table-wrap[@id]", labels, self.find_label_and_caption)
-        _report(xml, func_name=type(self))
-        return data
-
-
-class InsertTableWrapFootInTableWrapPipe(plumber.Pipe):
-    """
-    Insere table-wrap-foot em table-wrap.
-    """
-
-    def parser_node(self, node):
-        parent = node.getparent()
-        next_node = parent.getnext()
-        if next_node is None:
-            return
-
-        # FIXME - haver o próximo não é garantia de ser footnote
-        # table_wrap_foot = ET.Element("table-wrap-foot")
-        # table_wrap_foot.append(next_node)
-
-        # node.append(table_wrap_foot)
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "table-wrap[@id]", self.parser_node)
-        _report(xml, func_name=type(self))
-        return data
-
-
-class AlternativesGraphicPipe(plumber.Pipe):
-    """
-    Agrupa as imagens miniatura e padrão em alternatives.
-
-    Antes:
-
-    <qualquer-tag>
-        <a href="/fbpe/img/bres/v48/53t03.jpg">
-          <graphic xlink:href="/fbpe/img/bres/v48/53t03thumb.jpg"/>
-        </a>
-    </qualquer-tag>
-
-    Depois:
-
-    <qualquer-tag>
-        <alternatives>
-            <graphic xlink:href="/fbpe/img/bres/v48/53t03.jpg"/> <!-- imagem "original" (tiff), mas na ausência usar a imagem padrão -->
-            <graphic xlink:href="/fbpe/img/bres/v48/53t03.jpg" specific-use="scielo-web"/> <!-- imagem "ampliada" ou padrão -->
-            <graphic xlink:href="/fbpe/img/bres/v48/53t03thumb.jpg" specific-use="scielo-web" content-type="scielo-267x140"/> <!-- imagem miniatura -->
-        </alternatives>
-    </qualquer-tag>
-    """
-
-    def parser_node(self, node):
-        parent = node.getparent()
-        _graphic = node.getchildren()[0]
-
-        alternatives = ET.Element("alternatives")
-
-        graphic1 = ET.Element("graphic")
-        xlink_ref = "{http://www.w3.org/1999/xlink}href"
-        graphic1.set(xlink_ref, node.attrib["href"])
-        alternatives.append(graphic1)
-
-        graphic2 = ET.Element("graphic")
-        xlink_ref = "{http://www.w3.org/1999/xlink}href"
-        graphic2.set(xlink_ref, node.attrib["href"])
-        graphic2.set("specific-use", "scielo-web")
-        alternatives.append(graphic2)
-
-        graphic_thumb = ET.Element("graphic")
-        graphic_thumb.set(
-            xlink_ref, _graphic.attrib["{http://www.w3.org/1999/xlink}href"]
-        )
-        graphic_thumb.set("specific-use", "scielo-web")
-        graphic_thumb.set("content-type", "scielo-267x140")
-        alternatives.append(graphic_thumb)
-
-        # Troca o node 'a' por 'alternatives'
-        # Adicionando 'alternatives'
-        parent.append(alternatives)
-
-        # E removendo o node 'a'
-        parent.remove(node)
-
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "a[graphic]", self.parser_node)
-        _report(xml, func_name=type(self))
-        return data
+    def is_graphic_inline(self, graphic):
+        previous = graphic.getprevious()
+        if previous is not None:
+            previous_tail = (previous.tail or "").strip()
+            if previous_tail:
+                return True
+            
+        text = graphic.getparent().text
+        if text and text.strip():
+            return True
+        
+        tail = graphic.tail
+        if tail and tail.strip():
+            return True
+        return False
 
 
 class WrapPwithSecPipe(plumber.Pipe):
