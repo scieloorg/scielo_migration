@@ -273,6 +273,57 @@ class XMLArticleMetaContribGroupPipe(plumber.Pipe):
         return data
 
 
+class XMLArticleMetaAuthorNotesPipe(plumber.Pipe):
+    """
+    Pipe para criar author-notes como irmão de contrib-group.
+    Move elementos corresp de back para dentro de author-notes.
+    Executa após XMLArticleMetacontribGroupPipe.
+    """
+    
+    def precond(data):
+        raw, xml = data
+        
+        # Verifica se existe corresp em back
+        corresp_elements = xml.xpath(".//back//corresp|.//body//corresp")
+        if not corresp_elements:
+            raise plumber.UnmetPrecondition()
+    
+    @plumber.precondition(precond)
+    def transform(self, data):
+        raw, xml = data
+        
+        # Encontra elementos corresp em back
+        corresp_elements = xml.xpath(".//back//corresp|.//body//corresp")
+        
+        if corresp_elements:
+            # Cria author-notes
+            author_notes = ET.Element("author-notes")
+            
+            # Move cada corresp para dentro de author-notes
+            for corresp in corresp_elements:
+                # Remove corresp de sua localização atual
+                parent = corresp.getparent()
+                if parent is not None:
+                    parent.remove(corresp)
+                
+                # Adiciona corresp ao author-notes
+                author_notes.append(corresp)
+            
+            # Insere author-notes como irmão de contrib-group
+            article_meta = xml.find("./front/article-meta")
+            contrib_group = article_meta.find("contrib-group")
+            
+            if contrib_group is not None:
+                # Insere author-notes após contrib-group
+                contrib_group_index = list(article_meta).index(contrib_group)
+                article_meta.insert(contrib_group_index + 1, author_notes)
+            else:
+                # Se não há contrib-group, adiciona ao final de article-meta
+                article_meta.append(author_notes)
+        
+        return data
+
+
 class XMLArticleMetaAffiliationPipe(plumber.Pipe):
     def _addrline(self, affiliation):
         addrline = None
