@@ -86,6 +86,7 @@ def _process(document):
         XMLStylePipe(),
         XMLArticleMetaCountsPipe(),
         XMLNormalizeSpacePipe(),
+        XMLSupToXrefPipe(),
         XMLDeleteRepeatedElementWithId(),
         XMLDeleteRepeatedTranslations(),
         XMLFontFaceSymbolPipe(),
@@ -645,3 +646,100 @@ class XMLFontFaceSymbolPipe(plumber.Pipe):
 
         ET.strip_tags(xml, "REMOVEFONTFACESYMBOL")
         return data
+
+
+class XMLSupToXrefPipe(plumber.Pipe):
+    """
+    Transforma elementos <sup> com conteúdo numérico em <xref> quando eles
+    representam referências bibliográficas (bibr) ou notas de rodapé (fn).
+    
+    Critérios de análise:
+    - sup deve ter conteúdo numérico
+    - Verifica se não existem xref[@ref-type='bibr'] (evita duplicação)
+    - Compara valores numéricos com ref/label e fn/label existentes
+    - Prioriza bibr sobre fn quando há ambiguidade
+    - Na dúvida, mantém como sup
+    """
+    
+    def transform(self, data):
+        raw, xml = data
+
+        sups = xml.xpath(".//sup")
+        if not sups:
+            return data
+        
+        sup_values = set()
+        for sup in list(sups):
+            if sup.find("xref") is not None:
+                continue
+            parent = sup.getparent()
+            if parent.tag == "xref":
+                continue
+            text = "".join(sup.itertext()).strip()
+            if text and text.isdigit():
+                sup_values.add(text)
+        if not sup_values:
+            return data
+
+        ids, numeric_labels = self.get_ids_and_labels(xml, "ref", "mixed-citation")
+        done = self._convert_sup_to_xref(sups, sup_values, ids, numeric_labels, "bibr")
+        if done:
+            return data
+
+        ids, numeric_labels = self.get_ids_and_labels(xml, "fn")
+        done = self._convert_sup_to_xref(sups, sup_values, ids, numeric_labels, "fn")
+        if done:
+            return data
+         
+        return data
+    
+    def get_ids_and_labels(self, xml, from_tag, subtag=None):
+        elem_ids = {}
+        numeric_labels = set()
+        for elem in xml.xpath(f".//{from_tag}"):
+            node = elem
+            if subtag:
+                node = elem.find(subtag)
+            label = elem.findtext("label") or self._extract_numeric_label_from_node(node)
+            if label:
+                numeric_labels.add(label)
+                elem_ids[label] = elem.get("id")
+        return elem_ids, numeric_labels
+
+    def _convert_sup_to_xref(self, sups, sup_values, ids, numeric_labels, ref_type):
+        total = 0
+        if sup_values.issubset(numeric_labels):
+            for sup in list(sups):
+                sup_text = "".join(sup.itertext()).strip()
+                rid = ids.get(sup_text)
+                if not rid:
+                    continue
+                parent = sup.getparent()
+                xref = ET.Element("xref")
+                xref.set("ref-type", ref_type)
+                xref.set("rid", rid)
+                xref.append(deepcopy(sup))
+                parent.replace(sup, xref)
+                total += 1
+        return total
+
+    def _extract_numeric_label_from_node(self, node):
+        """
+        Extrai o label numérico inicial de um elemento mixed-citation.
+        
+        Returns:
+            str: O label numérico extraído ou string vazia se não encontrado
+        """
+        if node is None:
+            return None
+        text = "".join(node.itertext()).strip()
+        if not text or not text[0].isdigit():
+            return None
+        
+        label = ""
+        for char in text:
+            if char.isdigit():
+                label += char
+            else:
+                break
+        return label
