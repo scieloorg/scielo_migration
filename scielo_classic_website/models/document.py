@@ -1,5 +1,6 @@
 import logging
 from functools import cached_property
+from datetime import date
 
 from lxml import etree as ET
 
@@ -261,6 +262,26 @@ class Document:
         except KeyError:
             return None
 
+    def get_complete_article_publication_date(self, default_month=6, default_day=15):
+        try:
+            h_record = self.h_record
+            dates = (
+                h_record.document_publication_date,
+                h_record.creation_date,
+                h_record.update_date,
+                self.issue.issue_publication_date,
+            )
+            for date_str in dates:
+                if not date_str:
+                    continue
+                # d = YYYYMMDD
+                year = int(date_str[:4])
+                month = int(date_str[4:6]) or default_month
+                day = int(date_str[6:8]) or default_day
+                return date(year, month, day).isoformat()
+        except (AttributeError, ValueError) as e:
+            logging.exception(f"get_complete_article_publication_date: {e}")
+            
     @property
     def isis_updated_date(self):
         return self.h_record.update_date
