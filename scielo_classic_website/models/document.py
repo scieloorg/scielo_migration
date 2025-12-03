@@ -279,8 +279,8 @@ class Document:
                 month = int(date_str[4:6]) or default_month
                 day = int(date_str[6:8]) or default_day
                 return date(year, month, day).isoformat()
-        except AttributeError as e:
-            logging.exception(f"get_complete_article_publication_date": {e})
+        except (AttributeError, ValueError) as e:
+            logging.exception(f"get_complete_article_publication_date: {e}")
             
     @property
     def isis_updated_date(self):
