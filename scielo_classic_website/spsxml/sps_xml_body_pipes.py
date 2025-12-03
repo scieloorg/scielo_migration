@@ -280,6 +280,9 @@ def convert_html_to_xml_step_2_html_to_xml(document):
         TagsHPipe(),
         CreateStyleTagFromAttributePipe(),
         StylePipe(),
+        SizeAttributePipe(),
+        XMLBodyCenterPipe(),
+        XMLBodySecBoldPipe(),
         EndPipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -307,7 +310,6 @@ def convert_html_to_xml_step_2_b(document):
     # logging.info("convert_html_to_xml - step 2_b")
     ppl = plumber.Pipeline(
         StartPipe(),
-        SizeAttributePipe(),
         FixParagraphsAndBreaksPipe(),
         RemoveHTMLTagsPipe(),
         RemoveSpanTagsPipe(),
@@ -802,6 +804,10 @@ class FixParagraphsAndBreaksPipe(plumber.Pipe):
             # TODO - casos que há p já existem
             return
         self.fix_paragraph_absence(parent)
+        for font in parent.xpath(".//font"):
+            if font.find("p") is not None:
+                continue
+            font.tag = "p"
 
     def fix_paragraph_absence(self, parent):
         # troca break duplo por DOUBLEBREAK
@@ -2441,3 +2447,41 @@ class MarkHTMLFileToEmbedPipe(plumber.Pipe):
         # Cria wrapper com conteúdo corrigido
         parent.addnext(corrected_html)
         return True
+
+
+class XMLBodyCenterPipe(plumber.Pipe):
+    """
+    Converte elementos <center> para <title>.
+    
+    O elemento <center> não é apropriado para documentos XML científicos,
+    sendo convertido para <title> que é mais semântico para enfatizar texto.
+    """
+    
+    def transform(self, data):
+        raw, xml = data
+        
+        # Converte todos os elementos center para title
+        for center in xml.xpath(".//center"):
+            center.tag = "title"
+        
+        _report(xml, func_name=type(self))
+        return data
+
+
+class XMLBodySecBoldPipe(plumber.Pipe):
+    """
+    Converte elementos <sec><bold> para <sec><title>.
+    
+    Quando um elemento <bold> é filho direto de <sec>, provavelmente
+    representa um título de seção e deve ser convertido para <title>.
+    """
+    
+    def transform(self, data):
+        raw, xml = data
+        
+        # Converte bold que é filho direto de sec para title
+        for bold in xml.xpath(".//sec/bold"):
+            bold.tag = "title"
+        
+        _report(xml, func_name=type(self))
+        return data
