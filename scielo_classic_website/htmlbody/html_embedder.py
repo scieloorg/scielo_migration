@@ -59,7 +59,7 @@ class HTMLEmbedder:
         pattern = r".*/([a-zA-Z]+)/[^/]*\.html?(?:#.*)?$"
         return bool(re.search(pattern, normalized_href))
 
-    def get_html_to_embed(self, href: str, raw_data=None) -> Optional[str]:
+    def get_html_to_embed(self, href: str, new_name=None) -> Optional[str]:
         """
         Processa um HTML local navegando recursivamente e corrigindo âncoras/hrefs.
 
@@ -83,7 +83,7 @@ class HTMLEmbedder:
 
         try:
             # Lê o conteúdo HTML
-            html_content = self._read_html_file(href, raw_data)
+            html_content = self._read_html_file(href, new_name)
             if not html_content:
                 return None
         except Exception as e:
@@ -142,7 +142,7 @@ class HTMLEmbedder:
                 continue
             try:
                 # Navega e processa o HTML local recursivamente
-                corrected_html = self.get_html_to_embed(path)
+                corrected_html = self.get_html_to_embed(path, new_name)
             except Exception as e:
                 logging.exception(e)
                 corrected_html = None
@@ -159,7 +159,7 @@ class HTMLEmbedder:
             a_href.set("original-href", href)
             self.process_filenames.add(new_name)
 
-    def _read_html_file(self, href: str, raw_data=None) -> Optional[str]:
+    def _read_html_file(self, href: str, new_name=None) -> Optional[str]:
         """
         Lê o conteúdo do arquivo HTML.
 
@@ -172,7 +172,9 @@ class HTMLEmbedder:
         """
         try:
             if not self.file_reader:
-                return None
+                # TODO: implementar leitura via file_reader
+                name = f' name="{new_name}"' if new_name else ""
+                return f'<a{name} path="{href}" asset_type="html"></a>'
 
             return self.file_reader(href, self.journal_acron_folder)
 
