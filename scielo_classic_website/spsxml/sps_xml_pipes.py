@@ -357,8 +357,9 @@ class XMLBodyPipe(plumber.Pipe):
 
         converted_html_body = ET.fromstring(raw.xml_body)
         body = converted_html_body.find(".//body")
-        body.set("specific-use", "quirks-mode")
-        xml.append(body)
+        if body is not None:
+            body.set("specific-use", "quirks-mode")
+            xml.append(body)
         return data
 
 
@@ -664,11 +665,54 @@ class XMLSupToXrefPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
+        self.transform_sup_to_xref(xml)
+        self.complete_xref_reftype(xml)
+         
+        return data
+
+    def complete_xref_reftype(self, xml):
+        xref_numbers = xml.xpath(".//xref[@ref-type='number']")
+        if not xref_numbers:
+            return
+        
+        numbers = set()
+        for xref_number in list(xref_numbers):
+            text = "".join(xref_number.itertext()).strip()
+            if text and text.isdigit():
+                numbers.add(text)
+        if not numbers:
+            return
+
+        ids, numeric_labels = self.get_ids_and_labels(xml, "ref", "mixed-citation")
+        done = self._complete_xref_reftype(xref_numbers, numbers, ids, numeric_labels, "bibr")
+        if done:
+            return
+
+        ids, numeric_labels = self.get_ids_and_labels(xml, "fn")
+        done = self._complete_xref_reftype(xref_numbers, numbers, ids, numeric_labels, "fn")
+        if done:
+            return
+
+    def _complete_xref_reftype(self, xref_numbers, numbers, ids, numeric_labels, ref_type):
+        total = 0
+        if not numbers.issubset(numeric_labels):
+            return total
+        for xref_number in list(xref_numbers):
+            xref_number_text = "".join(xref_number.itertext()).strip()
+            rid = ids.get(xref_number_text)
+            if not rid:
+                continue
+            xref_number.set("ref-type", ref_type)
+            xref_number.set("rid", rid)
+            total += 1
+        return total
+
+    def transform_sup_to_xref(self, xml):
         sups = xml.xpath(".//sup")
         if not sups:
-            return data
+            return
         
-        sup_values = set()
+        numbers = set()
         for sup in list(sups):
             if sup.find("xref") is not None:
                 continue
@@ -677,21 +721,19 @@ class XMLSupToXrefPipe(plumber.Pipe):
                 continue
             text = "".join(sup.itertext()).strip()
             if text and text.isdigit():
-                sup_values.add(text)
-        if not sup_values:
-            return data
+                numbers.add(text)
+        if not numbers:
+            return
 
         ids, numeric_labels = self.get_ids_and_labels(xml, "ref", "mixed-citation")
-        done = self._convert_sup_to_xref(sups, sup_values, ids, numeric_labels, "bibr")
+        done = self._convert_sup_to_xref(sups, numbers, ids, numeric_labels, "bibr")
         if done:
-            return data
+            return
 
         ids, numeric_labels = self.get_ids_and_labels(xml, "fn")
-        done = self._convert_sup_to_xref(sups, sup_values, ids, numeric_labels, "fn")
+        done = self._convert_sup_to_xref(sups, numbers, ids, numeric_labels, "fn")
         if done:
-            return data
-         
-        return data
+            return
     
     def get_ids_and_labels(self, xml, from_tag, subtag=None):
         elem_ids = {}
@@ -706,21 +748,29 @@ class XMLSupToXrefPipe(plumber.Pipe):
                 elem_ids[label] = elem.get("id")
         return elem_ids, numeric_labels
 
-    def _convert_sup_to_xref(self, sups, sup_values, ids, numeric_labels, ref_type):
+    def _convert_sup_to_xref(self, sups, numbers, ids, numeric_labels, ref_type):
         total = 0
-        if sup_values.issubset(numeric_labels):
-            for sup in list(sups):
-                sup_text = "".join(sup.itertext()).strip()
-                rid = ids.get(sup_text)
-                if not rid:
-                    continue
-                parent = sup.getparent()
-                xref = ET.Element("xref")
-                xref.set("ref-type", ref_type)
-                xref.set("rid", rid)
-                xref.append(deepcopy(sup))
-                parent.replace(sup, xref)
-                total += 1
+        if not numbers.issubset(numeric_labels):
+            return total
+        for sup in list(sups):
+            sup_text = "".join(sup.itertext()).strip()
+            rid = ids.get(sup_text)
+            if not rid:
+                continue
+
+            # Cria um novo elemento <xref> e insere em <sup>
+            xref = ET.Element("xref")
+            xref.set("ref-type", ref_type)
+            xref.set("rid", rid)
+            if sup.text:
+                xref.text = sup.text
+                sup.text = None
+            for child in list(sup):
+                xref.append(child)
+            sup.text = None
+            sup.clear()
+            sup.append(xref)
+            total += 1
         return total
 
     def _extract_numeric_label_from_node(self, node):

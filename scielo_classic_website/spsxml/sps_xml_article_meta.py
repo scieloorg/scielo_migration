@@ -284,7 +284,7 @@ class XMLArticleMetaAuthorNotesPipe(plumber.Pipe):
         raw, xml = data
         
         # Verifica se existe corresp em back
-        corresp_elements = xml.xpath(".//back//corresp|.//body//corresp")
+        corresp_elements = xml.xpath(".//corresp")
         if not corresp_elements:
             raise plumber.UnmetPrecondition()
     
@@ -293,7 +293,7 @@ class XMLArticleMetaAuthorNotesPipe(plumber.Pipe):
         raw, xml = data
         
         # Encontra elementos corresp em back
-        corresp_elements = xml.xpath(".//back//corresp|.//body//corresp")
+        corresp_elements = xml.xpath(".//corresp")
         
         if corresp_elements:
             # Cria author-notes
