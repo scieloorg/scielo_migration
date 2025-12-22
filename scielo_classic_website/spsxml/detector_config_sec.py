@@ -372,3 +372,58 @@ COMBINED_PATTERNS = [
     (r"cases?\s+(and|&|e|y|et|und|en)\s+results?", ["cases", "results"]),
     (r"casos?\s+(e|y)\s+resultados?", ["cases", "results"]),
 ]
+AGRADECIMENTOS_PATTERNS = [
+    # Português
+    r'(?i)agradecimentos?(\s+especiais?)?',
+    
+    # Inglês
+    r'(?i)acknowledgm?ents?',
+    r'(?i)acknowledgements?',
+    r'(?i)special\s+thanks?',
+    
+    # Espanhol
+    r'(?i)agradecimientos?',
+    r'(?i)reconocimientos?',
+    
+    # Francês
+    r'(?i)remerciements?',
+    r'(?i)reconnaissances?',
+    
+    # Italiano
+    r'(?i)ringraziamenti',
+    r'(?i)riconoscimenti',
+    
+    # Alemão
+    r'(?i)danksagung(en)?',
+    r'(?i)anerkennung(en)?',
+]
+
+
+# Padrões para Referências em diversos idiomas
+REFERENCIAS_PATTERNS = [
+    # Português
+    r'(?i)refer[êe]ncias?(\s+bibliogr[áa]ficas?)?',
+    r'(?i)bibliografia',
+    
+    # Inglês
+    r'(?i)references?',
+    r'(?i)bibliography',
+    r'(?i)works?\s+cited',
+    r'(?i)literature\s+cited',
+    
+    # Espanhol
+    r'(?i)referencias?(\s+bibliogr[áa]ficas?)?',
+    r'(?i)bibliograf[íi]a',
+    
+    # Francês
+    r'(?i)r[ée]f[ée]rences?(\s+bibliographiques?)?',
+    r'(?i)bibliographie',
+    
+    # Italiano
+    r'(?i)riferimenti(\s+bibliografici)?',
+    
+    # Alemão
+    r'(?i)literatur(verzeichnis)?',
+    r'(?i)quellenverzeichnis',
+    r'(?i)referenzen',
+]
