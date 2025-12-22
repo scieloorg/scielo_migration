@@ -1,6 +1,8 @@
 import re
 from typing import Dict, Optional, Tuple, List
 import unicodedata
+
+# Importações dos módulos de configuração
 from scielo_classic_website.spsxml.detector_config_xref import (
     REF_TYPE_TO_ELEMENT,
     ID_PATTERNS,
@@ -10,6 +12,14 @@ from scielo_classic_website.spsxml.detector_config_xref import (
 from scielo_classic_website.spsxml.detector_config_sec import (
     SEC_TYPE_PATTERNS,
     COMBINED_PATTERNS,
+    REFERENCIAS_PATTERNS,
+    AGRADECIMENTOS_PATTERNS,
+)
+from scielo_classic_website.spsxml.detector_config_fn import (
+    FN_TYPE_PATTERNS,
+    SYMBOL_TO_FN_TYPE,
+    FN_NUMBER_PATTERNS,
+    NOT_FN_INDICATORS,
 )
 
 
@@ -80,7 +90,7 @@ def detect_from_text(
     return None, None, None, None
 
 
-def get_id_prefix_and_number(text: str, ref_type: Optional[str] = None) -> str:
+def get_id_prefix_and_number(text: str, ref_type: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
     """
     Gera um ID apropriado a partir do texto da referência.
 
@@ -89,7 +99,7 @@ def get_id_prefix_and_number(text: str, ref_type: Optional[str] = None) -> str:
         ref_type: Tipo já identificado (opcional)
 
     Returns:
-        ID gerado no formato padrão
+        Tupla (prefix, number)
     """
     prefix = None
     number = None
@@ -449,243 +459,436 @@ def batch_detect_sec_types(section_titles: List[str]) -> List[Dict[str, Optional
     return results
 
 
+def detect_fn_type(title: str) -> Optional[str]:
+    """
+    Detecta o tipo de footnote (@fn-type) a partir do título ou texto.
+
+    Args:
+        title: Título ou texto da nota de rodapé
+
+    Returns:
+        fn-type identificado ou None se não identificado
+
+    Exemplos:
+        >>> detect_fn_type("Corresponding author")
+        'corresp'
+        >>> detect_fn_type("Financial disclosure")
+        'financial-disclosure'
+        >>> detect_fn_type("†These authors contributed equally")
+        'equal'
+    """
+    if not title:
+        return None
+
+    title = title.strip()
+    
+    # Primeiro verifica se há símbolos especiais no início
+    for symbol, fn_type in SYMBOL_TO_FN_TYPE.items():
+        if title.startswith(symbol):
+            # Se o símbolo sugere um tipo, ainda verifica o texto
+            # para confirmar ou refinar a detecção
+            title_without_symbol = title[len(symbol):].strip()
+            detected_type = _detect_fn_type_from_patterns(title_without_symbol)
+            if detected_type:
+                return detected_type
+            # Se não encontrou padrão específico, usa o tipo do símbolo
+            return fn_type
+
+    # Tenta detecção pelos padrões de texto
+    return _detect_fn_type_from_patterns(title)
+
+
+def _detect_fn_type_from_patterns(text: str) -> Optional[str]:
+    """
+    Função auxiliar para detectar fn-type a partir dos padrões de texto.
+    """
+    if not text:
+        return None
+
+    # Remove possível numeração do início
+    clean_text = text
+    for pattern in FN_NUMBER_PATTERNS:
+        clean_text = re.sub(pattern, "", text, count=1)
+        if clean_text != text:
+            break
+
+    clean_text = clean_text.strip()
+    if not clean_text:
+        return None
+
+    # Verifica padrões de fn-type
+    for fn_type, patterns in FN_TYPE_PATTERNS.items():
+        for pattern in patterns:
+            if re.search(pattern, clean_text):
+                return fn_type
+
+    return None
+
+
+def detect_element_type(title: str, context: Optional[str] = None) -> Dict[str, Optional[str]]:
+    """
+    Detecta se um título corresponde a uma seção (sec) ou footnote (fn).
+    
+    Args:
+        title: Título ou texto a ser analisado
+        context: Contexto adicional opcional (por ex: "back", "body", "front")
+    
+    Returns:
+        Dicionário com:
+        - element_type: 'sec', 'fn' ou None
+        - type_attribute: sec-type ou fn-type detectado
+        - confidence: 'high', 'medium', 'low'
+        - detected_as: descrição do que foi detectado
+        - suggested_id: ID sugerido para o elemento
+    
+    Exemplos:
+        >>> detect_element_type("Introduction")
+        {'element_type': 'sec', 'type_attribute': 'intro', ...}
+        
+        >>> detect_element_type("*Corresponding author")
+        {'element_type': 'fn', 'type_attribute': 'corresp', ...}
+        
+        >>> detect_element_type("Financial disclosure: This work was supported by...")
+        {'element_type': 'fn', 'type_attribute': 'financial-disclosure', ...}
+    """
+    result = {
+        "element_type": None,
+        "type_attribute": None,
+        "confidence": None,
+        "detected_as": None,
+        "suggested_id": None,
+        "number": None,
+    }
+    
+    if not title:
+        return result
+    
+    title = title.strip()
+    if not title:
+        return result
+    
+    for pattern in REFERENCIAS_PATTERNS:
+        if re.search(pattern, title):
+            result["element_type"] = "ref-list"
+            return result
+    
+    for pattern in AGRADECIMENTOS_PATTERNS:
+        if re.search(pattern, title):
+            result["element_type"] = "ack"
+            return result
+
+    # Verifica se definitivamente NÃO é uma footnote
+    for pattern in NOT_FN_INDICATORS:
+        if re.match(pattern, title):
+            # É uma seção
+            sec_type, number = detect_sec_type_and_number(title)
+            if sec_type:
+                result["element_type"] = "sec"
+                result["type_attribute"] = sec_type
+                result["confidence"] = "high"
+                result["detected_as"] = f"section: {sec_type}"
+                result["suggested_id"] = suggest_sec_id(title)
+                result["number"] = number
+                return result
+    
+    # Tenta detectar como footnote
+    fn_type = detect_fn_type(title)
+    
+    # Tenta detectar como seção
+    sec_type, section_number = detect_sec_type_and_number(title)
+    
+    # Decide baseado no que foi detectado
+    if fn_type and not sec_type:
+        # Só detectou como footnote
+        result["element_type"] = "fn"
+        result["type_attribute"] = fn_type
+        result["confidence"] = "high"
+        result["detected_as"] = f"footnote: {fn_type}"
+        result["number"] = extract_fn_number(title)
+        result["suggested_id"] = suggest_fn_id(fn_type, result["number"])
+        
+    elif sec_type and not fn_type:
+        # Só detectou como seção
+        result["element_type"] = "sec"
+        result["type_attribute"] = sec_type
+        result["confidence"] = "high"
+        result["detected_as"] = f"section: {sec_type}"
+        result["number"] = section_number
+        result["suggested_id"] = suggest_sec_id(title)
+        
+    elif fn_type and sec_type:
+        # Detectou como ambos - precisa desambiguar
+        # Usa contexto e heurísticas
+        
+        # Se está no back-matter, provavelmente é footnote
+        if context == "back":
+            result["element_type"] = "fn"
+            result["type_attribute"] = fn_type
+            result["confidence"] = "medium"
+            result["detected_as"] = f"footnote (in back): {fn_type}"
+            result["number"] = extract_fn_number(title)
+            result["suggested_id"] = suggest_fn_id(fn_type, result["number"])
+        
+        # Se tem símbolo especial no início, provavelmente é footnote
+        elif any(title.startswith(symbol) for symbol in SYMBOL_TO_FN_TYPE.keys()):
+            result["element_type"] = "fn"
+            result["type_attribute"] = fn_type
+            result["confidence"] = "high"
+            result["detected_as"] = f"footnote (symbol): {fn_type}"
+            result["number"] = extract_fn_number(title)
+            result["suggested_id"] = suggest_fn_id(fn_type, result["number"])
+        
+        # Se tem numeração de seção (2.1, etc), provavelmente é seção
+        elif section_number and "." in section_number:
+            result["element_type"] = "sec"
+            result["type_attribute"] = sec_type
+            result["confidence"] = "high"
+            result["detected_as"] = f"section (numbered): {sec_type}"
+            result["number"] = section_number
+            result["suggested_id"] = suggest_sec_id(title)
+        
+        else:
+            # Caso ambíguo - usa seção como padrão
+            result["element_type"] = "sec"
+            result["type_attribute"] = sec_type
+            result["confidence"] = "low"
+            result["detected_as"] = f"ambiguous (defaulting to section): {sec_type}"
+            result["number"] = section_number
+            result["suggested_id"] = suggest_sec_id(title)
+            
+    else:
+        # Não detectou como nenhum dos dois
+        result["confidence"] = "none"
+        result["detected_as"] = "unidentified"
+    
+    return result
+
+
+def extract_fn_number(text: str) -> Optional[str]:
+    """
+    Extrai o número ou símbolo de uma footnote.
+    
+    Args:
+        text: Texto da footnote
+    
+    Returns:
+        Número, letra ou símbolo extraído
+    """
+    if not text:
+        return None
+    
+    for pattern in FN_NUMBER_PATTERNS:
+        match = re.match(pattern, text)
+        if match:
+            return match.group(1)
+    
+    return None
+
+
+def suggest_fn_id(fn_type: Optional[str], number: Optional[str] = None) -> str:
+    """
+    Sugere um ID para uma footnote baseado no tipo e número.
+    
+    Args:
+        fn_type: Tipo da footnote
+        number: Número ou símbolo da footnote
+    
+    Returns:
+        ID sugerido para a footnote
+    
+    Exemplos:
+        >>> suggest_fn_id("corresp", "1")
+        'fn1'
+        >>> suggest_fn_id("equal", "*")
+        'fnast'
+        >>> suggest_fn_id("financial-disclosure")
+        'fn1'
+    """
+    if number:
+        # Trata símbolos especiais
+        symbol_map = {
+            "*": "ast",
+            "†": "dag",
+            "‡": "ddag",
+            "§": "sect",
+            "¶": "para",
+            "#": "hash",
+            "**": "dast",
+            "††": "ddag",
+        }
+        
+        if number in symbol_map:
+            return f"fn{symbol_map[number]}"
+        else:
+            # Remove caracteres não alfanuméricos
+            clean_number = re.sub(r"[^\w]", "", number)
+            return f"fn{clean_number}"
+    else:
+        return "fn1"
+
+
+def batch_detect_element_types(titles: List[str], context: Optional[str] = None) -> List[Dict[str, Optional[str]]]:
+    """
+    Detecta tipos de múltiplos elementos em lote.
+    
+    Args:
+        titles: Lista de títulos para análise
+        context: Contexto opcional para todos os elementos
+    
+    Returns:
+        Lista de resultados da detecção
+    """
+    results = []
+    for title in titles:
+        result = detect_element_type(title, context)
+        result["original_title"] = title
+        results.append(result)
+    return results
+
+
 # Exemplos de uso e testes
 if __name__ == "__main__":
     print("=" * 80)
-    print("SISTEMA DE ANÁLISE BIDIRECIONAL DE XREFS")
+    print("SISTEMA DE DETECÇÃO DE TIPOS DE ELEMENTOS (SEC vs FN)")
     print("=" * 80)
-
-    # Teste 1: Análise a partir de texto
-    print("\n1. ANÁLISE A PARTIR DE TEXTO:")
+    
+    # Teste 1: Títulos claramente de seções
+    print("\n1. TÍTULOS DE SEÇÕES:")
     print("-" * 40)
-
-    test_texts = [
-        # Múltiplos idiomas
-        "Figure 1",
-        "Figura 2",
-        "Abbildung 3",
-        "Figuur 4",
-        "Table 1",
-        "Tableau 2",
-        "Tabelle 3",
-        "Tabel 4",
-        "Equation 1",
-        "Équation 2",
-        "Gleichung 3",
-        "Section 2.1",
-        "Sección 3",
-        "Chapitre 4",
-        # Referências bibliográficas
-        "Silva et al., 2024",
-        "García y col., 2023",
-        "Schmidt u.a., 2022",
-        "Van Der Merwe en ander, 2021",
-    ]
-
-    for text in test_texts:
-        ref_type, element_name, prefix, number = detect_from_text(text)
-        rid = f"{prefix}{number}" if prefix and number else None
-        print(
-            f"{text:<30} → ref_type: {ref_type:<15} element: {element_name:<20} rid: {rid}"
-        )
-
-    # Teste 2: Análise a partir de IDs
-    print("\n2. ANÁLISE A PARTIR DE IDs:")
-    print("-" * 40)
-
-    test_ids = [
-        "f1",
-        "f2a",
-        "t3",
-        "B42",
-        "sec2_1",
-        "app1",
-        "e5",
-        "TFN1",
-        "suppl3",
-        "S2",
-        "fnast",
-        "fndag",
-    ]
-
-    for rid in test_ids:
-        ref_type, element_name = detect_from_id(rid)
-        print(f"{rid:<15} → ref_type: {ref_type:<20} element: {element_name}")
-
-    # Teste 3: Análise bidirecional completa
-    print("\n3. ANÁLISE BIDIRECIONAL COMPLETA:")
-    print("-" * 40)
-
-    test_cases = [
-        {"text": "Figure 1", "rid": "f1"},
-        {"text": "Tabla 2", "rid": "t2"},
-        {"text": "Section 3.1", "rid": "sec3_1"},
-        {"text": "Fig. 4", "rid": "wrong5"},  # Inconsistente
-        {"text": "Equation 2"},  # Só texto
-        {"rid": "B15"},  # Só ID
-    ]
-
-    for test in test_cases:
-        result = analyze_xref(**test)
-        print(f"\nInput: {test}")
-        print(
-            f"Result: ref_type={result['ref_type']}, element={result['element_name']}, "
-            f"rid={result['rid']}, source={result['source']}, consistent={result['consistent']}"
-        )
-
-    # Teste 4: Análise em lote
-    print("\n4. ANÁLISE EM LOTE:")
-    print("-" * 40)
-
-    batch = [
-        {"text": "Figure 1"},
-        {"text": "Tableau 2", "rid": "t2"},
-        {"rid": "B3"},
-        {"text": "Gleichung 4"},
-        {"text": "Material Suplementar S1"},
-    ]
-
-    results = batch_analyze_xrefs(batch)
-    for i, result in enumerate(results, 1):
-        print(f"\n{i}. {batch[i-1]}")
-        print(f"   → {result['ref_type']}/{result['element_name']}/{result['rid']}")
-
-    # Teste 5: Detecção de sec-type
-    print("\n" + "=" * 80)
-    print("5. DETECÇÃO DE SEC-TYPE:")
-    print("-" * 40)
-
+    
     section_titles = [
-        # Inglês
-        "Introduction",
-        "Materials and Methods",
-        "Results",
-        "Discussion",
-        "Results and Discussion",
-        "Conclusions",
-        "Data Availability",
-        "Participants",
-        "Patients and Methods",
-        # Português
-        "Introdução",
-        "Material e Métodos",
-        "Metodologia",
-        "Resultados e Discussão",
-        "Conclusões",
-        "Disponibilidade de Dados",
-        "Pacientes e Métodos",
-        # Espanhol
-        "Introducción",
-        "Materiales y Métodos",
-        "Resultados",
-        "Discusión",
-        "Resultados y Discusión",
-        "Conclusiones",
-        # Francês
-        "Introduction",
-        "Matériaux et Méthodes",
-        "Résultats",
-        "Discussion",
-        "Résultats et Discussion",
-        # Alemão
-        "Einleitung",
-        "Material und Methoden",
-        "Ergebnisse",
-        "Diskussion",
-        "Ergebnisse und Diskussion",
-        "Schlussfolgerungen",
-        # Africâner
-        "Inleiding",
-        "Materiaal en Metodes",
-        "Resultate",
-        "Bespreking",
-        "Resultate en Bespreking",
-        # Casos combinados especiais
-        "Conclusions and Future Work",
-        "Cases and Results",
-        "Conclusions and Recommendations",
-    ]
-
-    print(f"{'Título da Seção':<40} {'sec-type detectado':<30}")
-    print("-" * 70)
-
-    for title in section_titles:
-        sec_type = detect_sec_type(title)
-        print(f"{title:<40} {str(sec_type):<30}")
-
-    # Teste 6: Detecção de sec-type com números
-    print("\n6. DETECÇÃO DE SEC-TYPE E NÚMEROS:")
-    print("-" * 40)
-
-    numbered_sections = [
         "1. Introduction",
         "2. Materials and Methods",
-        "2.1 Study Population",
-        "2.2 Experimental Procedures",
-        "3. Results",
-        "3.1. Clinical Cases",
-        "4. Discussion",
-        "4.1 Results and Discussion",
-        "5. Conclusions",
-        "A. Supplementary Material",
-        "I. Introdução",
-        "II. Material e Métodos",
+        "Results",
+        "Discussion",
+        "Conclusões",
     ]
-
-    print(f"{'Título':<40} {'sec-type':<25} {'número':<10} {'ID':<10}")
-    print("-" * 85)
-
-    for section in numbered_sections:
-        sec_type, number = detect_sec_type_and_number(section)
-        suggested_id = suggest_sec_id(section)
-        print(f"{section:<40} {str(sec_type):<25} {str(number):<10} {suggested_id:<10}")
-
-    # Teste 7: Detecção em lote
-    print("\n7. DETECÇÃO EM LOTE DE SEÇÕES:")
+    
+    for title in section_titles:
+        result = detect_element_type(title)
+        print(f"{title:<40} → {result['element_type']:<5} ({result['type_attribute']})")
+    
+    # Teste 2: Títulos claramente de footnotes
+    print("\n2. TÍTULOS DE FOOTNOTES:")
     print("-" * 40)
-
-    article_sections = [
-        "1. Introduction",
-        "2. Study Design and Participants",
-        "3. Materials and Methods",
-        "4. Results and Discussion",
-        "5. Cases and Results",
-        "6. Conclusions and Future Work",
-        "7. Data Availability Statement",
-        "Appendix A: Supplementary Material",
+    
+    footnote_titles = [
+        "*Corresponding author",
+        "†These authors contributed equally",
+        "Financial disclosure",
+        "1. Author contributions",
+        "Conflict of interest statement",
     ]
-
-    batch_results = batch_detect_sec_types(article_sections)
-
-    print(f"{'Título':<45} {'sec-type':<30} {'ID':<10}")
-    print("-" * 85)
-
-    for result in batch_results:
-        print(
-            f"{result['title']:<45} {str(result['sec_type']):<30} {result['suggested_id']:<10}"
-        )
-
-    # Teste 8: Casos especiais de múltiplos tipos
-    print("\n8. CASOS ESPECIAIS - MÚLTIPLOS TIPOS:")
+    
+    for title in footnote_titles:
+        result = detect_element_type(title)
+        print(f"{title:<40} → {result['element_type']:<5} ({result['type_attribute']})")
+    
+    # Teste 3: Casos ambíguos
+    print("\n3. CASOS AMBÍGUOS:")
     print("-" * 40)
-
-    special_cases = [
+    
+    ambiguous_titles = [
+        "Supplementary material",  # Pode ser sec ou fn
+        "Abbreviations",  # Pode ser sec ou fn
+        "Present address",  # Geralmente fn
+        "Study group members",  # Geralmente fn
+    ]
+    
+    for title in ambiguous_titles:
+        result = detect_element_type(title)
+        print(f"\n{title}:")
+        print(f"  Element: {result['element_type']}")
+        print(f"  Type: {result['type_attribute']}")
+        print(f"  Confidence: {result['confidence']}")
+        print(f"  Detected as: {result['detected_as']}")
+        print(f"  Suggested ID: {result['suggested_id']}")
+    
+    # Teste 4: Com contexto
+    print("\n4. DETECÇÃO COM CONTEXTO:")
+    print("-" * 40)
+    
+    test_with_context = [
+        ("Abbreviations", "back"),
+        ("Abbreviations", "body"),
+        ("Financial support", "back"),
+        ("Financial support", "body"),
+    ]
+    
+    for title, ctx in test_with_context:
+        result = detect_element_type(title, ctx)
+        print(f"{title} (context: {ctx}):")
+        print(f"  → {result['element_type']} / {result['type_attribute']} (conf: {result['confidence']})")
+    
+    # Teste 5: Detecção em lote
+    print("\n5. DETECÇÃO EM LOTE:")
+    print("-" * 40)
+    
+    mixed_titles = [
+        "Introduction",
+        "*Corresponding author: john.doe@example.com",
         "Materials and Methods",
-        "Material e Métodos",
-        "Matériaux et Méthodes",
+        "†Equal contribution",
         "Results and Discussion",
-        "Resultados e Discussão",
-        "Patients and Methods",
-        "Cases and Results",
-        "Introduction and Objectives",
-        "Methods and Procedures",
-        "Conclusions and Recommendations",
-        "Discussion and Conclusions",
+        "Financial disclosure: This work was supported by grant XYZ",
+        "Conclusions",
+        "Data availability statement",
+        "Conflict of interest: None declared",
+        "Supplementary Material",
     ]
-
-    print(f"{'Título':<45} {'sec-type (com | para múltiplos)':<35}")
-    print("-" * 80)
-
-    for title in special_cases:
-        sec_type = detect_sec_type(title)
-        print(f"{title:<45} {str(sec_type):<35}")
+    
+    batch_results = batch_detect_element_types(mixed_titles, context="back")
+    
+    print(f"{'Title':<50} {'Element':<8} {'Type':<25} {'Confidence':<10}")
+    print("-" * 93)
+    
+    for result in batch_results:
+        title_display = result['original_title'][:47] + "..." if len(result['original_title']) > 50 else result['original_title']
+        print(f"{title_display:<50} {str(result['element_type']):<8} {str(result['type_attribute']):<25} {str(result['confidence']):<10}")
+    
+    # Teste 6: Extração de números de footnotes
+    print("\n6. EXTRAÇÃO DE NÚMEROS DE FOOTNOTES:")
+    print("-" * 40)
+    
+    footnotes_with_numbers = [
+        "1. Corresponding author",
+        "[2] Financial disclosure",
+        "(a) Present address",
+        "* Equal contribution",
+        "† Deceased",
+        "‡ On leave",
+        "A. Supplementary data",
+    ]
+    
+    for fn_text in footnotes_with_numbers:
+        number = extract_fn_number(fn_text)
+        fn_type = detect_fn_type(fn_text)
+        suggested_id = suggest_fn_id(fn_type, number)
+        print(f"{fn_text:<35} → number: {str(number):<5} → ID: {suggested_id}")
+    
+    # Teste 7: Casos especiais multilíngues
+    print("\n7. CASOS MULTILÍNGUES:")
+    print("-" * 40)
+    
+    multilingual_cases = [
+        # Português
+        "Conflito de interesses",
+        "Contribuições dos autores",
+        "Endereço atual",
+        # Espanhol
+        "Conflicto de interés",
+        "Contribuciones de los autores",
+        "Dirección actual",
+        # Francês
+        "Conflit d'intérêt",
+        "Contributions des auteurs",
+        "Adresse actuelle",
+        # Alemão
+        "Interessenkonflikt",
+        "Autorenbeiträge",
+        "Aktuelle Adresse",
+    ]
+    
+    for title in multilingual_cases:
+        result = detect_element_type(title)
+        print(f"{title:<40} → {result['element_type']}/{result['type_attribute']}")
