@@ -4,7 +4,6 @@ import os
 from datetime import datetime
 
 from scielo_classic_website.htmlbody.html_body import HTMLContent
-from scielo_classic_website.isisdb.isis_cmd import get_documents_by_issue_folder
 
 
 def try_to_fix_encoding(nome_original):
@@ -41,36 +40,32 @@ def _get_classic_website_rel_path(file_path):
 
 
 def fixed_glob(patterns, file_type, recursive):
+    paths = set()
     for pattern in patterns:
-        for path in glob.glob(pattern, recursive=recursive):
-            try:
-                item = {
-                    "type": file_type,
-                }
-                item["path"] = path
-                with open(path, "rb") as f:
-                    item["content"] = f.read()
-                item["modified_date"] = modified_date(path)
-            except Exception as e:
-                logging.exception(e)
-                item["error"] = str(e)
-                item["error_type"] = type(e).__name__
-            yield item
+        paths.update(
+            glob.glob(pattern, recursive=recursive)
+        )
+    return paths
 
 
 def get_files(patterns, file_type, recursive=False):
-    for item in fixed_glob(patterns, file_type, recursive):
+    for path in fixed_glob(patterns, file_type, recursive):
         try:
-            if not item.get("error"):
-                path = item["path"]
-                item["name"] = os.path.basename(path)
-                item["key"], item["extension"] = os.path.splitext(item["name"])
-                item["type"] = file_type
-                item["relative_path"] = _get_classic_website_rel_path(path)
-            yield item
-
+            item = {
+                "type": file_type,
+                "path": path,
+                "modified_date": modified_date(path),
+                "name": os.path.basename(path),
+                "relative_path": _get_classic_website_rel_path(path),
+            }
+            item["key"], item["extension"] = os.path.splitext(item["name"])
+            with open(path, "rb") as f:
+                item["content"] = f.read()
         except Exception as e:
-            yield {"type": file_type, "error": str(e), "error_type": type(e).__name__}
+            logging.exception(e)
+            item["error"] = str(e)
+            item["error_type"] = type(e).__name__
+        yield item
 
 
 def fix_html_content(content):
@@ -78,11 +73,10 @@ def fix_html_content(content):
         return None
     try:
         content = content.decode("utf-8")
+        logging.info("HTML content decoded as utf-8")
     except Exception as e:
         content = content.decode("iso-8859-1")
-        logging.warning(
-            f"HTML content decoded using iso-8859-1 due to utf-8 decoding error. {e}"
-        )
+        logging.info("HTML content decoded as iso-8859-1")
     try:
         return HTMLContent(content).content
     except Exception as e:
@@ -104,13 +98,9 @@ class IssueFolder:
 
     @property
     def files(self):
-        logging.info("xml")
         yield from self.bases_xml_files
-        logging.info("bases_translation_files")
         yield from self.bases_translation_files
-        logging.info("bases_pdf_files")
         yield from self.bases_pdf_files
-        logging.info("htdocs_img_revistas_files")
         yield from self.htdocs_img_revistas_files
 
     @property
@@ -136,9 +126,9 @@ class IssueFolder:
         pattern = os.path.join(
             self._classic_website_paths.bases_translation_path,
             self._subdir_acron_issue,
-            "*.ht*",
+            "**",
+            "*.*",
         )
-        logging.info(pattern)
         for item in get_files([pattern], "html"):
             if item.get("error"):
                 yield item
@@ -156,11 +146,8 @@ class IssueFolder:
                 item["lang"] = lang
                 item["part"] = part
                 content = fix_html_content(item["content"])
-                if not content:
-                    raise ValueError(
-                        f"Conteúdo vazio no arquivo HTML {item['path']}"
-                    )
-                item["content"] = content
+                if content:
+                    item["content"] = content
                 yield item
 
             except Exception as e:
@@ -192,17 +179,12 @@ class IssueFolder:
                 yield item
                 continue
             try:
-                lang = None
+                item["lang"] = None
                 key = item["key"]
                 if "_" in key and key[2] == "_":
                     # translations
-                    lang = key[:2]
-                    key = key[3:]
-                    item["key"] = key
-            except IndexError as e:
-                continue
-            try:
-                item["lang"] = lang
+                    item["key"] = key[3:]
+                    item["lang"] = key[:2]
                 yield item
             except Exception as e:
                 yield {"type": "pdf", "error": str(e), "error_type": type(e).__name__}

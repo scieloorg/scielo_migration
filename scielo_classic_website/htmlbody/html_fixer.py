@@ -246,7 +246,7 @@ def get_tagless_items(content):
         if (item or "").strip():
             if item and item[0] == "<" and item[-1] == ">":
                 continue
-        yield item
+        yield item.replace("<", "&lt;").replace(">", "&gt;")
 
 
 def wrap_html(content):

@@ -136,17 +136,12 @@ class BodyFromISIS:
         return []
 
     def _identify_references_range(self):
-        x = []
         for i, item in enumerate(self.p_records):
             if item.reference_index:
                 self.last_reference = i
-                x.append((i, int(item.reference_index)))
-                if not self.first_reference:
-                    self.first_reference = i
-        logging.info(f"first_reference: {self.first_reference}")
-        logging.info(f"last_reference: {self.last_reference}")
-        for i, ref_index in x:
-            logging.info(f"reference_index: {ref_index} at p_record index: {i}")
+                if self.first_reference:
+                    continue
+                self.first_reference = i
 
     @cached_property
     def parts(self):
@@ -169,12 +164,27 @@ class BodyFromISIS:
             return list(get_paragraphs_data(references))
 
 
+def get_paragraphs_text(p_records):
+    if not p_records:
+        return ""
+    texts = []
+    for item in p_records:
+        if not item.paragraph_text:
+            continue
+        texts.append(item.paragraph_text)
+    return "".join(texts)
+
+
 def get_text_block(paragraphs):
     if not paragraphs:
         return ""
     try:
-        return build_text(paragraphs)
+        # corrige o bloco de parágrafos de uma vez
+        paragraphs_text = get_paragraphs_text(paragraphs)
+        hc = HTMLContent(paragraphs_text)
+        return hc.content
     except Exception as e:
+        # corrige cada parágrafo individualmente
         return get_text(get_paragraphs_data(paragraphs))
 
 

@@ -48,7 +48,6 @@ def get_id_function(db_type):
 
 
 def pids_and_their_records(id_file_path, db_type):
-    logging.info("pids_and_their_records %s %s" % (id_file_path, db_type))
     if not id_file_path:
         return []
     id_function = get_id_function(db_type)
