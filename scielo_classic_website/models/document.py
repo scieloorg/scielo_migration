@@ -269,7 +269,7 @@ class Document:
                 h_record.document_publication_date,
                 h_record.creation_date,
                 h_record.update_date,
-                self.issue.issue_publication_date,
+                h_record.issue_publication_date,
             )
             for date_str in dates:
                 if not date_str:
@@ -302,24 +302,25 @@ class Document:
 
     @property
     def license_texts(self):
-        languages = ("en", "es", "pt")
         license_code = self.h_record.license_code
         issue_licenses = self.issue.license_texts
         data = {}
-        for language in languages:
-            item = issue_licenses.get(language)
-            if not item:
-                continue
-            item["code"] = license_code
-            data.setdefault(language, item)
-            try:
-                text = f"<root>{item['html']}</root>"
-                html = ET.fromstring(text)
-                item["url"] = html.get("href")
-                item["text"] = "".join(html.itertext())
+        if issue_licenses and license_code:
+            for item in issue_licenses:
+                language = item.get("language")
+                item["code"] = license_code
+                try:
+                    html = ET.fromstring(f"<root>{item['html']}</root>")
+                    item["url"] = html.find(".//a").get("href")
+                    item["text"] = "".join(html.itertext())
+                except Exception as e:
+                    logging.exception(e)
                 data[language] = item
-            except Exception as e:
-                logging.exception(e)
+            return data
+        if license_code:
+            languages = ("en", "es", "pt")
+            for language in languages:
+                data[language] = {"code": license_code}
         return data
 
     @property

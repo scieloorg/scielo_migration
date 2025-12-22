@@ -4,6 +4,7 @@ import glob
 
 from scielo_classic_website.iid2json import id2json3
 from scielo_classic_website.isisdb.isis_cmd import ISISCommader
+# manter Document, Issue, Journal imports para evitar quebra em outras partes do sistema
 from scielo_classic_website.models.document import Document
 from scielo_classic_website.models.issue import Issue
 from scielo_classic_website.models.issue_files import (
@@ -58,6 +59,11 @@ class ClassicWebsitePaths:
             path = os.path.join(self.bases_path, partial_path)
             if os.path.isfile(path):
                 return path
+            raise FileNotFoundError(
+                f"ID file not found for article pid={article_pid} at {path}"
+            )
+        else:
+            raise ValueError(f"Found article_pid={article_pid} invalid size")
 
     @property
     def id_files(self):
