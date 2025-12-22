@@ -41,7 +41,7 @@ REF_TYPE_TO_ELEMENT = {
     "inline-formula": "inline-formula",
     "fig": "fig",
     "fn": "fn",
-    "author-notes-fn": "author-notes//fn",
+    "author-notes-fn": "fix-author-notes-fn",
     "graphic": "graphic",
     "inline-graphic": "inline-graphic",
     "list": "list",
@@ -53,10 +53,10 @@ REF_TYPE_TO_ELEMENT = {
     "sub-article": "sub-article",
     "response": "response",
     "supplementary-material": "supplementary-material",
-    "table-fn": "table-wrap-foot//fn",
+    "table-fn": "fix-table-wrap-foot-fn",
     "table": "table-wrap",
-    "transcript-sec": "sec[@sec-type='transcript']",
-    "visual-abstract": "abstract[@abstract-type='graphical']",
+    "transcript-sec": "fix-sec-transcript",
+    "visual-abstract": "fix-visual-abstract",
 }
 
 # Padrões de texto para identificação em múltiplos idiomas
