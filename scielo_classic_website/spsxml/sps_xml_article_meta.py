@@ -9,6 +9,7 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
     get_attribute_value,
 )
 from scielo_classic_website.spsxml.sps_xml_utils import set_subject_text
+from scielo_classic_website.htmlbody.html_fixer import remove_tags
 
 
 def fix_html_text(html_text):
@@ -280,47 +281,32 @@ class XMLArticleMetaAuthorNotesPipe(plumber.Pipe):
     Executa após XMLArticleMetacontribGroupPipe.
     """
     
-    def precond(data):
-        raw, xml = data
-        
-        # Verifica se existe corresp em back
-        corresp_elements = xml.xpath(".//corresp")
-        if not corresp_elements:
-            raise plumber.UnmetPrecondition()
-    
-    @plumber.precondition(precond)
     def transform(self, data):
         raw, xml = data
         
         # Encontra elementos corresp em back
         corresp_elements = xml.xpath(".//corresp")
-        
-        if corresp_elements:
-            # Cria author-notes
+        if not corresp_elements:
+            emails = xml.xpath(".//email")
+            if not emails:
+                return data
+            corresp = ET.Element("corresp")
+            for item in emails:
+                corresp.append(item)
+            corresp_elements = [corresp]
+
+        author_notes = xml.xpath(".//author-notes")
+        if not author_notes:
             author_notes = ET.Element("author-notes")
-            
-            # Move cada corresp para dentro de author-notes
-            for corresp in corresp_elements:
-                # Remove corresp de sua localização atual
-                parent = corresp.getparent()
-                if parent is not None:
-                    parent.remove(corresp)
-                
-                # Adiciona corresp ao author-notes
-                author_notes.append(corresp)
-            
             # Insere author-notes como irmão de contrib-group
-            article_meta = xml.find("./front/article-meta")
-            contrib_group = article_meta.find("contrib-group")
-            
-            if contrib_group is not None:
-                # Insere author-notes após contrib-group
-                contrib_group_index = list(article_meta).index(contrib_group)
-                article_meta.insert(contrib_group_index + 1, author_notes)
-            else:
-                # Se não há contrib-group, adiciona ao final de article-meta
-                article_meta.append(author_notes)
+            contrib_group = xml.find(".//front//contrib-group")
+            contrib_group.addnext(author_notes)
         
+        # Move cada corresp para dentro de author-notes
+        for corresp in corresp_elements:
+            # Adiciona corresp ao author-notes
+            author_notes.append(corresp)
+
         return data
 
 
@@ -598,23 +584,24 @@ class XMLArticleMetaKeywordsPipe(plumber.Pipe):
 
 
 class XMLArticleMetaPermissionPipe(plumber.Pipe):
-    def precond(data):
-        raw, xml = data
 
-        if not raw.license_texts:
-            raise plumber.UnmetPrecondition()
-
-    @plumber.precondition(precond)
     def transform(self, data):
         raw, xml = data
-
-        licenses = self.get_licenses(raw)
-        if not licenses:
+        permissions = self.get_permissions(raw, xml)
+        if permissions is None:
             return data
-        
         articlemeta = xml.find("./front/article-meta")
-        permissions = ET.Element("permissions")
+        articlemeta.append(permissions)
+        return data
 
+    def get_permissions(self, raw, xml):
+        licenses = (
+            self.get_article_license_data(raw) or 
+            self.get_issue_license(raw)
+        )
+        if not licenses:
+            return None
+        permissions = ET.Element("permissions")
         for language, url, text in licenses:
             dlicense = ET.Element("license")
             dlicense.set("license-type", "open-access")
@@ -624,11 +611,9 @@ class XMLArticleMetaPermissionPipe(plumber.Pipe):
             licensep.text = text
             dlicense.append(licensep)
             permissions.append(dlicense)
-        articlemeta.append(permissions)
+        return permissions
 
-        return data
-
-    def get_licenses(self, raw):     
+    def get_article_license_data(self, raw):     
         data = [] 
         for language, item in raw.license_texts.items():
             url = item.get("url")
@@ -641,6 +626,25 @@ class XMLArticleMetaPermissionPipe(plumber.Pipe):
                 continue
             data.append((language, url, item.get("text")))
         return data
+    
+    def get_issue_license(self, raw):
+        license_texts = raw.issue.get_license_text_by_language() or {}
+        if not license_texts:
+            return None
+        license_code = raw.issue.license_code
+        if not license_code:
+            return None
+        license_code = license_code.lower()
+        items = []
+        for language, license_text in license_texts.items():
+            license_text = remove_tags(license_text)
+            items.append((
+                language,
+                f"https://creativecommons.org/licenses/{license_code}",
+                license_text
+            ))
+        return items
+
 
 class XMLArticleMetaSelfUriPipe(plumber.Pipe):
     """Adiciona tag `self-uri` ao article-meta do artigo.
