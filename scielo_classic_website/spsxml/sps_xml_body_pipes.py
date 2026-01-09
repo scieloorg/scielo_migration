@@ -564,7 +564,7 @@ class MainHTMLPipe(plumber.Pipe):
             parent.replace(item, new_node)
         
         remove_items = []
-        for item in xml.xpath(".//ref[@id='BNone']"):
+        for item in xml.xpath(".//ref"):
             mixed_citation = item.find(".//mixed-citation")
             if mixed_citation is None:
                 remove_items.append(item)
@@ -572,6 +572,11 @@ class MainHTMLPipe(plumber.Pipe):
             text = "".join(mixed_citation.itertext()).strip()
             if not text:
                 remove_items.append(item)
+                continue
+            ref_id = item.get("id")
+            if not ref_id or "None" in ref_id:
+                remove_items.append(item)
+                continue
         for item in remove_items:
             parent = item.getparent()
             parent.remove(item)
