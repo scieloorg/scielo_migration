@@ -64,19 +64,27 @@ class XMLArticleMetaCitationsPipe(plumber.Pipe):
 
         cit = XMLCitation()
         for i, citation in enumerate(raw.citations):
+            logging.info(f"Processing citation {i}")
             try:
                 citation.fix_function = html_decode
                 ref = cit.deploy(xylose_adapters.ReferenceXyloseAdapter(citation))[1]
                 if ref is None:
                     continue
                 ref_id = ref.get("id")
-                reflist_node = reflist.xpath(f".//ref[@id='{ref_id}']")[0]
-                mixed_citation = ref.find(".//mixed-citation")
-                element_citation = ref.find(".//element-citation")
-                if reflist_node.find(".//mixed-citation") is None and mixed_citation is not None:
-                    reflist_node.append(mixed_citation)
-                if reflist_node.find(".//element-citation") is None and element_citation is not None:
-                    reflist_node.append(element_citation)
+                if not ref_id:
+                    continue
+                try:
+                    reflist_node = reflist.xpath(f".//ref[@id='{ref_id}']")[0]
+                except IndexError:
+                    continue
+                if reflist_node.find(".//mixed-citation") is None:
+                    mixed_citation = ref.find(".//mixed-citation")
+                    if mixed_citation is not None:
+                        reflist_node.append(mixed_citation)
+                if reflist_node.find(".//element-citation") is None:
+                    element_citation = ref.find(".//element-citation")
+                    if element_citation is not None:
+                        reflist_node.append(element_citation)
             except Exception as e:
                 raw.exceptions.append({
                     "i": i,
@@ -100,6 +108,7 @@ class XMLCitation(object):
             self.SourcePipe(),
             self.ConferencePipe(),
             self.ThesisPipe(),
+            self.PublicationPipe(),
             self.PatentPipe(),
             self.VolumePipe(),
             self.IssuePipe(),
