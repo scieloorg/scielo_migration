@@ -68,7 +68,6 @@ def _process(document):
         XMLArticleMetaTitleGroupPipe(),
         XMLArticleMetaTranslatedTitleGroupPipe(),
         XMLArticleMetaContribGroupPipe(),
-        XMLArticleMetaAuthorNotesPipe(),
         XMLArticleMetaAffiliationPipe(),
         XMLArticleMetaPublicationDatesPipe(),
         XMLArticleMetaIssueInfoPipe(),
@@ -81,6 +80,8 @@ def _process(document):
         XMLArticleMetaKeywordsPipe(),
         XMLBodyPipe(),
         XMLBackPipe(),
+        XMLAckPipe(),
+        XMLArticleMetaAuthorNotesPipe(),
         XMLArticleMetaCitationsPipe(),
         XMLSubArticlePipe(),
         XMLStylePipe(),
@@ -193,9 +194,6 @@ class XMLClosePipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        xml.find(".").insert(
-            1, ET.Comment(f"HTML 2 XML {datetime.utcnow().isoformat()}")
-        )
         try:
             doctype = raw.params_for_xml_creation["doctype"]
         except (KeyError, AttributeError):
@@ -793,3 +791,21 @@ class XMLSupToXrefPipe(plumber.Pipe):
             else:
                 break
         return label
+
+
+class XMLAckPipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+        if not xml.xpath(".//body//ack"):
+            return data
+        for body in xml.xpath(".//body"):
+            ack = body.find(".//ack")
+            if ack is None:
+                continue
+            back = body.getnext()
+            if back is None or back.tag != "back":
+                back = ET.Element("back")
+                body.addnext(back)
+            back.insert(0, ack)
+
+        return data
