@@ -74,3 +74,9 @@ class Issue:
                 self._sections_by_code.setdefault(item["code"], [])
                 self._sections_by_code[item["code"]].append(item)
         return self._sections_by_code
+    
+    def get_license_text_by_language(self):
+        texts = {}
+        for item in self.license_texts:
+            texts[item["language"]] = item["html"]
+        return texts
