@@ -1,7 +1,5 @@
 import logging
-from datetime import datetime
 from difflib import SequenceMatcher
-
 
 from lxml.html import fromstring, tostring
 
@@ -20,34 +18,23 @@ DEFAULT_STYLE_MAPPINGS = {
 DEFAULT_TAGS_TO_FIX = ("p", )
 
 
-def get_html_fixed_or_original(original):
-    fixed_html = get_fixed_html(original)
-
+def get_fixed_similarity_rate(original, fixed_html):
+    """Verifica se o HTML corrigido é válido comparando com o original."""
     tagless_html = remove_tags(fixed_html)
     tagless_text = get_fixed_text(original)
 
     std_converted = tagless_html.split()
     std_original = tagless_text.split()
 
-    score = SequenceMatcher(None, std_original, std_converted).ratio()
+    return SequenceMatcher(None, std_original, std_converted).ratio()
+
+
+def get_best_choice_between_original_and_fixed(score, original, fixed_html, min_score=0.7):
     if score == 1:
-        return fixed_html
-
-    # now = datetime.now().isoformat()
-
-    # rows = [
-    #     original,
-    #     tagless_html,
-    #     tagless_text,
-    # ]
-    
-    # with open(f"_diff_{now}.txt", "w") as fp:
-    #     fp.write("\n--------\n".join(rows))
-
-    if score > 0.7:
-        return fixed_html
-
-    return original
+        return "fixed_html"
+    if score > min_score:
+        return "fixed_html"
+    return "original"
 
 
 def load_html(content):
@@ -69,7 +56,6 @@ def get_fixed_html(content, style_mappings=None, tags_to_fix=None, remove_namesp
     """
     style_mappings = style_mappings or DEFAULT_STYLE_MAPPINGS
     tags_to_fix = tags_to_fix or DEFAULT_TAGS_TO_FIX
-    
     fixed_content = fix(content, style_mappings, tags_to_fix)
     wrapped = wrap_html(fixed_content)
     tree = fromstring(wrapped)
@@ -130,12 +116,12 @@ def avoid_mismatched_styles(content, style_mappings=None):
     
     for tag, style in style_mappings.items():
         # Tags minúsculas
-        content = content.replace(f"<{tag}>", f'<span name="style_{style}">')
+        content = content.replace(f"<{tag}>", f'<span style="{style}">')
         content = content.replace(f"</{tag}>", '</span>')
         
         # Tags maiúsculas
         tag_upper = tag.upper()
-        content = content.replace(f"<{tag_upper}>", f'<span name="style_{style}">')
+        content = content.replace(f"<{tag_upper}>", f'<span style="{style}">')
         content = content.replace(f"</{tag_upper}>", '</span>')
     
     return content
@@ -219,7 +205,7 @@ def get_no_namespaces(content):
         yield item
 
 
-def remove_tags(content):
+def remove_tags(content, skip_tags=None):
     """
     Remove todas as tags HTML do conteúdo.
     
@@ -229,10 +215,10 @@ def remove_tags(content):
     Returns:
         Conteúdo sem tags
     """
-    return "".join(get_tagless_items(content))
+    return "".join(get_tagless_items(content, skip_tags=skip_tags))
 
 
-def get_tagless_items(content):
+def get_tagless_items(content, skip_tags=None):
     """
     Gerador que retorna apenas o conteúdo sem tags HTML.
     
@@ -242,10 +228,21 @@ def get_tagless_items(content):
     Yields:
         Partes do conteúdo sem tags
     """
+    tags_to_skip = []
+    for tag in (skip_tags or []):
+        tags_to_skip.append(f"<{tag}")
+        tags_to_skip.append(f"</{tag}>")
+
     for item in break_content(content):
-        if (item or "").strip():
-            if item and item[0] == "<" and item[-1] == ">":
-                continue
+        if not item:
+            yield item
+            continue
+        if item[0] == "<" and item[-1] == ">":
+            for tag in tags_to_skip:
+                if item.startswith(tag):
+                    yield item
+                    break
+            continue
         yield item.replace("<", "&lt;").replace(">", "&gt;")
 
 
@@ -300,13 +297,19 @@ def tag_has_namespace(tag):
     """
     if ":" not in tag:
         return False
-    for part in tag.split():
-        if ":" in part.split("=")[0]:
+    
+    tag = tag.replace('="', '-ATTRVALUE-BEGIN')
+    tag = tag.replace('"', "END-ATTRVALUE-')")
+    items = tag.split("-ATTRVALUE-")
+    for item in items:
+        if item.startswith("BEGIN") and item.endswith("END"):
+            continue
+        if ":" in item:
             return True
     return False
 
 
-def html2xml(tree):
+def html2xml(tree, extra=None):
     """
     Converte a árvore HTML para string XML.
     
@@ -318,9 +321,14 @@ def html2xml(tree):
     """
     body = tree.find(".//body")
     try:
-        content = tostring(body, method="xml", encoding="utf-8").decode("utf-8")
+        content = tostring(body, method="html", encoding="utf-8").decode("utf-8")
+        x = content[:content.find(">")+1]
+        if not x.startswith("<body"):
+            raise ValueError(f"Tag <body> não encontrada corretamente. {x}")
         content = content[content.find(">")+1:]
         content = content[:content.rfind("</body>")]
+        if extra:
+            content = extra + content
     except Exception as e:
         logging.exception(e)
         raise
