@@ -41,7 +41,7 @@ REF_TYPE_TO_ELEMENT = {
     "inline-formula": "inline-formula",
     "fig": "fig",
     "fn": "fn",
-    "author-notes-fn": "fix-author-notes-fn",
+    "author-notes-fn": "author-notes//fn",
     "graphic": "graphic",
     "inline-graphic": "inline-graphic",
     "list": "list",
@@ -53,10 +53,10 @@ REF_TYPE_TO_ELEMENT = {
     "sub-article": "sub-article",
     "response": "response",
     "supplementary-material": "supplementary-material",
-    "table-fn": "fix-table-wrap-foot-fn",
+    "table-fn": "table-wrap-foot//fn",
     "table": "table-wrap",
-    "transcript-sec": "fix-sec-transcript",
-    "visual-abstract": "fix-visual-abstract",
+    "transcript-sec": "sec[@sec-type='transcript']",
+    "visual-abstract": "abstract[@abstract-type='graphical']",
 }
 
 # Padrões de texto para identificação em múltiplos idiomas
@@ -65,48 +65,49 @@ TEXT_PATTERNS = {
     # Figuras
     "fig": [
         # Inglês
-        r"(?i)^fig\.?(?:\s*\d+)?$",  # fig, fig., fig 1, FIG. 2
-        r"(?i)^figure(?:\s*\d+)?$",  # Figure, figure 3, FIGURE 4
+        r"(?i)^figs?\.?(?:\s*\d+)?$",  # fig, figs, fig., figs. 1, FIG. 2
+        r"(?i)^figures?(?:\s*\d+)?$",  # Figure, Figures, figure 3, figures 4
         # Português
         r"(?i)^figura(?:\s*\d+)?$",
+        r"(?i)^figuras(?:\s*\d+)?$",
         # Espanhol
-        r"(?i)^fig\.?(?:\s*\d+)?$",
-        r"(?i)^figura(?:\s*\d+)?$",
-        r"(?i)^gráfico(?:\s*\d+)?$",
+        r"(?i)^figs?\.?(?:\s*\d+)?$",
+        r"(?i)^figuras?(?:\s*\d+)?$",
+        r"(?i)^gráficos?(?:\s*\d+)?$",
         # Francês
-        r"(?i)^fig\.?(?:\s*\d+)?$",
-        r"(?i)^figure(?:\s*\d+)?$",
-        r"(?i)^schéma(?:\s*\d+)?$",
+        r"(?i)^figs?\.?(?:\s*\d+)?$",
+        r"(?i)^figures?(?:\s*\d+)?$",
+        r"(?i)^schémas?(?:\s*\d+)?$",
         # Alemão
-        r"(?i)^abb\.?(?:\s*\d+)?$",
-        r"(?i)^abbildung(?:\s*\d+)?$",
-        r"(?i)^bild(?:\s*\d+)?$",
+        r"(?i)^abbs?\.?(?:\s*\d+)?$",
+        r"(?i)^abbildungen?(?:\s*\d+)?$",
+        r"(?i)^bilder?(?:\s*\d+)?$",
         # Africâner
-        r"(?i)^fig\.?(?:\s*\d+)?$",
-        r"(?i)^figuur(?:\s*\d+)?$",
-        r"(?i)^beeld(?:\s*\d+)?$"
+        r"(?i)^figs?\.?(?:\s*\d+)?$",
+        r"(?i)^figure?(?:\s*\d+)?$",
+        r"(?i)^beelde?(?:\s*\d+)?$"
     ],
     # Tabelas
     "table": [
         # Inglês
-        r"(?i)^tab\.?(?:\s*\d+)?$",  # tab, tab., Tab 1, TAB. 2
-        r"(?i)^table(?:\s*\d+)?$",  # Table, table 3, TABLE 4
+        r"(?i)^tabs?\.?(?:\s*\d+)?$",  # tab, tabs, tab., tabs. 1, TAB. 2
+        r"(?i)^tables?(?:\s*\d+)?$",  # Table, Tables, table 3, tables 4
         # Português
-        r"(?i)^tabela(?:\s*\d+)?$",
-        r"(?i)^quadro(?:\s*\d+)?$",
+        r"(?i)^tabelas?(?:\s*\d+)?$",
+        r"(?i)^quadros?(?:\s*\d+)?$",
         # Espanhol
-        r"(?i)^tabla(?:\s*\d+)?$",
-        r"(?i)^cuadro(?:\s*\d+)?$",
+        r"(?i)^tablas?(?:\s*\d+)?$",
+        r"(?i)^cuadros?(?:\s*\d+)?$",
         # Francês
-        r"(?i)^tableau(?:\s*\d+)?$",
-        r"(?i)^tabl\.?(?:\s*\d+)?$",
+        r"(?i)^tableaux?(?:\s*\d+)?$",
+        r"(?i)^tabls?\.?(?:\s*\d+)?$",
         # Alemão
-        r"(?i)^tabelle(?:\s*\d+)?$",
-        r"(?i)^tab\.?(?:\s*\d+)?$",
-        r"(?i)^tafel(?:\s*\d+)?$",
+        r"(?i)^tabellen?(?:\s*\d+)?$",
+        r"(?i)^tabs?\.?(?:\s*\d+)?$",
+        r"(?i)^tafeln?(?:\s*\d+)?$",
         # Africâner
-        r"(?i)^tabel(?:\s*\d+)?$",
-        r"(?i)^tab\.?(?:\s*\d+)?$"
+        r"(?i)^tabelle?(?:\s*\d+)?$",
+        r"(?i)^tabs?\.?(?:\s*\d+)?$"
     ],
     # Referências bibliográficas
     "bibr": [
@@ -133,28 +134,28 @@ TEXT_PATTERNS = {
     # Equações/Fórmulas
     "disp-formula": [
         # Inglês
-        r"(?i)^eq\.?(?:\s*\d+)?$",  # eq, eq., Eq 1, EQ. 2
-        r"(?i)^equation(?:\s*\d+)?$",  # Equation, equation 3, EQUATION 4
+        r"(?i)^eqs?\.?(?:\s*\d+)?$",  # eq, eqs, eq., eqs. 1, EQ. 2
+        r"(?i)^equations?(?:\s*\d+)?$",  # Equation, Equations, equation 3, equations 4
         # Português
-        r"(?i)^eq\.?(?:\s*\d+)?$",
-        r"(?i)^equação(?:\s*\d+)?$",
-        r"(?i)^fórmula(?:\s*\d+)?$",
+        r"(?i)^eqs?\.?(?:\s*\d+)?$",
+        r"(?i)^equações?(?:\s*\d+)?$",
+        r"(?i)^fórmulas?(?:\s*\d+)?$",
         # Espanhol
-        r"(?i)^ec\.?(?:\s*\d+)?$",
-        r"(?i)^ecuación(?:\s*\d+)?$",
-        r"(?i)^fórmula(?:\s*\d+)?$",
+        r"(?i)^ecs?\.?(?:\s*\d+)?$",
+        r"(?i)^ecuaciones?(?:\s*\d+)?$",
+        r"(?i)^fórmulas?(?:\s*\d+)?$",
         # Francês
-        r"(?i)^éq\.?(?:\s*\d+)?$",
-        r"(?i)^équation(?:\s*\d+)?$",
-        r"(?i)^formule(?:\s*\d+)?$",
+        r"(?i)^éqs?\.?(?:\s*\d+)?$",
+        r"(?i)^équations?(?:\s*\d+)?$",
+        r"(?i)^formules?(?:\s*\d+)?$",
         # Alemão
-        r"(?i)^gl\.?(?:\s*\d+)?$",
-        r"(?i)^gleichung(?:\s*\d+)?$",
-        r"(?i)^formel(?:\s*\d+)?$",
+        r"(?i)^gls?\.?(?:\s*\d+)?$",
+        r"(?i)^gleichungen?(?:\s*\d+)?$",
+        r"(?i)^formeln?(?:\s*\d+)?$",
         # Africâner
-        r"(?i)^vgl\.?(?:\s*\d+)?$",
-        r"(?i)^vergelyking(?:\s*\d+)?$",
-        r"(?i)^formule(?:\s*\d+)?$",
+        r"(?i)^vgls?\.?(?:\s*\d+)?$",
+        r"(?i)^vergelykings?(?:\s*\d+)?$",
+        r"(?i)^formules?(?:\s*\d+)?$",
         r"^\(\d+\)$"  # (1) quando em contexto matemático
     ],
     # Fórmulas inline
@@ -167,17 +168,17 @@ TEXT_PATTERNS = {
         # r"^[*‡§¶#]+$",  # Símbolos especiais - REMOVIDO
         # r"^[a-z]$",  # Letra minúscula única - REMOVIDO
         # Inglês
-        r"(?i)^note(?:\s*\d+)?$",  # note, Note, NOTE 1
-        r"(?i)^footnote(?:\s*\d+)?$",  # footnote, Footnote 2, FOOTNOTE 3
+        r"(?i)^notes?(?:\s*\d+)?$",  # note, notes, Note, Notes 1
+        r"(?i)^footnotes?(?:\s*\d+)?$",  # footnote, footnotes, Footnote 2, footnotes 3
         # Português
-        r"(?i)^nota(?:\s*\d+)?$",
-        r"(?i)^nota\s+de\s+rodapé(?:\s*\d+)?$",
+        r"(?i)^notas?(?:\s*\d+)?$",
+        r"(?i)^notas?\s+de\s+rodapé(?:\s*\d+)?$",
         # Espanhol
-        r"(?i)^nota(?:\s*\d+)?$",
-        r"(?i)^nota\s+al\s+pie(?:\s*\d+)?$",
+        r"(?i)^notas?(?:\s*\d+)?$",
+        r"(?i)^notas?\s+al\s+pie(?:\s*\d+)?$",
         # Francês
-        r"(?i)^note(?:\s*\d+)?$",
-        r"(?i)^note\s+de\s+bas\s+de\s+page(?:\s*\d+)?$",
+        r"(?i)^notes?(?:\s*\d+)?$",
+        r"(?i)^notes?\s+de\s+bas\s+de\s+page(?:\s*\d+)?$",
         # Alemão
         r"(?i)^anm\.?(?:\s*\d+)?$",
         r"(?i)^anmerkung(?:\s*\d+)?$",
@@ -218,18 +219,18 @@ TEXT_PATTERNS = {
     # Seções
     "sec": [
         # Inglês
-        r"(?i)^sec\.?(?:\s*\d+)?$",  # sec, sec., Sec 1, SEC. 2
-        r"(?i)^section(?:\s*\d+)?$",  # Section, section 3, SECTION 4
-        r"(?i)^chapter(?:\s*\d+)?$",
+        r"(?i)^secs?\.?(?:\s*\d+)?$",  # sec, secs, sec., secs. 1, SEC. 2
+        r"(?i)^sections?(?:\s*\d+)?$",  # Section, Sections, section 3, sections 4
+        r"(?i)^chapters?(?:\s*\d+)?$",
         # Português
-        r"(?i)^seção(?:\s*\d+)?$",
-        r"(?i)^capítulo(?:\s*\d+)?$",
-        r"(?i)^parte(?:\s*\d+)?$",
+        r"(?i)^seções?(?:\s*\d+)?$",
+        r"(?i)^capítulos?(?:\s*\d+)?$",
+        r"(?i)^partes?(?:\s*\d+)?$",
         # Espanhol
-        r"(?i)^sección(?:\s*\d+)?$",
-        r"(?i)^sec\.?(?:\s*\d+)?$",
-        r"(?i)^capítulo(?:\s*\d+)?$",
-        r"(?i)^apartado(?:\s*\d+)?$",
+        r"(?i)^secciones?(?:\s*\d+)?$",
+        r"(?i)^secs?\.?(?:\s*\d+)?$",
+        r"(?i)^capítulos?(?:\s*\d+)?$",
+        r"(?i)^apartados?(?:\s*\d+)?$",
         # Francês
         r"(?i)^section(?:\s*\d+)?$",
         r"(?i)^chapitre(?:\s*\d+)?$",

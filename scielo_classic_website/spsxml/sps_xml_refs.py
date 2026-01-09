@@ -1,4 +1,5 @@
 import logging
+import traceback
 from datetime import datetime
 from io import StringIO
 
@@ -55,35 +56,41 @@ class XMLArticleMetaCitationsPipe(plumber.Pipe):
             back = ET.Element("back")
             article.append(back)
 
-        reflist = xml.find("./back/ref-list")
-        if reflist is None:
+        try:
+            reflist = back.xpath(".//ref-list")[0]
+        except IndexError:
             reflist = ET.Element("ref-list")
-            back.append(reflist)
-
-        refs = ET.Element("ref-list")
+            back.insert(0, reflist)
 
         cit = XMLCitation()
         for i, citation in enumerate(raw.citations):
+            logging.info(f"Processing citation {i}")
             try:
                 citation.fix_function = html_decode
                 ref = cit.deploy(xylose_adapters.ReferenceXyloseAdapter(citation))[1]
-                if ref is not None:
-                    if ref.find(".//mixed-citation") is None:
-                        ref_id = ref.get("id")
-                        r = reflist.find(f".//ref[@id='{ref_id}']")
-                        if r is not None:
-                            mixed_citation = r.find(".//mixed-citation")
-                            if mixed_citation is not None:
-                                ref.insert(0, mixed_citation)
-                    refs.append(ref)
-            except Exception as e:
-                logging.exception(e)
+                if ref is None:
+                    continue
+                ref_id = ref.get("id")
+                if not ref_id:
+                    continue
                 try:
-                    logging.info(citation._record)
-                except:
-                    logging.info(dir(citation))
-                refs.append(ET.Comment(str({"data": citation._record, "error": str(e), "error_type": str(type(e))})))
-        back.replace(reflist, refs)
+                    reflist_node = reflist.xpath(f".//ref[@id='{ref_id}']")[0]
+                except IndexError:
+                    continue
+                if reflist_node.find(".//mixed-citation") is None:
+                    mixed_citation = ref.find(".//mixed-citation")
+                    if mixed_citation is not None:
+                        reflist_node.append(mixed_citation)
+                if reflist_node.find(".//element-citation") is None:
+                    element_citation = ref.find(".//element-citation")
+                    if element_citation is not None:
+                        reflist_node.append(element_citation)
+            except Exception as e:
+                raw.exceptions.append({
+                    "i": i,
+                    "data": citation._record,
+                    "exception": traceback.format_exc(),
+                })
         return data
 
 
@@ -101,6 +108,7 @@ class XMLCitation(object):
             self.SourcePipe(),
             self.ConferencePipe(),
             self.ThesisPipe(),
+            self.PublicationPipe(),
             self.PatentPipe(),
             self.VolumePipe(),
             self.IssuePipe(),

@@ -32,10 +32,10 @@ PATTERNS = {
     
     # Appendix/Supplement
     r'^(append|apêndice|apéndice|anexo|anejo|supp?lement)': 'app',
-    r'^(supplementary|material\s+suplementar|material\s+complementario|información\s+adicional)': 'supplement',
+    r'^(supplementary|material\s+suplementar|material\s+complementario|información\s+adicional)': 'supplementary-material',
     
     # Notes and footnotes
-    r'^(notes?|notas?|observa|anmerkung|anotaciones?)': 'notes',
+    r'^(notes?|notas?|observa|anmerkung|anotaciones?)': 'fn-group',
     r'^(footnote|nota\s+de\s+rodapé|nota\s+al\s+pie|pie\s+de\s+página|nota\s+a\s+pie)': 'fn-group',
     
     # Author information
@@ -49,8 +49,8 @@ PATTERNS = {
     r'^(glossary|glossário|glosario|lexique|wörterbuch|vocabulario|léxico)': 'glossary',
     
     # Questions (Q&A sections)
-    r'^(question|pergunta|pregunta|frage|questão|cuestión|interrogante)': 'question',
-    r'^(answer|resposta|respuesta|antwort|contestación)': 'answer',
+    # r'^(question|pergunta|pregunta|frage|questão|cuestión|interrogante)': 'question',
+    # r'^(answer|resposta|respuesta|antwort|contestación)': 'answer',
     
     # Lists and definitions
     r'^(definition|definição|definición|définition|concepto)': 'def-list',
