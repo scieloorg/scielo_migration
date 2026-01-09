@@ -1,16 +1,11 @@
 import logging
 import os
-import sys
-from difflib import unified_diff
 from functools import cached_property
-from datetime import datetime
 
 from lxml import etree
-from lxml.etree import ParseError, register_namespace
-from lxml.html import fromstring, html_to_xhtml, iterlinks, rewrite_links, tostring
 
 from scielo_classic_website.htmlbody import html_fixer
-from scielo_classic_website.htmlbody.html_code_utils import html_safe_decode
+from scielo_classic_website.htmlbody.name2number import fix_pre_loading
 
 
 class UnableToGetHTMLTreeError(Exception): ...
@@ -25,11 +20,28 @@ class HTMLContent:
     """
 
     def __init__(self, content):
-        # for prefix, uri in HTML_WORD_NAMESPACES.items():
-        #     register_namespace(prefix, uri)
         self.original = content
-        self.fixed_or_original = html_fixer.get_html_fixed_or_original(content)
-        self.tree = self.fixed_or_original
+        self.best_choice = None
+        self.score = 0
+        self.fixed_html = None
+        self._tree = None
+
+        try:
+            self.fixed_html = html_fixer.get_fixed_html(content)
+            self.score = html_fixer.get_fixed_similarity_rate(
+                self.original, self.fixed_html
+            )
+            self.best_choice = html_fixer.get_best_choice_between_original_and_fixed(
+                self.score, self.original, self.fixed_html
+            )
+            if self.best_choice == "original":
+                self.tree = self.original
+            else:
+                self.tree = self.fixed_html
+        except Exception as e:
+            logging.exception(e)
+            logging.info((self.score, self.best_choice))
+            self.tree = self.original
 
     @staticmethod
     def create(file_path):
@@ -44,11 +56,14 @@ class HTMLContent:
     @property
     def content(self):
         if self.tree is None:
+            logging.info("returning original content")
             return self.original
         try:
             self.fix_asset_paths()
             return html_fixer.html2xml(self.tree)
         except Exception as e:
+            logging.exception(e)
+            logging.info(f"returning original content due to exception: {e}")
             return self.original
 
     @property
@@ -165,29 +180,25 @@ class BodyFromISIS:
 
 
 def get_paragraphs_text(p_records):
-    if not p_records:
-        return ""
-    texts = []
     for item in p_records:
         if not item.paragraph_text:
             continue
-        texts.append(item.paragraph_text)
-    return "".join(texts)
+        yield item.paragraph_text
 
 
 def get_text_block(paragraphs):
     if not paragraphs:
         return ""
-    try:
-        # corrige o bloco de parágrafos de uma vez
-        paragraphs_text = get_paragraphs_text(paragraphs)
-        hc = HTMLContent(paragraphs_text)
-        return hc.content
-    except Exception as e:
-        # corrige cada parágrafo individualmente
-        return get_text(get_paragraphs_data(paragraphs))
+    # corrige o bloco de parágrafos de uma vez
+    return "".join(get_paragraphs_text(paragraphs))
 
+    # hc = HTMLContent(paragraphs_text)
+    # return hc.content
+    # except Exception as e:
+    #     # corrige cada parágrafo individualmente
+    #     return get_text(get_paragraphs_data(paragraphs))
 
+    
 def get_paragraphs_data(p_records, part_name=None):
     index = None
     for item in p_records:
@@ -236,18 +247,49 @@ def fix_paragraphs(p_records):
 
 
 def fix_references(p_records):
-    index = None
+    index = 0
     for item in p_records:
         # item.data (dict which keys: text, index, reference_index)
-        if index:
-            index += 1
-        elif item.reference_index:
-            index = int(item.reference_index)
-        text = item.paragraph_text
-        if text:
-            data = {}
-            data.update(item.data)
-            data["text"] = html_fixer.avoid_mismatched_tags(text)
-            if not item.reference_index:
-                data["guessed_reference_index"] = str(index)
-            yield data
+        text = (item.paragraph_text or "").strip()
+        if not text:
+            continue
+        node = html_to_node("mixed-citation", text)
+        node_text = etree.tostring(node, encoding="utf-8").decode("utf-8")
+        fixed_text = node_text.replace("<mixed-citation>", "").replace("</mixed-citation>", "").strip()
+        if not fixed_text:
+            continue
+        index += 1
+        data = {}
+        data.update(item.data)
+        if not item.reference_index:
+            data["guessed_reference_index"] = str(index)
+        yield data
+
+
+def html_to_node(element_name, children_data_as_text):
+    if not element_name:
+        raise ValueError("element_name cannot be empty")
+    if not children_data_as_text:
+        return etree.Element(element_name)
+
+    # padroniza entidades
+    fixed_html_entities = fix_pre_loading(children_data_as_text)
+    try:
+        return get_node_from_standardized_html(element_name, fixed_html_entities)
+    except Exception as e:
+        logging.exception(f"Tentativa 2: Error: {e}")
+        xml = html_fixer.remove_tags(fixed_html_entities, ["a", "img"])
+        return get_node_from_standardized_html(element_name, xml)
+
+
+def get_node_from_standardized_html(element_name, fixed_html_entities):
+    if element_name != "body":
+        fixed_html_entities = f"<{element_name}>{fixed_html_entities}</{element_name}>"
+    try:
+        hc = HTMLContent(fixed_html_entities)
+        node = hc.tree.find(f".//{element_name}")
+        if node is None:
+            raise ValueError(f"Unable to get node from html (node is None): {fixed_html_entities}")
+        return node
+    except Exception as e:
+        raise ValueError(f"Unable to get node from html (exception occurred: {e}): {fixed_html_entities}")
