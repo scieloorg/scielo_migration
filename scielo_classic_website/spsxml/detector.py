@@ -192,6 +192,15 @@ def analyze_xref(text: str = None, rid: str = None) -> Dict[str, Optional[str]]:
             result["prefix"] = prefix
             result["number"] = number
             result["source"] = "text"
+        else:
+            ref_type_text, element_name_text, prefix, number = detect_from_text(text.split()[0])
+            if ref_type_text:
+                result["ref_type"] = ref_type_text
+                result["element_name"] = element_name_text
+                result["prefix"] = prefix
+                result["number"] = number
+                result["source"] = "text"
+
 
     # Análise do ID
     if rid:

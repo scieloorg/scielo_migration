@@ -85,7 +85,9 @@ TEXT_PATTERNS = {
         # Africâner
         r"(?i)^figs?\.?(?:\s*\d+)?$",
         r"(?i)^figure?(?:\s*\d+)?$",
-        r"(?i)^beelde?(?:\s*\d+)?$"
+        r"(?i)^beelde?(?:\s*\d+)?$",
+        # Padrão Fig. No
+        r"(?i)^fig\.?\s*no\.?\s*\d+$"
     ],
     # Tabelas
     "table": [
@@ -107,7 +109,9 @@ TEXT_PATTERNS = {
         r"(?i)^tafeln?(?:\s*\d+)?$",
         # Africâner
         r"(?i)^tabelle?(?:\s*\d+)?$",
-        r"(?i)^tabs?\.?(?:\s*\d+)?$"
+        r"(?i)^tabs?\.?(?:\s*\d+)?$",
+        # Padrão cuadro No
+        r"(?i)^cuadro\s*no\.?\s*\d+$"
     ],
     # Referências bibliográficas
     "bibr": [
@@ -548,6 +552,7 @@ ID_PATTERNS = {
     r"^c\d+": "corresp",
     r"^e\d+": "disp-formula",
     r"^f\d+": "fig",
+    r"^cuadro\d+": "table",  # cuadro em espanhol para table
     r"^gf\d+": "graphic",
     r"^suppl\d+": "supplementary-material",
     r"^m\d+": "math",

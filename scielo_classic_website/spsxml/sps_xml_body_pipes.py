@@ -16,6 +16,7 @@ from scielo_classic_website.spsxml.detector import (
     detect_from_text,
     detect_element_type,
     detect_sec_type,
+    detect_from_id,
 )
 from scielo_classic_website.spsxml.detector_title_parent import identify_parent_by_title
 from scielo_classic_website.htmlbody.html_merger import (
@@ -128,7 +129,7 @@ def convert_html_to_xml(document):
         convert_html_to_xml_step_60_ahref_and_aname,
         convert_html_to_xml_step_70_complete_fig_and_tablewrap,
         convert_html_to_xml_step_80_fix_sec,
-        convert_html_to_xml_step_90_complete_disp_formula,
+        # convert_html_to_xml_step_90_complete_disp_formula,
         convert_html_to_xml_step_95_fix_body,
     )
     document.exceptions = []
@@ -1135,8 +1136,10 @@ class ANamePipe(plumber.Pipe):
         self.remove_top_and_back(xml)
         self.remove_multiplicity(xml)
         for node in xml.xpath(".//a[@name]"):
-            node.tag = "element"
-            node.set("id", node.attrib.pop("name"))
+            name = node.attrib.pop("name")
+            ref_type, elem = detect_from_id(name)
+            node.tag = elem or "element"
+            node.set("id", name)
         return data
 
 
@@ -1910,6 +1913,7 @@ class XMLBodyCenterPipe(plumber.Pipe):
                 center.tag = "p"
                 continue
             center.tag = "title"
+        ET.strip_tags(root, "STRIPTAG")
 
 
 class XMLBoldToTitlePipe(plumber.Pipe):
