@@ -1137,7 +1137,7 @@ class ANamePipe(plumber.Pipe):
         self.remove_multiplicity(xml)
         for node in xml.xpath(".//a[@name]"):
             name = node.attrib.pop("name")
-            elem = detect_from_id(name)
+            ref_type, elem = detect_from_id(name)
             node.tag = elem or "element"
             node.set("id", name)
         return data
