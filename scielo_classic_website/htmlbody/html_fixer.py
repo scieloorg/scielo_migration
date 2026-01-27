@@ -321,7 +321,7 @@ def html2xml(tree, extra=None):
     """
     body = tree.find(".//body")
     try:
-        content = tostring(body, method="html", encoding="utf-8").decode("utf-8")
+        content = tostring(body, pretty_print=False, method="html", encoding="utf-8").decode("utf-8")
         x = content[:content.find(">")+1]
         if not x.startswith("<body"):
             raise ValueError(f"Tag <body> não encontrada corretamente. {x}")
