@@ -45,11 +45,10 @@ def create_node_with_fixed_html_text(element_name, html_text):
     xml = f"<{element_name}>{html_text or ''}</{element_name}>"
     hc = HTMLContent(xml)
     node = hc.tree.find(f".//{element_name}")
-    for n in node.xpath(".//span[@name='style_bold']"):
-        n.tag = "bold"
     ET.strip_tags(node, "b")
     ET.strip_tags(node, "B")
     ET.strip_tags(node, "bold")
+    ET.strip_tags(node, "span")
 
     return node
 
@@ -183,12 +182,18 @@ class XMLArticleMetaTranslatedTitleGroupPipe(plumber.Pipe):
         raw, xml = data
 
         for item in raw.translated_titles:
+            language = item.get("language")
+            if not language:
+                continue
+            text = item.get("text")
+            if not text:
+                continue
             trans_title = create_node_with_fixed_html_text(
-                "trans-title", item["text"])
+                "trans-title", text)
 
             trans_titlegrp = ET.Element("trans-title-group")
             trans_titlegrp.set(
-                "{http://www.w3.org/XML/1998/namespace}lang", item["language"]
+                "{http://www.w3.org/XML/1998/namespace}lang", language
             )
             trans_titlegrp.append(trans_title)
 
@@ -298,15 +303,24 @@ class XMLArticleMetaAuthorNotesPipe(plumber.Pipe):
         author_notes = xml.xpath(".//author-notes")
         if not author_notes:
             author_notes = ET.Element("author-notes")
-            # Insere author-notes como irmão de contrib-group
-            contrib_group = xml.find(".//front//contrib-group")
-            contrib_group.addnext(author_notes)
         
         # Move cada corresp para dentro de author-notes
         for corresp in corresp_elements:
             # Adiciona corresp ao author-notes
             author_notes.append(corresp)
 
+        siblings = reversed((
+            "article-id",
+            "article-categories",
+            "title-group",
+            "contrib-group",
+            "aff",
+        ))
+        for sibling_tag in siblings:
+            sibling = xml.find(f".//front/article-meta/{sibling_tag}")
+            if sibling is not None:
+                sibling.addnext(author_notes)
+                break
         return data
 
 
