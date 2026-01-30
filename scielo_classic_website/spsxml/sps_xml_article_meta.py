@@ -64,10 +64,13 @@ def _create_date_element(element_name, attributes, date_text):
     year, month, day = date_text[:4], date_text[4:6], date_text[6:]
     labels = ("day", "month", "year")
     for label, value in zip(labels, (day, month, year)):
-        if int(value) != 0:
-            e = ET.Element(label)
-            e.text = value
-            date_element.append(e)
+        if not value.isdigit():
+            break
+        if int(value) == 0:
+            break
+        e = ET.Element(label)
+        e.text = value
+        date_element.append(e)
     return date_element
 
 
@@ -523,7 +526,18 @@ class XMLArticleMetaHistoryPipe(plumber.Pipe):
         for date_type, date_ in dates.items():
             if date_:
                 attributes = {"date-type": date_type}
-                elem = _create_date_element("date", attributes, date_)
+                try:
+                    elem = _create_date_element("date", attributes, date_)
+                except Exception as e:
+                    raw.exceptions.append(
+                        {
+                            "pipe": "XMLArticleMetaHistoryPipe",
+                            "error_type": str(type(e)),
+                            "error_message": str(e),
+                            "exc_traceback": traceback.format_exc(),
+                        }
+                    )
+                    continue
                 history.append(elem)
 
         if len(history.findall("date")) > 0:
