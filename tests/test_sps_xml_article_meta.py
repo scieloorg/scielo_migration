@@ -43,6 +43,9 @@ def _get_journal():
 
 
 def _get_document(data):
+    # Handle both single dict and list of dicts
+    if isinstance(data, dict):
+        data = [data]
     for item in data:
         item.update({"v702": [{"_": "path/filename.xml"}]})
     data = {"article": data}
@@ -503,6 +506,42 @@ class TestXMLArticleMetaAbstractsPipe(TestCase):
         result = tostring(transformed[1])
         self.assertEqual(expected, result)
 
+    def test_transform_with_translated_html_by_lang(self):
+        """Test that abstracts in translated_html_by_lang are excluded from trans-abstract"""
+        document_data = {
+            "v706": [{"_": "f"}],
+            "v083": [
+                {"_": "Resumo", "l": "pt"},
+                {"_": "Resumen", "l": "es"},
+                {"_": "Abstract", "l": "en"},
+            ],
+        }
+        document, xml = self._get_document(document_data)
+        
+        # Simulate that 'en' language has translated HTML (sub-article)
+        document._translated_html_by_lang = {
+            "en": {
+                "before references": "<p>English content</p>",
+                "after references": "",
+            }
+        }
+        
+        transformed = XMLArticleMetaAbstractsPipe().transform((document, xml))
+        expected = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            "<front>"
+            "<article-meta>"
+            "<abstract><p>Resumo</p></abstract>"
+            '<trans-abstract xml:lang="es"><p>Resumen</p></trans-abstract>'
+            # Note: 'en' abstract should be excluded because it has translated HTML
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        result = tostring(transformed[1])
+        self.assertEqual(expected, result)
+
 
 class TestXMLArticleMetaKeywordsPipe(TestCase):
     def _get_document(self, document_data=None):
@@ -566,6 +605,50 @@ class TestXMLArticleMetaKeywordsPipe(TestCase):
             "<kwd>nutrition disorders</kwd>"
             "<kwd>Wistar rats</kwd>"
             "</kwd-group>"
+            '<kwd-group xml:lang="pt" kwd-group-type="author-generated">'
+            "<kwd>pulmão, crescimento</kwd>"
+            "<kwd>transtornos nutricionais</kwd>"
+            "<kwd>ratos wistar</kwd>"
+            "</kwd-group>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        result = tostring(transformed[1])
+        self.assertEqual(expected, result)
+
+    def test_transform_with_translated_html_by_lang(self):
+        """Test that keywords in translated_html_by_lang are excluded from kwd-group"""
+        document_data = {
+            "v706": [{"_": "f"}],
+            "v85": [
+                {"_": "", "d": "nd", "i": "1"},
+                {"_": "", "s": "growth and development", "k": "lung", "i": "1", "l": "en", "t": "m"},
+                {"l": "en", "_": "", "t": "m", "k": "nutrition disorders", "i": "1"},
+                {"l": "en", "_": "", "t": "m", "k": "Wistar rats", "i": "1"},
+                {"_": "", "d": "nd", "i": "2"},
+                {"_": "", "s": "crescimento", "k": "pulmão", "i": "2", "l": "pt", "t": "m"},
+                {"l": "pt", "_": "", "t": "m", "k": "transtornos nutricionais", "i": "2"},
+                {"l": "pt", "_": "", "t": "m", "k": "ratos wistar", "i": "2"},
+            ],
+        }
+        document, xml = self._get_document(document_data)
+        
+        # Simulate that 'en' language has translated HTML (sub-article)
+        document._translated_html_by_lang = {
+            "en": {
+                "before references": "<p>English content</p>",
+                "after references": "",
+            }
+        }
+        
+        transformed = XMLArticleMetaKeywordsPipe().transform((document, xml))
+        expected = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0">'
+            "<front>"
+            "<article-meta>"
+            # Note: 'en' keywords should be excluded because it has translated HTML
             '<kwd-group xml:lang="pt" kwd-group-type="author-generated">'
             "<kwd>pulmão, crescimento</kwd>"
             "<kwd>transtornos nutricionais</kwd>"

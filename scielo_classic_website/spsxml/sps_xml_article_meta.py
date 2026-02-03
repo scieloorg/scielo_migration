@@ -561,7 +561,7 @@ class XMLArticleMetaAbstractsPipe(plumber.Pipe):
             articlemeta.append(abstract)
 
         if raw.translated_abstracts:
-            langs = list((raw.translated_htmls or {}).keys())
+            langs = list((raw.translated_html_by_lang or {}).keys())
 
             for item in raw.translated_abstracts:
                 if item["language"] in langs:
@@ -591,7 +591,7 @@ class XMLArticleMetaKeywordsPipe(plumber.Pipe):
     def transform(self, data):
         raw, xml = data
 
-        translated_langs = list((raw.translated_htmls or {}).keys())
+        translated_langs = list((raw.translated_html_by_lang or {}).keys())
 
         articlemeta = xml.find("./front/article-meta")
 
