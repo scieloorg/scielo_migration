@@ -4,7 +4,7 @@ import os
 
 from scielo_classic_website.htmlbody.html_body import HTMLContent
 from scielo_classic_website.isisdb.isis_cmd import get_documents_by_issue_folder
-from scielo_classic_website.utils.files_utils import create_zip_file
+from scielo_classic_website.utils.files_utils import create_zip_file, sanitize_filename_surrogates
 
 
 def _get_classic_website_rel_path(file_path):
@@ -75,7 +75,7 @@ class IssueFiles:
             files = []
             for path in paths:
                 try:
-                    basename = os.path.basename(path)
+                    basename = sanitize_filename_surrogates(os.path.basename(path))
                     name, ext = os.path.splitext(basename)
                     lang = name[:2]
                     name = name[3:]
@@ -131,7 +131,7 @@ class IssueFiles:
             files = []
             for path in paths:
                 try:
-                    basename = os.path.basename(path)
+                    basename = sanitize_filename_surrogates(os.path.basename(path))
                     name, ext = os.path.splitext(basename)
                     try:
                         if "_" in name and name[2] == "_":
@@ -213,7 +213,7 @@ class IssueFiles:
                             "type": file_type,
                             "path": path,
                             "relative_path": _get_classic_website_rel_path(path),
-                            "name": os.path.basename(path),
+                            "name": sanitize_filename_surrogates(os.path.basename(path)),
                         }
                     )
                 elif os.path.isdir(path):
@@ -227,7 +227,7 @@ class IssueFiles:
                                     "relative_path": _get_classic_website_rel_path(
                                         item
                                     ),
-                                    "name": os.path.basename(item),
+                                    "name": sanitize_filename_surrogates(os.path.basename(item)),
                                 }
                             )
 
@@ -252,7 +252,7 @@ class IssueFiles:
             )
             files = []
             for path in paths:
-                basename = os.path.basename(path)
+                basename = sanitize_filename_surrogates(os.path.basename(path))
                 name, ext = os.path.splitext(basename)
                 try:
                     files.append(
