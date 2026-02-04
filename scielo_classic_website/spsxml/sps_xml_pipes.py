@@ -1,9 +1,11 @@
 import logging
 from copy import deepcopy
 from datetime import datetime
+import re
 
 import plumber
 from lxml import etree as ET
+from langdetect import detect, DetectorFactory, LangDetectException
 
 from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLArticleMetaAbstractsPipe,
@@ -33,6 +35,22 @@ from scielo_classic_website.spsxml.sps_xml_attributes import (
 )
 from scielo_classic_website.spsxml.sps_xml_refs import XMLArticleMetaCitationsPipe
 from scielo_classic_website.spsxml.sps_xml_utils import set_subject_text
+
+
+def get_node_text_language_code(node):
+    texts = []
+    for text in node.xpath(".//text()"):  # Garantir que body não está vazio
+        if text.strip():
+            texts.append(text.strip())
+        if len(str(texts)) > 300:  # Limita a quantidade de texto para detecção
+            break
+    text = " ".join(texts)
+    if not text:
+        return None
+    try:
+        return detect(text)
+    except LangDetectException:
+        return None
 
 
 def get_xml_rsps(document):
@@ -91,6 +109,7 @@ def _process(document):
         XMLDeleteRepeatedElementWithId(),
         XMLDeleteRepeatedTranslations(),
         XMLFontFaceSymbolPipe(),
+        XMLCheckArticleLanguagePipe(),
         XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
@@ -807,5 +826,44 @@ class XMLAckPipe(plumber.Pipe):
                 back = ET.Element("back")
                 body.addnext(back)
             back.insert(0, ack)
+
+        return data
+
+
+class XMLCheckArticleLanguagePipe(plumber.Pipe):
+    def transform(self, data):
+        raw, xml = data
+
+        article_meta = xml.find(".//article-meta")
+        if article_meta is None:
+            return data
+
+        article_lang = xml.get("{http://www.w3.org/XML/1998/namespace}lang")
+        
+        expected_langs = []
+        title_lang = None
+        for item in raw.article_titles:
+            title_lang = item.get("language")
+            break
+        if title_lang:
+            expected_langs.append(title_lang)
+
+        abstract_lang = None
+        for item in raw.abstracts:
+            abstract_lang = item.get("language")
+            break
+        if abstract_lang:
+            expected_langs.append(abstract_lang)
+
+        if expected_langs:
+            if len(expected_langs) > len(set(expected_langs)):
+                if article_lang in expected_langs:
+                    # article lang já está correto
+                    return data
+                xml.set("{http://www.w3.org/XML/1998/namespace}lang", title_lang or abstract_lang)
+                return data
+
+        # não é possível decidir por falta de informação ou ambiguidade dos idiomas de título/abstract
+        xml.set("{http://www.w3.org/XML/1998/namespace}lang", get_node_text_language_code(article_meta))
 
         return data
