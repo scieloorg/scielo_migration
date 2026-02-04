@@ -9,6 +9,38 @@ from zipfile import ZipFile
 logger = logging.getLogger(__name__)
 
 
+def sanitize_filename_surrogates(filename):
+    """
+    Sanitize a filename that may contain Unicode surrogate characters.
+    
+    When filenames are read from the filesystem with special characters,
+    they may contain surrogate pairs that cannot be encoded to valid UTF-8.
+    This function replaces surrogates with valid replacement characters.
+    
+    Parameters
+    ----------
+    filename : str
+        The filename to sanitize
+    
+    Returns
+    -------
+    str
+        The sanitized filename with surrogates replaced
+    """
+    if not filename:
+        return filename
+    
+    try:
+        # First try to encode to UTF-8, which will fail on surrogates
+        # Then decode back with 'replace' to handle the surrogates
+        return filename.encode("utf-8", errors="replace").decode(
+            "utf-8", errors="replace"
+        )
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        # If all else fails, return a string representation
+        return repr(filename)
+
+
 def is_folder(source):
     return os.path.isdir(source)
 
