@@ -175,7 +175,7 @@ class XMLDeleteRepeatedElementWithId(plumber.Pipe):
             self.fix_subarticle_id_and_rid(subarticle)
         self.remove_multiplicity(xml.find("."))
         ET.strip_tags(xml, "EMPTYTAGTOSTRIP")
-        return data, xml
+        return data
 
 
 class XMLDeleteRepeatedTranslations(plumber.Pipe):
@@ -202,7 +202,7 @@ class XMLDeleteRepeatedTranslations(plumber.Pipe):
             if parent is not None:
                 parent.remove(node)
 
-        return data, xml
+        return data
 
 
 class XMLClosePipe(plumber.Pipe):
