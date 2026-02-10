@@ -1,4 +1,5 @@
 import logging
+import re
 from difflib import SequenceMatcher
 
 from lxml.html import fromstring, tostring
@@ -95,6 +96,7 @@ def fix(content, style_mappings=None, tags_to_fix=None):
     tags_to_fix = tags_to_fix or DEFAULT_TAGS_TO_FIX
     
     # Pipeline de processamento
+    content = remove_ms_office_conditionals(content)
     content = avoid_mismatched_styles(content, style_mappings)
     content = avoid_mismatched_tags(content, tags_to_fix)
     content = remove_namespaces_from_content(content)
@@ -360,3 +362,35 @@ if __name__ == "__main__":
     html_with_ns = '<p>Texto com <o:p>namespace</o:p></p>'
     fixed_with_ns = get_fixed_html(html_with_ns, remove_namespaces=False)
     print("HTML mantendo namespaces:", fixed_with_ns)
+
+
+def remove_ms_office_conditionals(xml_str):
+    """
+    Remove blocos condicionais do MS Office que causam erros de parsing XML.
+    
+    Exemplos de padrões removidos:
+    - <!--[if supportFields]>...<![endif]-->
+    - <!--[if gte mso 9]>...<![endif]-->
+    - <![if !supportLists]>...<![endif]>
+    - Tags do Office: <o:p>, <w:data>, etc.
+    """
+    # Padrões a serem removidos (aplicados na string antes do parsing)
+    PATTERNS = [
+        # Blocos condicionais completos: <!--[if ...]>...<![endif]-->
+        (r'<!--\[if[^\]]*\]>.*?<!\[endif\]-->', ''),
+        # Marcadores soltos
+        (r'<!--\[if\s+[^\]]+\]>', ''),
+        (r'<!\[endif\]-->', ''),
+        # Variantes sem comentário: <![if ...]>...<![endif]>
+        (r'<!\[if[^\]]*\]>', ''),
+        (r'<!\[endif\]>', ''),
+        # Blocos <xml>...</xml> do Office
+        (r'<xml>.*?</xml>', ''),
+    ]
+    
+    # Aplica os padrões de limpeza
+    for pattern, replacement in PATTERNS:
+        xml_str = re.sub(pattern, replacement, xml_str, flags=re.DOTALL | re.IGNORECASE)
+    
+    # Remove tags do Office (o:p, w:data, etc.)
+    return re.sub(r'</?[ow]:[^>]*>', '', xml_str)
