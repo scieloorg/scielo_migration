@@ -337,31 +337,6 @@ def html2xml(tree, extra=None):
     return content
 
 
-# Exemplos de uso:
-if __name__ == "__main__":
-    # Exemplo 1: Corrigir HTML com configurações padrão
-    html_content = "<P>Texto com <b>negrito</b> e <i>itálico</i></P>"
-    fixed = get_fixed_html(html_content)
-    print("HTML corrigido:", fixed)
-    
-    # Exemplo 2: Obter apenas texto sem tags
-    text_only = get_fixed_text(html_content)
-    print("Texto sem tags:", text_only)
-    
-    # Exemplo 3: Usar mapeamentos customizados
-    custom_mappings = {
-        "b": "strong",
-        "i": "emphasis",
-        "u": "underline",
-        "strike": "strikethrough"
-    }
-    fixed_custom = get_fixed_html(html_content, style_mappings=custom_mappings)
-    print("HTML com mapeamentos customizados:", fixed_custom)
-    
-    # Exemplo 4: Processar sem remover namespaces
-    html_with_ns = '<p>Texto com <o:p>namespace</o:p></p>'
-    fixed_with_ns = get_fixed_html(html_with_ns, remove_namespaces=False)
-    print("HTML mantendo namespaces:", fixed_with_ns)
 
 
 def remove_ms_office_conditionals(xml_str):
@@ -394,3 +369,30 @@ def remove_ms_office_conditionals(xml_str):
     
     # Remove tags do Office (o:p, w:data, etc.)
     return re.sub(r'</?[ow]:[^>]*>', '', xml_str)
+
+
+# Exemplos de uso:
+if __name__ == "__main__":
+    # Exemplo 1: Corrigir HTML com configurações padrão
+    html_content = "<P>Texto com <b>negrito</b> e <i>itálico</i></P>"
+    fixed = get_fixed_html(html_content)
+    print("HTML corrigido:", fixed)
+    
+    # Exemplo 2: Obter apenas texto sem tags
+    text_only = get_fixed_text(html_content)
+    print("Texto sem tags:", text_only)
+    
+    # Exemplo 3: Usar mapeamentos customizados
+    custom_mappings = {
+        "b": "strong",
+        "i": "emphasis",
+        "u": "underline",
+        "strike": "strikethrough"
+    }
+    fixed_custom = get_fixed_html(html_content, style_mappings=custom_mappings)
+    print("HTML com mapeamentos customizados:", fixed_custom)
+    
+    # Exemplo 4: Processar sem remover namespaces
+    html_with_ns = '<p>Texto com <o:p>namespace</o:p></p>'
+    fixed_with_ns = get_fixed_html(html_with_ns, remove_namespaces=False)
+    print("HTML mantendo namespaces:", fixed_with_ns)
