@@ -9,7 +9,6 @@ import plumber
 from lxml import etree as ET
 
 from scielo_classic_website.htmlbody.html_body import html_to_node
-from scielo_classic_website.utils.body_sec_type_matcher import get_sectype
 from scielo_classic_website.spsxml.detector import (
     analyze_xref,
     detect_from_text,
@@ -209,6 +208,31 @@ def convert_html_to_xml_step_20_remove_cdata(document):
 
 
 def convert_html_to_xml_step_30_embed_html(document):
+    """
+    Incorpora conteúdo HTML de arquivos referenciados recursivamente na estrutura XML.
+
+    Esta função processa um documento através de um pipeline que identifica e marca
+    arquivos HTML mencionados no HTML principal para serem incorporados recursivamente
+    dentro da estrutura XML, permitindo a inclusão de conteúdo de múltiplos arquivos
+    HTML de forma aninhada.
+
+    Parameters
+    ----------
+    document : Document
+        Objeto documento a ser processado para conversão de HTML para XML
+        com incorporação recursiva de arquivos HTML referenciados.
+
+    Returns
+    -------
+    Document
+        Documento transformado com arquivos HTML incorporados recursivamente
+        na estrutura XML.
+
+    Raises
+    ------
+    StopIteration
+        Se o pipeline não produz saída.
+    """
     ppl = plumber.Pipeline(
         StartPipe(),
         MarkHTMLFileToEmbedPipe(),
