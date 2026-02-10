@@ -26,8 +26,12 @@ from scielo_classic_website.spsxml.sps_xml_article_meta import (
     XMLArticleMetaSelfUriPipe,
     XMLArticleMetaTitleGroupPipe,
     XMLArticleMetaTranslatedTitleGroupPipe,
-    XMLNormalizeSpacePipe,
     create_node_with_fixed_html_text,
+)
+from scielo_classic_website.spsxml.sps_xml_body_pipes import (
+    XMLNormalizeSpacePipe,
+    RemoveCommentPipe,
+    RemoveHTMLTagsPipe,
 )
 from scielo_classic_website.spsxml.sps_xml_attributes import (
     get_article_type,
@@ -110,6 +114,8 @@ def _process(document):
         XMLDeleteRepeatedTranslations(),
         XMLFontFaceSymbolPipe(),
         XMLCheckArticleLanguagePipe(),
+        RemoveCommentPipe(),
+        RemoveHTMLTagsPipe(),
         XMLClosePipe(),
     )
     transformed_data = ppl.run(document, rewrap=True)
