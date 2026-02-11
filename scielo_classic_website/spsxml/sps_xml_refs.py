@@ -90,6 +90,10 @@ class XMLArticleMetaCitationsPipe(plumber.Pipe):
                     action=f"Processing citation {i}",
                     exception_type=type(e).__name__,
                     message=traceback.format_exc(),
+                    detail={
+                        "i": i,
+                        "record_data": citation._record
+                    },
                 )
         return data
 
