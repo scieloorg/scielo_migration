@@ -1383,147 +1383,144 @@ class XRefAssetTypeImagePipe(plumber.Pipe):
         return reversed(sorted(children, key=lambda x: x.get("id")))
 
 
-class InsertGraphicInFigPipe(plumber.Pipe):
+class BaseInsertGraphicInContainerPipe(plumber.Pipe):
     """
-    Procura graphic nos irmãos ascendentes de fig e table-wrap e os envolve.
-    Antes:
-    <fig id="f1"/>
-    <p align="center">
-        <graphic xlink:href="f1.jpg"/>
-    </p>
+    Classe base para procurar graphic/table nos irmãos e ascendentes
+    de containers (fig, table-wrap) e movê-los para dentro.
+    
+    Estratégia de busca:
+    1. Busca nos irmãos seguintes do container
+    2. Sobe para o pai e busca nos irmãos seguintes do pai
+    3. Repete até atingir max_parent_depth ou elemento de parada (body, back)
+    """
+    container_xpath = None
+    target_tags = ("graphic",)
+    max_sibling_depth = 3
+    max_parent_depth = 3
+    stop_tags = ("body", "back", "sec", "app")
+    log_not_found = False
 
-    Resultado esperado:
-    <fig id="f1">
-        <graphic xlink:href="f1.jpg"/>
-    </fig>
-    <p align="center"> </p>
-    """
     def transform(self, data):
         raw, xml = data
-        _process(xml, "fig[@id]", self.wrap_graphic)
+        _process(xml, self.container_xpath, self._wrap_content)
         return data
 
-    def wrap_graphic(self, fig):
-        if fig.xpath(".//graphic"):
+    @property
+    def components_xpath(self):
+        return " | ".join(f".//{tag}" for tag in self.target_tags)
+
+    def _wrap_content(self, container):
+        if container.xpath(self.components_xpath):
+            # já tem o componente dentro do container, não precisa buscar
             return
-        graphic = self.find_graphic(fig)
-        if graphic is None:
-            logging.error(f"InsertGraphicInFigPipe - no graphic found for fig {ET.tostring(fig)}")
+        target = self._find_target(container)
+        if target is not None:
+            container.append(target)
             return
-        fig.append(graphic)
+        if self.log_not_found:
+            logging.error(
+                f"{self.__class__.__name__} - no {self.target_tags} "
+                f"found for {ET.tostring(container, encoding='unicode')[:100]}"
+            )
+        return
+
+    def _find_target(self, start_element):
+        """
+        Busca target subindo na árvore e verificando irmãos em cada nível.
         
-    def find_graphic(self, item):
-        graphic = self.find_graphic_in_siblings(item)
-        if graphic is not None:
-            return graphic
-        graphic = self.find_graphic_in_upper_siblings(item)
-        if graphic is not None:
-            return graphic
-    
-    def find_graphic_in_siblings(self, item):
-        if item is None:
-            return None
-        for i in range(3):
-            sibling = item.getnext()
-            if sibling is None:
-                return
-            if sibling.tag == "graphic":
-                return sibling
-            graphic = sibling.find(".//graphic")
-            if graphic is not None:
-                return graphic
-            item = sibling
-    
-    def go_up(self, node):
-        parent = node.getparent()
-        if parent is None:
-            return None
-        if parent.tag in ("body", "back"):
-            return None
-        return parent
-    
-    def find_graphic_in_upper_siblings(self, item):
-        if item is None:
-            return None
-        node = item
-        for i in range(3):
-            node = self.go_up(node)
-            if node is None:
-                return None
-            graphic = self.find_graphic(node)
-            if graphic is not None:
-                return graphic
-
-
-class InsertGraphicInTablewrapPipe(plumber.Pipe):
-    """
-    Procura graphic nos irmãos ascendentes de fig e table-wrap e os envolve.
-    Antes:
-    <fig id="f1"/>
-    <p align="center">
-        <graphic xlink:href="f1.jpg"/>
-    </p>
-
-    Resultado esperado:
-    <fig id="f1">
-        <graphic xlink:href="f1.jpg"/>
-    </fig>
-    <p align="center"> </p>
-    """
-    def transform(self, data):
-        raw, xml = data
-        _process(xml, "table-wrap[@id]", self.wrap_graphic)
-        return data
-
-    def wrap_graphic(self, tablewrap):
-        if tablewrap.xpath(".//graphic|.//table"):
-            return
-        graphic = self.find_graphic(tablewrap)
-        if graphic is None:
-            return
-        tablewrap.append(graphic)
+        Para: <p><fig id="f1"/></p> <p><graphic/></p>
         
-    def find_graphic(self, item):
-        graphic = self.find_graphic_in_siblings(item)
-        if graphic is not None:
-            return graphic
-        graphic = self.find_graphic_in_upper_siblings(item)
-        if graphic is not None:
-            return graphic
-    
-    def find_graphic_in_siblings(self, item):
-        if item is None:
-            return None
-        while True:
-            sibling = item.getnext()
-            if sibling is None:
-                return
-            if sibling.tag in ("graphic", "table"):
-                return sibling
-            graphic = sibling.find(".//graphic|.//table")
-            if graphic is not None:
-                return graphic
-            item = sibling
-    
-    def go_up(self, node):
-        parent = node.getparent()
-        if parent is None:
-            return None
-        if parent.tag in ("body", "back"):
-            return None
-        return parent
-    
-    def find_graphic_in_upper_siblings(self, item):
-        if item is None:
-            return None
-        node = item
-        while True:
-            node = self.go_up(node)
-            if node is None:
+        1. Busca irmãos de <fig> → não encontra
+        2. Sobe para <p>, busca irmãos de <p> → encontra <p> com <graphic>
+        """
+        current = start_element
+        
+        for depth in range(self.max_parent_depth + 1):
+            # Busca nos irmãos do elemento atual
+            target = self._find_in_following_siblings(current)
+            if target is not None:
+                return target
+            
+            # Sobe para o pai
+            parent = current.getparent()
+            if parent is None or parent.tag in self.stop_tags:
                 return None
-            graphic = self.find_graphic(node)
-            if graphic is not None:
-                return graphic
+            current = parent
+        
+        return None
+
+    def _find_in_following_siblings(self, element):
+        """Busca target nos próximos N irmãos (e seus descendentes)."""
+        if element is None:
+            return None
+        
+        current = element
+        for _ in range(self.max_sibling_depth):
+            sibling = current.getnext()
+            if sibling is None:
+                return None
+            
+            # Irmão é o próprio target?
+            if sibling.tag in self.target_tags:
+                return sibling
+            
+            # Target está nos descendentes do irmão?
+            target = self._find_in_descendants(sibling)
+            if target is not None:
+                return target
+            
+            current = sibling
+        
+        return None
+
+    def _find_in_descendants(self, element):
+        """Busca primeiro target nos descendentes."""
+        found = element.xpath(self.components_xpath)
+        return found[0] if found else None
+
+
+class InsertGraphicInFigPipe(BaseInsertGraphicInContainerPipe):
+    """
+    Move <graphic> encontrado em irmãos/ascendentes para dentro de <fig>.
+    
+    Caso 1 - graphic é irmão direto:
+        <fig id="f1"/>
+        <graphic xlink:href="f1.jpg"/>
+    
+    Caso 2 - graphic está em irmão do pai:
+        <p><fig id="f1"/></p>
+        <p><graphic xlink:href="f1.jpg"/></p>
+    
+    Resultado:
+        <fig id="f1">
+            <graphic xlink:href="f1.jpg"/>
+        </fig>
+    """
+    container_xpath = "fig[@id]"
+    target_tags = ("graphic",)
+    log_not_found = True
+
+
+class InsertGraphicInTablewrapPipe(BaseInsertGraphicInContainerPipe):
+    """
+    Move <graphic> ou <table> para dentro de <table-wrap>.
+    
+    Caso 1:
+        <table-wrap id="t1"/>
+        <table>...</table>
+    
+    Caso 2:
+        <p><table-wrap id="t1"/></p>
+        <p><graphic xlink:href="t1.jpg"/></p>
+    
+    Resultado:
+        <table-wrap id="t1">
+            <graphic xlink:href="t1.jpg"/>
+        </table-wrap>
+    """
+    container_xpath = "table-wrap[@id]"
+    target_tags = ("graphic", "table")
+    log_not_found = False
 
 
 class StripTagsPipe(plumber.Pipe):
