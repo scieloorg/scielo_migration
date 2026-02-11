@@ -1404,12 +1404,11 @@ class InsertGraphicInFigPipe(plumber.Pipe):
         return data
 
     def wrap_graphic(self, fig):
-        item = fig
-        if item.xpath(".//graphic"):
+        if fig.xpath(".//graphic"):
             return
-        graphic = self.find_graphic(item)
+        graphic = self.find_graphic(fig)
         if graphic is None:
-            logging.error(f"InsertGraphicInFigPipe - no graphic found for fig {ET.tostring(item)}")
+            logging.error(f"InsertGraphicInFigPipe - no graphic found for fig {ET.tostring(fig)}")
             return
         fig.append(graphic)
         
@@ -1451,7 +1450,7 @@ class InsertGraphicInFigPipe(plumber.Pipe):
             node = self.go_up(node)
             if node is None:
                 return None
-            graphic = self.find_graphic_in_siblings(node)
+            graphic = self.find_graphic(node)
             if graphic is not None:
                 return graphic
 
@@ -1477,10 +1476,9 @@ class InsertGraphicInTablewrapPipe(plumber.Pipe):
         return data
 
     def wrap_graphic(self, tablewrap):
-        item = tablewrap
-        if item.xpath(".//graphic|.//table"):
+        if tablewrap.xpath(".//graphic|.//table"):
             return
-        graphic = self.find_graphic(item)
+        graphic = self.find_graphic(tablewrap)
         if graphic is None:
             return
         tablewrap.append(graphic)
@@ -1523,7 +1521,7 @@ class InsertGraphicInTablewrapPipe(plumber.Pipe):
             node = self.go_up(node)
             if node is None:
                 return None
-            graphic = self.find_graphic_in_siblings(node)
+            graphic = self.find_graphic(node)
             if graphic is not None:
                 return graphic
 
