@@ -564,6 +564,13 @@ class XMLArticleMetaAbstractsPipe(plumber.Pipe):
             langs = list((raw.translated_htmls or {}).keys())
 
             for item in raw.translated_abstracts:
+                if not item.get("language") or not item.get("text"):
+                    raw.add_exception(
+                        "XMLArticleMetaAbstractsPipe",
+                        "ValueError",
+                        f"Translated abstract item missing language or text: {item}",
+                    )
+                    continue
                 if item["language"] in langs:
                     continue
 
