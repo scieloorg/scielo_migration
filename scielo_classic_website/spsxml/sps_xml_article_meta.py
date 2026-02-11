@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 import plumber
 from lxml import etree as ET
@@ -529,13 +530,10 @@ class XMLArticleMetaHistoryPipe(plumber.Pipe):
                 try:
                     elem = _create_date_element("date", attributes, date_)
                 except Exception as e:
-                    raw.exceptions.append(
-                        {
-                            "pipe": "XMLArticleMetaHistoryPipe",
-                            "error_type": str(type(e)),
-                            "error_message": str(e),
-                            "exc_traceback": traceback.format_exc(),
-                        }
+                    raw.add_exception(
+                        "XMLArticleMetaHistoryPipe",
+                        type(e).__name__,
+                        traceback.format_exc(),
                     )
                     continue
                 history.append(elem)
