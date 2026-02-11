@@ -371,6 +371,17 @@ class Document:
         except (TypeError, IndexError) as e:
             self.xml_body = None
         return get_xml_rsps(self)
+    
+    def add_exception(self, action, exception_type, message):
+        if not self.exceptions:
+            self.exceptions = []
+        self.exceptions.append(
+            {
+                "action": action,
+                "type": exception_type,
+                "message": message,
+            }
+        )
 
 
 class DocumentRecords:
