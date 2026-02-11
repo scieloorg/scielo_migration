@@ -130,23 +130,14 @@ def convert_html_to_xml(document):
         # convert_html_to_xml_step_90_complete_disp_formula,
         convert_html_to_xml_step_95_fix_body,
     )
-    document.exceptions = []
     document.xml_body_and_back = []
     for i, call_ in enumerate(calls, start=1):
         try:
             document.xml_body_and_back.append(call_(document))
         except Exception as e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            logging.info(f"Convert HTML to XML - step {i} failed {call_.__name__}")
-            logging.exception(e)
-            document.exceptions.append(
-                {
-                    "index": i,
-                    "error_type": str(type(e)),
-                    "error_message": str(e),
-                    "exc_traceback": traceback.format_exc(),
-                }
-            )
+            action = f"Convert HTML to XML - step {i} failed {call_.__name__}"
+            document.add_exception(action, str(type(e)), traceback.format_exc())
 
 
 def convert_html_to_xml_step_10_insert_html_in_cdata(document):

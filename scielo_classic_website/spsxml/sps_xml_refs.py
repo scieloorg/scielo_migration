@@ -86,11 +86,15 @@ class XMLArticleMetaCitationsPipe(plumber.Pipe):
                     if element_citation is not None:
                         reflist_node.append(element_citation)
             except Exception as e:
-                raw.exceptions.append({
-                    "i": i,
-                    "data": citation._record,
-                    "exception": traceback.format_exc(),
-                })
+                raw.add_exception(
+                    action=f"Processing citation {i}",
+                    exception_type=type(e).__name__,
+                    message=traceback.format_exc(),
+                    detail={
+                        "i": i,
+                        "record_data": citation._record
+                    },
+                )
         return data
 
 
