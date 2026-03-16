@@ -340,7 +340,7 @@ def html2xml(tree, extra=None):
 
 
 
-def _is_valid_xml_comment(match):
+def _filter_invalid_xml_comment(match):
     """Keep valid XML comments, remove those with double hyphens inside."""
     content = match.group(0)
     # Extract the inner content between <!-- and -->
@@ -363,7 +363,7 @@ def remove_invalid_xml_comments(html):
     """
     if not html:
         return html
-    return re.sub(r'<!--.*?-->', _is_valid_xml_comment, html, flags=re.DOTALL)
+    return re.sub(r'<!--.*?-->', _filter_invalid_xml_comment, html, flags=re.DOTALL)
 
 
 def remove_ms_office_conditionals(xml_str):

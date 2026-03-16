@@ -60,7 +60,7 @@ class TestRemoveInvalidXmlComments(TestCase):
         result = remove_invalid_xml_comments(html)
         self.assertEqual(result, "<!-- valid --><p>text</p><p>more</p>")
 
-    def test_removes_startfragment_endfragment_pair(self):
+    def test_preserves_startfragment_endfragment_pair(self):
         html = "<p>text</p><!--StartFragment--><!--EndFragment-->"
         result = remove_invalid_xml_comments(html)
         # These are valid XML comments individually (no -- inside),
