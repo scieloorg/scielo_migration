@@ -1,4 +1,5 @@
 from unittest import TestCase
+from unittest.mock import MagicMock
 
 from lxml import etree
 
@@ -8,6 +9,7 @@ from scielo_classic_website.spsxml.sps_xml_pipes import (
     XMLClosePipe,
     get_xml_rsps,
     XMLFontFaceSymbolPipe,
+    XMLSubArticlePipe,
 )
 
 
@@ -194,3 +196,63 @@ class TestXMLFontFaceSymbolPipe(TestCase):
         expected = etree.fromstring('<article></article>')
         
         self.assertEqual(etree.tostring(expected), etree.tostring(_xml))
+
+
+class TestXMLSubArticlePipe(TestCase):
+    def _make_raw(self, section=None, translated_titles=None, translated_abstracts=None, keywords_groups=None):
+        raw = MagicMock()
+        raw.section = section
+        raw.translated_titles = translated_titles
+        raw.translated_abstracts = translated_abstracts
+        raw.get_article_title = MagicMock(return_value="Title")
+        raw.get_abstract = MagicMock(return_value="Abstract text")
+        raw.get_keywords_group = MagicMock(return_value=keywords_groups)
+        return raw
+
+    def test_transform_subarticle_without_lang_and_abstracts(self):
+        """Test that sub-articles without xml:lang don't crash when abstracts exist."""
+        xml_body = (
+            '<body>'
+            '<sub-article article-type="translation">'
+            '<body><p>Content</p></body>'
+            '</sub-article>'
+            '</body>'
+        )
+        raw = self._make_raw(translated_abstracts=[{"language": "en", "text": "Abstract"}])
+        raw.xml_body = xml_body
+        xml = etree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0"/>'
+        )
+        data = raw, xml
+        result_raw, result_xml = XMLSubArticlePipe().transform(data)
+        # Should not raise TypeError
+        sub = result_xml.find(".//sub-article")
+        self.assertIsNotNone(sub)
+        abstract = sub.find(".//abstract")
+        self.assertIsNotNone(abstract)
+        # abstract should NOT have xml:lang when language is None
+        self.assertIsNone(abstract.get("{http://www.w3.org/XML/1998/namespace}lang"))
+
+    def test_transform_subarticle_with_lang_and_abstracts(self):
+        """Test that sub-articles with xml:lang still set the lang attribute properly."""
+        xml_body = (
+            '<body>'
+            '<sub-article article-type="translation" xml:lang="en">'
+            '<body><p>Content</p></body>'
+            '</sub-article>'
+            '</body>'
+        )
+        raw = self._make_raw(translated_abstracts=[{"language": "en", "text": "Abstract"}])
+        raw.xml_body = xml_body
+        xml = etree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0"/>'
+        )
+        data = raw, xml
+        result_raw, result_xml = XMLSubArticlePipe().transform(data)
+        sub = result_xml.find(".//sub-article")
+        self.assertIsNotNone(sub)
+        abstract = sub.find(".//abstract")
+        self.assertIsNotNone(abstract)
+        self.assertEqual("en", abstract.get("{http://www.w3.org/XML/1998/namespace}lang"))
