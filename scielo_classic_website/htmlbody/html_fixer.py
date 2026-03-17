@@ -96,6 +96,7 @@ def fix(content, style_mappings=None, tags_to_fix=None):
     tags_to_fix = tags_to_fix or DEFAULT_TAGS_TO_FIX
     
     # Pipeline de processamento
+    content = remove_invalid_xml_comments(content)
     content = remove_ms_office_conditionals(content)
     content = avoid_mismatched_styles(content, style_mappings)
     content = avoid_mismatched_tags(content, tags_to_fix)
@@ -337,6 +338,32 @@ def html2xml(tree, extra=None):
     return content
 
 
+
+
+def _filter_invalid_xml_comment(match):
+    """Keep valid XML comments, remove those with double hyphens inside."""
+    content = match.group(0)
+    # Extract the inner content between <!-- and -->
+    inner = content[4:-3]
+    if '--' in inner:
+        return ''
+    return content
+
+
+def remove_invalid_xml_comments(html):
+    """
+    Remove comentários HTML inválidos para XML.
+
+    Artefatos de clipboard do Windows como <!--EndFragment--> e variantes
+    corrompidas (<!--EndF>><!--EndFragment-->, <!--EndFrag>><!--EndFragment-->)
+    violam a regra XML que proíbe '--' dentro de comentários, causando
+    lxml.etree.XMLSyntaxError ao fazer parsing.
+
+    Comentários válidos (sem '--' no conteúdo interno) são preservados.
+    """
+    if not html:
+        return html
+    return re.sub(r'<!--.*?-->', _filter_invalid_xml_comment, html, flags=re.DOTALL)
 
 
 def remove_ms_office_conditionals(xml_str):
