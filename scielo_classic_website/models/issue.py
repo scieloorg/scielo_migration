@@ -78,5 +78,8 @@ class Issue:
     def get_license_text_by_language(self):
         texts = {}
         for item in self.license_texts:
-            texts[item["language"]] = item["html"]
+            language = item.get("language")
+            html = item.get("html")
+            if language and html:
+                texts[language] = html
         return texts
