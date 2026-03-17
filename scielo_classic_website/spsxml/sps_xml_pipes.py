@@ -438,27 +438,32 @@ class XMLSubArticlePipe(plumber.Pipe):
 
             # ARTICLE TITLE
             if raw.translated_titles:
-                titlegroup = ET.Element("title-group")
                 title = raw.get_article_title(language)
-                articletitle = create_node_with_fixed_html_text("article-title", title)
-                articletitle.set("{http://www.w3.org/XML/1998/namespace}lang", language)
-                titlegroup.append(articletitle)
-                frontstub.append(titlegroup)
+                if title:
+                    titlegroup = ET.Element("title-group")
+                    articletitle = create_node_with_fixed_html_text("article-title", title)
+                    if language:
+                        articletitle.set("{http://www.w3.org/XML/1998/namespace}lang", language)
+                    titlegroup.append(articletitle)
+                    frontstub.append(titlegroup)
 
             # ABSTRACT
             if raw.translated_abstracts:
                 text = raw.get_abstract(language)
-                abstract = ET.Element("abstract")
-                abstract.set("{http://www.w3.org/XML/1998/namespace}lang", language)
-                p = create_node_with_fixed_html_text("p", text)
-                abstract.append(p)
-                frontstub.append(abstract)
+                if text:
+                    abstract = ET.Element("abstract")
+                    if language:
+                        abstract.set("{http://www.w3.org/XML/1998/namespace}lang", language)
+                    p = create_node_with_fixed_html_text("p", text)
+                    abstract.append(p)
+                    frontstub.append(abstract)
 
             # KEYWORDS
             keywords_group = raw.get_keywords_group(language)
             if keywords_group:
                 kwd_group = ET.Element("kwd-group")
-                kwd_group.set("{http://www.w3.org/XML/1998/namespace}lang", language)
+                if language:
+                    kwd_group.set("{http://www.w3.org/XML/1998/namespace}lang", language)
                 for item in keywords_group:
                     kwd_group.append(create_node_with_fixed_html_text("kwd", item))
                 frontstub.append(kwd_group)
