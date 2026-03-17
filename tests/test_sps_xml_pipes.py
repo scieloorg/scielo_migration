@@ -204,13 +204,27 @@ class TestXMLSubArticlePipe(TestCase):
         raw.section = section
         raw.translated_titles = translated_titles
         raw.translated_abstracts = translated_abstracts
-        raw.get_article_title = MagicMock(return_value="Title")
-        raw.get_abstract = MagicMock(return_value="Abstract text")
-        raw.get_keywords_group = MagicMock(return_value=keywords_groups)
+
+        titles = {}
+        if translated_titles:
+            for item in translated_titles:
+                titles[item["language"]] = item["text"]
+        raw.get_article_title = MagicMock(side_effect=lambda lang: titles.get(lang))
+
+        abstracts = {}
+        if translated_abstracts:
+            for item in translated_abstracts:
+                abstracts[item["language"]] = item["text"]
+        raw.get_abstract = MagicMock(side_effect=lambda lang: abstracts.get(lang))
+
+        kw_groups = {}
+        if keywords_groups:
+            kw_groups = keywords_groups
+        raw.get_keywords_group = MagicMock(side_effect=lambda lang: kw_groups.get(lang))
         return raw
 
     def test_transform_subarticle_without_lang_and_abstracts(self):
-        """Test that sub-articles without xml:lang don't crash when abstracts exist."""
+        """Test that sub-articles without xml:lang don't crash and skip empty abstract."""
         xml_body = (
             '<body>'
             '<sub-article article-type="translation">'
@@ -229,10 +243,9 @@ class TestXMLSubArticlePipe(TestCase):
         # Should not raise TypeError
         sub = result_xml.find(".//sub-article")
         self.assertIsNotNone(sub)
+        # No abstract should be created since get_abstract(None) returns None
         abstract = sub.find(".//abstract")
-        self.assertIsNotNone(abstract)
-        # abstract should NOT have xml:lang when language is None
-        self.assertIsNone(abstract.get("{http://www.w3.org/XML/1998/namespace}lang"))
+        self.assertIsNone(abstract)
 
     def test_transform_subarticle_with_lang_and_abstracts(self):
         """Test that sub-articles with xml:lang still set the lang attribute properly."""
@@ -258,7 +271,7 @@ class TestXMLSubArticlePipe(TestCase):
         self.assertEqual("en", abstract.get("{http://www.w3.org/XML/1998/namespace}lang"))
 
     def test_transform_subarticle_without_lang_and_titles(self):
-        """Test that sub-articles without xml:lang don't crash when titles exist."""
+        """Test that sub-articles without xml:lang skip empty title-group."""
         xml_body = (
             '<body>'
             '<sub-article article-type="translation">'
@@ -276,9 +289,32 @@ class TestXMLSubArticlePipe(TestCase):
         result_raw, result_xml = XMLSubArticlePipe().transform(data)
         sub = result_xml.find(".//sub-article")
         self.assertIsNotNone(sub)
+        # No title should be created since get_article_title(None) returns None
+        title = sub.find(".//article-title")
+        self.assertIsNone(title)
+
+    def test_transform_subarticle_with_lang_and_titles(self):
+        """Test that sub-articles with xml:lang create title-group with lang attribute."""
+        xml_body = (
+            '<body>'
+            '<sub-article article-type="translation" xml:lang="en">'
+            '<body><p>Content</p></body>'
+            '</sub-article>'
+            '</body>'
+        )
+        raw = self._make_raw(translated_titles=[{"language": "en", "text": "Title"}])
+        raw.xml_body = xml_body
+        xml = etree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0"/>'
+        )
+        data = raw, xml
+        result_raw, result_xml = XMLSubArticlePipe().transform(data)
+        sub = result_xml.find(".//sub-article")
+        self.assertIsNotNone(sub)
         title = sub.find(".//article-title")
         self.assertIsNotNone(title)
-        self.assertIsNone(title.get("{http://www.w3.org/XML/1998/namespace}lang"))
+        self.assertEqual("en", title.get("{http://www.w3.org/XML/1998/namespace}lang"))
 
     def test_transform_subarticle_without_lang_and_keywords(self):
         """Test that sub-articles without xml:lang don't crash when keywords exist."""
@@ -289,7 +325,30 @@ class TestXMLSubArticlePipe(TestCase):
             '</sub-article>'
             '</body>'
         )
-        raw = self._make_raw(keywords_groups=["kw1", "kw2"])
+        raw = self._make_raw(keywords_groups={"en": ["kw1", "kw2"]})
+        raw.xml_body = xml_body
+        xml = etree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0"/>'
+        )
+        data = raw, xml
+        result_raw, result_xml = XMLSubArticlePipe().transform(data)
+        sub = result_xml.find(".//sub-article")
+        self.assertIsNotNone(sub)
+        # No kwd-group since get_keywords_group(None) returns None
+        kwd_group = sub.find(".//kwd-group")
+        self.assertIsNone(kwd_group)
+
+    def test_transform_subarticle_with_lang_and_keywords(self):
+        """Test that sub-articles with xml:lang create kwd-group with lang attribute."""
+        xml_body = (
+            '<body>'
+            '<sub-article article-type="translation" xml:lang="en">'
+            '<body><p>Content</p></body>'
+            '</sub-article>'
+            '</body>'
+        )
+        raw = self._make_raw(keywords_groups={"en": ["kw1", "kw2"]})
         raw.xml_body = xml_body
         xml = etree.fromstring(
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
@@ -301,4 +360,4 @@ class TestXMLSubArticlePipe(TestCase):
         self.assertIsNotNone(sub)
         kwd_group = sub.find(".//kwd-group")
         self.assertIsNotNone(kwd_group)
-        self.assertIsNone(kwd_group.get("{http://www.w3.org/XML/1998/namespace}lang"))
+        self.assertEqual("en", kwd_group.get("{http://www.w3.org/XML/1998/namespace}lang"))
