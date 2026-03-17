@@ -256,3 +256,49 @@ class TestXMLSubArticlePipe(TestCase):
         abstract = sub.find(".//abstract")
         self.assertIsNotNone(abstract)
         self.assertEqual("en", abstract.get("{http://www.w3.org/XML/1998/namespace}lang"))
+
+    def test_transform_subarticle_without_lang_and_titles(self):
+        """Test that sub-articles without xml:lang don't crash when titles exist."""
+        xml_body = (
+            '<body>'
+            '<sub-article article-type="translation">'
+            '<body><p>Content</p></body>'
+            '</sub-article>'
+            '</body>'
+        )
+        raw = self._make_raw(translated_titles=[{"language": "en", "text": "Title"}])
+        raw.xml_body = xml_body
+        xml = etree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0"/>'
+        )
+        data = raw, xml
+        result_raw, result_xml = XMLSubArticlePipe().transform(data)
+        sub = result_xml.find(".//sub-article")
+        self.assertIsNotNone(sub)
+        title = sub.find(".//article-title")
+        self.assertIsNotNone(title)
+        self.assertIsNone(title.get("{http://www.w3.org/XML/1998/namespace}lang"))
+
+    def test_transform_subarticle_without_lang_and_keywords(self):
+        """Test that sub-articles without xml:lang don't crash when keywords exist."""
+        xml_body = (
+            '<body>'
+            '<sub-article article-type="translation">'
+            '<body><p>Content</p></body>'
+            '</sub-article>'
+            '</body>'
+        )
+        raw = self._make_raw(keywords_groups=["kw1", "kw2"])
+        raw.xml_body = xml_body
+        xml = etree.fromstring(
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" '
+            'specific-use="sps-1.4" dtd-version="1.0"/>'
+        )
+        data = raw, xml
+        result_raw, result_xml = XMLSubArticlePipe().transform(data)
+        sub = result_xml.find(".//sub-article")
+        self.assertIsNotNone(sub)
+        kwd_group = sub.find(".//kwd-group")
+        self.assertIsNotNone(kwd_group)
+        self.assertIsNone(kwd_group.get("{http://www.w3.org/XML/1998/namespace}lang"))
