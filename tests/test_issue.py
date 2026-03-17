@@ -1,10 +1,10 @@
-import unittest
+from unittest import TestCase
 from unittest.mock import patch, PropertyMock
 
 from scielo_classic_website.models.issue import Issue
 
 
-class TestGetLicenseTextByLanguage(unittest.TestCase):
+class TestGetLicenseTextByLanguage(TestCase):
 
     def _make_issue(self, license_texts):
         record = {}
@@ -69,7 +69,3 @@ class TestGetLicenseTextByLanguage(unittest.TestCase):
         ]
         result = self._make_issue(license_texts)
         self.assertEqual(result, {})
-
-
-if __name__ == "__main__":
-    unittest.main()
