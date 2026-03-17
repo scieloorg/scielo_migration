@@ -217,9 +217,7 @@ class TestXMLSubArticlePipe(TestCase):
                 abstracts[item["language"]] = item["text"]
         raw.get_abstract = MagicMock(side_effect=lambda lang: abstracts.get(lang))
 
-        kw_groups = {}
-        if keywords_groups:
-            kw_groups = keywords_groups
+        kw_groups = keywords_groups or {}
         raw.get_keywords_group = MagicMock(side_effect=lambda lang: kw_groups.get(lang))
         return raw
 
