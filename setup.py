@@ -15,7 +15,7 @@ tests_require = [
 
 setuptools.setup(
     name="scielo_classic_website",
-    version="1.0.0",
+    version="1.10.7",
     author="SciELO",
     author_email="scielo-dev@googlegroups.com",
     description="",
