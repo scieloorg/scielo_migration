@@ -201,7 +201,7 @@ class HTMLMerger:
             # Erro ao processar ou circular ou já processado - cria xref
             return self.create_xref_element(file_path, anchor, link_element)
     
-    def process_html_internal(self, html_content: str, base_path: str = None) -> etree.Element:
+    def process_html_internal(self, html_content: str, base_path: str = None) -> Optional[etree.Element]:
         """Processa HTML internamente (para recursão)."""
         try:
             # Parse do HTML
@@ -224,7 +224,10 @@ class HTMLMerger:
             
         except Exception as e:
             print(f"Erro ao processar HTML: {e}")
-            return html_content
+            # Retorna None em caso de falha; o conteúdo original (string) não
+            # é um elemento etree e quebraria os chamadores que esperam um
+            # Element (ex.: parent.replace, .tag, .set).
+            return None
     
     def process_html(self, html_content: str, base_path: str = None) -> str:
         """Processa HTML incorporando referências locais (API pública)."""
