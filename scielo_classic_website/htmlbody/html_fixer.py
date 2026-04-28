@@ -39,7 +39,9 @@ def get_best_choice_between_original_and_fixed(score, original, fixed_html, min_
 
 
 def load_html(content):
-    return fromstring(wrap_html(content))
+    tree = fromstring(wrap_html(content))
+    remove_invalid_namespace_attributes(tree)
+    return tree
 
 
 def get_fixed_html(content, style_mappings=None, tags_to_fix=None, remove_namespaces=True):
@@ -60,6 +62,7 @@ def get_fixed_html(content, style_mappings=None, tags_to_fix=None, remove_namesp
     fixed_content = fix(content, style_mappings, tags_to_fix)
     wrapped = wrap_html(fixed_content)
     tree = fromstring(wrapped)
+    remove_invalid_namespace_attributes(tree)
     return html2xml(tree)
 
 
@@ -364,6 +367,48 @@ def remove_invalid_xml_comments(html):
     if not html:
         return html
     return re.sub(r'<!--.*?-->', _filter_invalid_xml_comment, html, flags=re.DOTALL)
+
+
+_VALID_NAMESPACE_PREFIXES = frozenset({"xml", "xlink"})
+
+
+def remove_invalid_namespace_attributes(tree):
+    """
+    Remove atributos cujo nome contém prefixo de namespace não declarado.
+
+    HTML de origem ocasionalmente contém atributos malformados como
+    ``<a mailto:dade="...">``. O parser HTML do lxml mantém o nome literal
+    com dois pontos. Quando a árvore é serializada como XML e novamente
+    parseada, o lxml interpreta os dois pontos como separador de namespace
+    e levanta ``XMLSyntaxError`` ("Namespace prefix X for Y on Z is not
+    defined").
+
+    Esta função percorre a árvore e remove tais atributos. Os prefixos
+    padrão (``xml``, ``xlink``) são preservados; atributos já mapeados
+    em namespace pelo lxml (armazenados na notação Clark
+    ``{uri}localname``) também são preservados.
+    """
+    if tree is None:
+        return tree
+
+    elements = tree.iter() if hasattr(tree, "iter") else [tree]
+    for elem in elements:
+        attrib = getattr(elem, "attrib", None)
+        if not attrib:
+            continue
+        for attr_name in list(attrib.keys()):
+            if not isinstance(attr_name, str):
+                continue
+            # Atributos já mapeados em namespace ficam em notação Clark
+            if attr_name.startswith("{"):
+                continue
+            if ":" not in attr_name:
+                continue
+            prefix = attr_name.split(":", 1)[0]
+            if prefix in _VALID_NAMESPACE_PREFIXES:
+                continue
+            del attrib[attr_name]
+    return tree
 
 
 def remove_ms_office_conditionals(xml_str):
