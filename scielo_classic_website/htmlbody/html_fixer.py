@@ -101,6 +101,7 @@ def fix(content, style_mappings=None, tags_to_fix=None):
     # Pipeline de processamento
     content = remove_invalid_xml_comments(content)
     content = remove_ms_office_conditionals(content)
+    content = remove_invalid_namespace_prefix_attributes(content)
     content = avoid_mismatched_styles(content, style_mappings)
     content = avoid_mismatched_tags(content, tags_to_fix)
     content = remove_namespaces_from_content(content)
@@ -370,6 +371,49 @@ def remove_invalid_xml_comments(html):
 
 
 _VALID_NAMESPACE_PREFIXES = frozenset({"xml", "xlink"})
+
+
+# Atributos cujo nome tem prefixo de namespace (ex.: ``mailto:dade``).
+# Captura o nome do prefixo e o valor opcional ("...", '...' ou sem aspas).
+_INVALID_NAMESPACE_ATTR_RE = re.compile(
+    r'\s+([A-Za-z_][\w.-]*):[\w.-]+'
+    r'''(?:\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+))?'''
+)
+
+
+def _strip_invalid_namespace_attributes_in_tag(tag_match):
+    tag = tag_match.group(0)
+
+    def _maybe_strip(attr_match):
+        prefix = attr_match.group(1)
+        if prefix in _VALID_NAMESPACE_PREFIXES:
+            return attr_match.group(0)
+        return ""
+
+    return _INVALID_NAMESPACE_ATTR_RE.sub(_maybe_strip, tag)
+
+
+def remove_invalid_namespace_prefix_attributes(content):
+    """
+    Remove atributos com prefixo de namespace não declarado do HTML de origem.
+
+    HTML de origem ocasionalmente contém atributos malformados como
+    ``<a mailto:dade="...">``. Quando o conteúdo gerado é re-parseado como
+    XML (parser estrito), o lxml interpreta os dois pontos como prefixo de
+    namespace e levanta ``XMLSyntaxError``. Esta limpeza ocorre no nível
+    de string para corrigir o conteúdo original antes da geração do HTML,
+    de forma que toda a pipeline subsequente trabalhe com conteúdo limpo.
+
+    Os prefixos padrão (``xml``, ``xlink``) são preservados.
+    """
+    if not content:
+        return content
+    # Aplica somente dentro de tags abertas/auto-fechadas (``<...>``)
+    return re.sub(
+        r"<[A-Za-z][^>]*>",
+        _strip_invalid_namespace_attributes_in_tag,
+        content,
+    )
 
 
 def remove_invalid_namespace_attributes(tree):

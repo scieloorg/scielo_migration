@@ -4,9 +4,11 @@ from lxml import etree as ET
 from lxml import html as lxml_html
 
 from scielo_classic_website.htmlbody.html_fixer import (
+    fix,
     get_fixed_html,
     load_html,
     remove_invalid_namespace_attributes,
+    remove_invalid_namespace_prefix_attributes,
     remove_invalid_xml_comments,
 )
 
@@ -139,3 +141,61 @@ class TestRemoveInvalidNamespaceAttributes(TestCase):
         result = get_fixed_html(content)
         wrapped = f"<root>{result}</root>"
         ET.fromstring(wrapped)
+
+
+class TestRemoveInvalidNamespacePrefixAttributes(TestCase):
+    def test_removes_basic_undefined_prefix_attribute(self):
+        content = '<p>Hello <a mailto:dade="x@y.com" href="z">link</a></p>'
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            '<p>Hello <a href="z">link</a></p>',
+        )
+
+    def test_handles_attribute_value_with_lt(self):
+        # This is the case where remove_namespaces_from_content is fooled
+        # because '<' inside the value breaks the text-based tag detection.
+        content = '<p>Hello <a mailto:dade="a<b" href="z">link</a> end</p>'
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            '<p>Hello <a href="z">link</a> end</p>',
+        )
+
+    def test_handles_single_quoted_value(self):
+        content = "<p><a mailto:dade='a\"b' href='z'>link</a></p>"
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            "<p><a href='z'>link</a></p>",
+        )
+
+    def test_preserves_xml_and_xlink_prefixes(self):
+        content = (
+            '<p><a xml:lang="pt" xlink:href="x" mailto:foo="y" href="h">l</a></p>'
+        )
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            '<p><a xml:lang="pt" xlink:href="x" href="h">l</a></p>',
+        )
+
+    def test_handles_attribute_without_value(self):
+        content = '<p><a mailto:dade>l</a></p>'
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            '<p><a>l</a></p>',
+        )
+
+    def test_does_not_change_plain_content(self):
+        content = '<p>Plain text without bad attrs</p>'
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content), content
+        )
+
+    def test_handles_none_and_empty(self):
+        self.assertIsNone(remove_invalid_namespace_prefix_attributes(None))
+        self.assertEqual(remove_invalid_namespace_prefix_attributes(""), "")
+
+    def test_called_inside_fix(self):
+        # Through the full fix() pipeline, the bad attribute is gone but
+        # the surrounding <a> tag is preserved (unlike the old behaviour
+        # of remove_namespaces_from_content which dropped the whole tag).
+        content = '<p>Hello <a mailto:dade="a<b" href="z">link</a> end</p>'
+        self.assertIn('<a href="z">link</a>', fix(content))
