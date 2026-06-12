@@ -48,18 +48,20 @@ def fixed_glob(patterns, file_type, recursive):
     return paths
 
 
+def _sanitize_surrogates(s: str) -> str:
+    return s.encode("utf-16", "surrogatepass").decode("utf-16", "replace")
+
+
 def get_files(patterns, file_type, recursive=False):
-    for path in fixed_glob(patterns, file_type, recursive):
+    for raw_path in fixed_glob(patterns, file_type, recursive):
+        safe_path = _sanitize_surrogates(raw_path)     # para strings/JSON
+        item = {"type": file_type, "path": safe_path}
         try:
-            item = {
-                "type": file_type,
-                "path": path,
-                "modified_date": modified_date(path),
-                "name": os.path.basename(path),
-                "relative_path": _get_classic_website_rel_path(path),
-            }
+            item["modified_date"] = modified_date(raw_path)
+            item["name"] = os.path.basename(safe_path)
             item["key"], item["extension"] = os.path.splitext(item["name"])
-            with open(path, "rb") as f:
+            item["relative_path"] = _get_classic_website_rel_path(safe_path)
+            with open(raw_path, "rb") as f:            # raw_path para I/O
                 item["content"] = f.read()
         except Exception as e:
             logging.exception(e)
