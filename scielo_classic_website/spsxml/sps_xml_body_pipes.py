@@ -480,7 +480,21 @@ class StartPipe(plumber.Pipe):
     @plumber.precondition(precond)
     def transform(self, data):
         raw = data
-        xml = ET.fromstring(raw.xml_body_and_back[-1])
+        content = raw.xml_body_and_back[-1]
+        try:
+            xml = ET.fromstring(content)
+        except ET.XMLSyntaxError:
+            # Tenta recuperar XML malformado (ex: comentários inválidos,
+            # condicionais MS Office residuais) usando o parser de recuperação
+            # do lxml para evitar falha total da etapa.
+            if isinstance(content, str):
+                content_bytes = content.encode("utf-8")
+            else:
+                content_bytes = content
+            recover_parser = ET.XMLParser(recover=True)
+            xml = ET.fromstring(content_bytes, parser=recover_parser)
+            if xml is None:
+                raise
         _report(xml, func_name=type(self))
         return data, xml
 
@@ -1858,8 +1872,8 @@ class MarkHTMLFileToEmbedPipe(plumber.Pipe):
         return data
 
     def merge(self, journal_acron_folder, html_reader, xml):
-        try:
-            for body in xml.xpath(".//body"):
+        for body in xml.xpath(".//body"):
+            try:
                 body_str = ET.tostring(body, encoding="iso-8859-1").decode("iso-8859-1")
                 input_html = f"<html>{body_str}</html>"
                 new_body = merge_html(
@@ -1868,10 +1882,19 @@ class MarkHTMLFileToEmbedPipe(plumber.Pipe):
                     encoding="iso-8859-1",
                     content_reader=html_reader
                 )
+                if not isinstance(new_body, ET._Element):
+                    continue
                 parent = body.getparent()
+                if parent is None:
+                    continue
                 parent.replace(body, new_body)
-            
-            for back in xml.xpath(".//back"):
+            except Exception as e:
+                logging.error(f"MarkHTMLFileToEmbedPipe - error processing body: {e}")
+                logging.exception(e)
+
+        for back in xml.xpath(".//back"):
+            original_tag = back.tag
+            try:
                 back.tag = "body"
                 back_str = ET.tostring(back, encoding="iso-8859-1").decode("iso-8859-1")
                 input_html = f"<html>{back_str}</html>"
@@ -1881,12 +1904,24 @@ class MarkHTMLFileToEmbedPipe(plumber.Pipe):
                     encoding="iso-8859-1",
                     content_reader=html_reader
                 )
-                new_back.tag = "back"
+                if not isinstance(new_back, ET._Element):
+                    # Restaura tag original se a mesclagem falhou
+                    back.tag = original_tag
+                    continue
+                new_back.tag = original_tag
                 parent = back.getparent()
+                if parent is None:
+                    back.tag = original_tag
+                    continue
                 parent.replace(back, new_back)
-        except Exception as e:
-            logging.error(f"MarkHTMLFileToEmbedPipe - error processing html embedding: {e}")
-            logging.exception(e)
+            except Exception as e:
+                # Garante que a tag original seja restaurada mesmo em caso de erro
+                try:
+                    back.tag = original_tag
+                except Exception:
+                    pass
+                logging.error(f"MarkHTMLFileToEmbedPipe - error processing back: {e}")
+                logging.exception(e)
 
 
 class XMLBodyCenterPipe(plumber.Pipe):
