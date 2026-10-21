@@ -6,6 +6,7 @@ from scielo_classic_website.models.document import Document
 from scielo_classic_website.spsxml.sps_xml_article_meta import (  # XMLArticleMetaSelfUriPipe,; XMLArticleMetaCountsPipe,; XMLBodyPipe,; XMLArticleMetaCitationsPipe,; XMLSubArticlePipe,
     XMLArticleMetaAbstractsPipe,
     XMLArticleMetaAffiliationPipe,
+    XMLArticleMetaAuthorNotesPipe,
     XMLArticleMetaElocationInfoPipe,
     XMLArticleMetaHistoryPipe,
     XMLArticleMetaIssueInfoPipe,
@@ -652,3 +653,48 @@ class TestXMLArticleMetaPermissionPipe(TestCase):
         )
         result = tostring(transformed[1])
         self.assertEqual(expected, result)
+
+
+class TestXMLArticleMetaAuthorNotesPipe(TestCase):
+    def _transform(self, xml_str):
+        xml = get_tree(xml_str)
+        XMLArticleMetaAuthorNotesPipe().transform((None, xml))
+        return xml
+
+    def test_transform_creates_author_notes_with_corresp(self):
+        xml = self._transform(
+            "<article><front><article-meta><contrib-group/></article-meta></front>"
+            "<back><corresp>c</corresp></back></article>"
+        )
+        self.assertEqual(
+            tostring(xml.find("./front/article-meta")),
+            "<article-meta><contrib-group/>"
+            "<author-notes><corresp>c</corresp></author-notes></article-meta>",
+        )
+
+    def test_transform_reuses_existing_author_notes(self):
+        xml = self._transform(
+            "<article><front><article-meta><contrib-group/></article-meta></front>"
+            "<back><author-notes><fn>f</fn></author-notes>"
+            "<corresp>c</corresp></back></article>"
+        )
+        self.assertEqual(len(xml.xpath(".//author-notes")), 1)
+        self.assertEqual(
+            tostring(xml.find("./front/article-meta")),
+            "<article-meta><contrib-group/>"
+            "<author-notes><fn>f</fn><corresp>c</corresp></author-notes>"
+            "</article-meta>",
+        )
+
+    def test_transform_merges_multiple_author_notes(self):
+        xml = self._transform(
+            "<article><front><article-meta><contrib-group/></article-meta></front>"
+            "<body><author-notes><fn>f1</fn></author-notes></body>"
+            "<back><author-notes><fn>f2</fn></author-notes>"
+            "<corresp>c</corresp></back></article>"
+        )
+        self.assertEqual(len(xml.xpath(".//author-notes")), 1)
+        self.assertEqual(
+            tostring(xml.find("./front/article-meta/author-notes")),
+            "<author-notes><fn>f1</fn><fn>f2</fn><corresp>c</corresp></author-notes>",
+        )
