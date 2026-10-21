@@ -1,8 +1,16 @@
 from unittest import TestCase
 
 from lxml import etree as ET
+from lxml import html as lxml_html
 
-from scielo_classic_website.htmlbody.html_fixer import remove_invalid_xml_comments
+from scielo_classic_website.htmlbody.html_fixer import (
+    fix,
+    get_fixed_html,
+    load_html,
+    remove_invalid_namespace_attributes,
+    remove_invalid_namespace_prefix_attributes,
+    remove_invalid_xml_comments,
+)
 
 
 class TestRemoveInvalidXmlComments(TestCase):
@@ -71,3 +79,123 @@ class TestRemoveInvalidXmlComments(TestCase):
         html = "<p>text</p><!--EndF>>\n<!--EndFragment--><p>more</p>"
         result = remove_invalid_xml_comments(html)
         self.assertEqual(result, "<p>text</p><p>more</p>")
+
+
+class TestRemoveInvalidNamespaceAttributes(TestCase):
+    def test_removes_undefined_namespace_attribute(self):
+        tree = lxml_html.fromstring(
+            '<html><body><a mailto:dade="x" href="y">link</a></body></html>'
+        )
+        remove_invalid_namespace_attributes(tree)
+        a = tree.find(".//a")
+        self.assertNotIn("mailto:dade", a.attrib)
+        self.assertEqual(a.get("href"), "y")
+
+    def test_serialized_tree_is_valid_xml(self):
+        tree = lxml_html.fromstring(
+            '<html><body><a mailto:dade="x" href="y">link</a></body></html>'
+        )
+        remove_invalid_namespace_attributes(tree)
+        serialized = ET.tostring(tree, method="xml").decode("utf-8")
+        # Re-parsing as XML must not raise XMLSyntaxError
+        ET.fromstring(serialized)
+
+    def test_preserves_xml_and_xlink_prefixes(self):
+        tree = lxml_html.fromstring(
+            '<html><body>'
+            '<a xml:lang="pt" xlink:href="x" mailto:foo="y">link</a>'
+            '</body></html>'
+        )
+        remove_invalid_namespace_attributes(tree)
+        a = tree.find(".//a")
+        self.assertEqual(a.get("xml:lang"), "pt")
+        self.assertEqual(a.get("xlink:href"), "x")
+        self.assertNotIn("mailto:foo", a.attrib)
+
+    def test_preserves_attributes_without_colon(self):
+        tree = lxml_html.fromstring(
+            '<html><body><p id="x" class="y">text</p></body></html>'
+        )
+        remove_invalid_namespace_attributes(tree)
+        p = tree.find(".//p")
+        self.assertEqual(p.get("id"), "x")
+        self.assertEqual(p.get("class"), "y")
+
+    def test_handles_none_tree(self):
+        self.assertIsNone(remove_invalid_namespace_attributes(None))
+
+    def test_load_html_strips_invalid_namespace_attributes(self):
+        tree = load_html('<p>foo <a mailto:dade="z" href="y">link</a> bar</p>')
+        a = tree.find(".//a")
+        self.assertNotIn("mailto:dade", a.attrib)
+        # Tree must serialize to valid XML
+        serialized = ET.tostring(tree, method="xml").decode("utf-8")
+        ET.fromstring(serialized)
+
+    def test_get_fixed_html_output_is_valid_xml(self):
+        # Attribute value contains '>' so the regex-based
+        # ``remove_namespaces_from_content`` step (used inside ``fix()``)
+        # cannot reliably strip the bad attribute. The tree-level cleanup
+        # must still produce XML that re-parses without errors.
+        content = '<p>Hello <a mailto:dade="a>b" href="x">world</a></p>'
+        result = get_fixed_html(content)
+        wrapped = f"<root>{result}</root>"
+        ET.fromstring(wrapped)
+
+
+class TestRemoveInvalidNamespacePrefixAttributes(TestCase):
+    def test_removes_basic_undefined_prefix_attribute(self):
+        content = '<p>Hello <a mailto:dade="x@y.com" href="z">link</a></p>'
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            '<p>Hello <a href="z">link</a></p>',
+        )
+
+    def test_handles_attribute_value_with_lt(self):
+        # This is the case where remove_namespaces_from_content is fooled
+        # because '<' inside the value breaks the text-based tag detection.
+        content = '<p>Hello <a mailto:dade="a<b" href="z">link</a> end</p>'
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            '<p>Hello <a href="z">link</a> end</p>',
+        )
+
+    def test_handles_single_quoted_value(self):
+        content = "<p><a mailto:dade='a\"b' href='z'>link</a></p>"
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            "<p><a href='z'>link</a></p>",
+        )
+
+    def test_preserves_xml_and_xlink_prefixes(self):
+        content = (
+            '<p><a xml:lang="pt" xlink:href="x" mailto:foo="y" href="h">l</a></p>'
+        )
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            '<p><a xml:lang="pt" xlink:href="x" href="h">l</a></p>',
+        )
+
+    def test_handles_attribute_without_value(self):
+        content = '<p><a mailto:dade>l</a></p>'
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content),
+            '<p><a>l</a></p>',
+        )
+
+    def test_does_not_change_plain_content(self):
+        content = '<p>Plain text without bad attrs</p>'
+        self.assertEqual(
+            remove_invalid_namespace_prefix_attributes(content), content
+        )
+
+    def test_handles_none_and_empty(self):
+        self.assertIsNone(remove_invalid_namespace_prefix_attributes(None))
+        self.assertEqual(remove_invalid_namespace_prefix_attributes(""), "")
+
+    def test_called_inside_fix(self):
+        # Through the full fix() pipeline, the bad attribute is gone but
+        # the surrounding <a> tag is preserved (unlike the old behaviour
+        # of remove_namespaces_from_content which dropped the whole tag).
+        content = '<p>Hello <a mailto:dade="a<b" href="z">link</a> end</p>'
+        self.assertIn('<a href="z">link</a>', fix(content))
