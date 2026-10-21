@@ -304,10 +304,10 @@ class XMLArticleMetaAuthorNotesPipe(plumber.Pipe):
                 corresp.append(item)
             corresp_elements = [corresp]
 
-        author_notes = xml.xpath(".//author-notes")
+        author_notes = xml.find(".//author-notes")
         if not author_notes:
             author_notes = ET.Element("author-notes")
-        
+
         # Move cada corresp para dentro de author-notes
         for corresp in corresp_elements:
             # Adiciona corresp ao author-notes
