@@ -1,4 +1,5 @@
 import glob
+import itertools
 import logging
 import os
 from datetime import datetime
@@ -26,13 +27,16 @@ def modified_date(file_path):
 
 
 def _get_classic_website_rel_path(file_path):
+    # compara segmentos inteiros do caminho, para que "/srv/mybases/..."
+    # não seja confundido com "bases"
+    parts = file_path.split(os.sep)
     for folder in (
         "bases-work",
         "bases",
         "htdocs",
     ):
-        if folder in file_path:
-            return file_path[file_path.find(folder) :]
+        if folder in parts:
+            return os.sep.join(parts[parts.index(folder) :])
     logging.error(
         f"Não foi possível determinar o caminho relativo do arquivo {file_path}"
     )
@@ -100,10 +104,21 @@ class IssueFolder:
 
     @property
     def files(self):
-        yield from self.bases_xml_files
-        yield from self.bases_translation_files
-        yield from self.bases_pdf_files
-        yield from self.htdocs_img_revistas_files
+        # mantém a primeira ocorrência de cada arquivo, que tem o tipo
+        # mais específico (xml, html, pdf) em relação a "asset"
+        seen = set()
+        for item in itertools.chain(
+            self.bases_xml_files,
+            self.bases_translation_files,
+            self.bases_pdf_files,
+            self.htdocs_img_revistas_files,
+        ):
+            path = item.get("path")
+            if path:
+                if path in seen:
+                    continue
+                seen.add(path)
+            yield item
 
     @property
     def bases_translation_files(self):
@@ -131,7 +146,7 @@ class IssueFolder:
             "**",
             "*.*",
         )
-        for item in get_files([pattern], "html"):
+        for item in get_files([pattern], "html", True):
             if item.get("error"):
                 yield item
                 continue
@@ -208,12 +223,20 @@ class IssueFolder:
         htdocs_path = os.path.dirname(os.path.dirname(htdocs_img_revistas_path))
 
         patterns = [
-            os.path.join(htdocs_path, "**", self._subdir_acron_issue, "**", "*.*"),
+            os.path.join(
+                htdocs_img_revistas_path, self._subdir_acron_issue, "**", "*.*"
+            ),
+            # caminhos alternativos (fbpe)
+            os.path.join(
+                htdocs_path, "**", "fbpe", "**", self._subdir_acron_issue, "**", "*.*"
+            ),
         ]
 
         for item in get_files(patterns, "asset", True):
             if item.get("error"):
                 yield item
+                continue
+            if self._is_bases_path(item["path"]):
                 continue
             try:
                 if os.path.isfile(item["path"]):
@@ -221,6 +244,20 @@ class IssueFolder:
                     yield item
             except Exception as e:
                 yield {"type": "asset", "error": str(e), "error_type": type(e).__name__}
+
+    def _is_bases_path(self, file_path):
+        paths = self._classic_website_paths
+        for bases_path in (
+            paths.bases_xml_path,
+            paths.bases_pdf_path,
+            paths.bases_translation_path,
+        ):
+            if not bases_path:
+                continue
+            bases_path = os.path.abspath(bases_path)
+            if os.path.abspath(file_path).startswith(bases_path + os.sep):
+                return True
+        return False
 
     @property
     def bases_xml_files(self):
