@@ -210,7 +210,10 @@ class TestArtigoIdFile(IdFileTestBase):
     def test_records_are_lazy_and_complete(self):
         item = self.id_file.get("S0044-59672019000300001")
         self.assertIsNone(item._records)
+        self.assertIsNone(item._main_records)
         self.assertEqual(3, len(item.records))
+        self.assertIs(item.records, item.records)
+        self.assertEqual(item.main_records, item.records)
         self.assertEqual("0044-596720190003", item.issue_pid)
         self.assertEqual(
             {"_": "Titulo com quebra de linha", "l": "en"}, item.records[1]["v012"][0]
@@ -394,6 +397,59 @@ class TestArtigoExternalPRecords(TestCase):
     def test_without_base_paths_external_p_records_are_ignored(self):
         item = ClassicIdFile("artigo", self.main_path).get("S0044-59672019000300001")
         self.assertEqual(["o", "h"], [r["v706"][0]["_"] for r in item.records])
+
+    def test_records_keep_main_records_before_external_p_records(self):
+        id_file = ClassicIdFile("artigo", self.main_path, p_records_base_paths=self.bases)
+        item = id_file.get("S0044-59672019000300001")
+        self.assertEqual(item.main_records, item.records[:2])
+        self.assertEqual(item.external_p_records, item.records[2:])
+
+    def test_records_are_cached_and_external_file_is_read_once(self):
+        id_file = ClassicIdFile("artigo", self.main_path, p_records_base_paths=self.bases)
+        item = id_file.get("S0044-59672019000300001")
+        records = item.records
+        os.remove(self.p_path)
+        self.assertIs(records, item.records)
+        self.assertEqual(4, len(item.records))
+
+    def test_main_p_records_are_not_duplicated(self):
+        id_file = ClassicIdFile("artigo", self.main_path, p_records_base_paths=self.bases)
+        item = id_file.get("S0044-59672019000300002")
+        self.assertTrue(item.has_main_p_records)
+        self.assertEqual(item.main_records, item.records)
+        self.assertEqual(["o", "h", "p"], [r["v706"][0]["_"] for r in item.records])
+
+    def test_records_without_external_file_are_main_records(self):
+        os.remove(self.p_path)
+        id_file = ClassicIdFile("artigo", self.main_path, p_records_base_paths=self.bases)
+        item = id_file.get("S0044-59672019000300001")
+        self.assertIsNone(item.external_p_records_path)
+        self.assertEqual([], item.external_p_records)
+        self.assertEqual(item.main_records, item.records)
+
+    def test_issue_record_in_artigo_does_not_read_external_p_records(self):
+        path = os.path.join(self.tmp.name, "with_i.id")
+        with open(path, "w", encoding="iso-8859-1") as fp:
+            fp.write(ARTIGO_ID)
+        p_dir = os.path.join(self.bases, "artigo", "p", "0044-5967", "2019", "0003")
+        with open(os.path.join(p_dir, "00000.id"), "w", encoding="iso-8859-1") as fp:
+            fp.write(self.P_FILE)
+        id_file = ClassicIdFile("artigo", path, p_records_base_paths=self.bases)
+        issue = id_file.get("0044-596720190003")
+        self.assertEqual("issue", issue.kind)
+        self.assertIsNone(issue.external_p_records_path)
+        self.assertEqual(["i"], [r["v706"][0]["_"] for r in issue.records])
+
+    def test_title_and_issue_records_are_main_records(self):
+        for db_type, content in (("title", TITLE_ID), ("issue", ISSUE_ID)):
+            with self.subTest(db_type=db_type):
+                path = os.path.join(self.tmp.name, f"{db_type}.id")
+                with open(path, "w", encoding="iso-8859-1") as fp:
+                    fp.write(content)
+                id_file = ClassicIdFile(db_type, path, p_records_base_paths=self.bases)
+                item = next(iter(id_file.items()))
+                self.assertEqual(item.main_records, item.records)
+                self.assertIs(item.records[0], item.data)
 
 
 class TestItemMfn(IdFileTestBase):

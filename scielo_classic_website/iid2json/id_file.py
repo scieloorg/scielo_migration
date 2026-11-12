@@ -304,7 +304,8 @@ class IdFileItem:
         if self._records is None:
             records = list(self.main_records)
             if self.db_type == ARTIGO:
-                records.extend(self.external_p_records)
+                if not self.has_main_p_records:
+                    records.extend(self.external_p_records)
             self._records = records
         return self._records
 
