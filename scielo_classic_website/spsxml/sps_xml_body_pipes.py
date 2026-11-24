@@ -17,6 +17,11 @@ from scielo_classic_website.spsxml.detector import (
     detect_from_id,
 )
 from scielo_classic_website.spsxml.detector_title_parent import identify_parent_by_title
+from scielo_classic_website.spsxml.front_text import (
+    FrontMetadata,
+    strip_front_text,
+    strip_trailing_front_text,
+)
 from scielo_classic_website.htmlbody.html_merger import (
     merge_html,
 )
@@ -2138,16 +2143,29 @@ class XMLFixBodySecHierarchyPipe(plumber.Pipe):
 
 
 class XMLStripFrontTextPipe(plumber.Pipe):
+    """
+    Remove do body a página de rosto (título, autores, resumos...), que os
+    registros de parágrafo trazem junto com o texto completo: o que vem
+    antes da seção de introdução ou, sem ela, os blocos iniciais que estão
+    nos metadados do artigo (ver ``front_text``).
+    """
 
     def transform(self, data):
         raw, xml = data
+        metadata = FrontMetadata.from_document(raw)
         for body in xml.xpath(".//body"):
             self.save_elements(body)
-            self.identify_body_beginning(body)
+            self.identify_body_beginning(body, metadata)
         return data
-    
-    def identify_body_beginning(self, body):
-        self.strip_front_text_by_sec_intro(body)
+
+    def identify_body_beginning(self, body, metadata=None):
+        stripped = self.strip_front_text_by_sec_intro(body)
+        if metadata:
+            if not stripped:
+                stripped = bool(strip_front_text(body, metadata))
+            # resumo em outro idioma no fim do texto
+            stripped = bool(strip_trailing_front_text(body, metadata)) or stripped
+        return stripped
 
     def save_elements(self, body):
         corresp = body.find(".//corresp")
